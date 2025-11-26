@@ -1,32 +1,29 @@
 package View;
 
 import Controller.GameController;
-import Model.Board;
-import Model.Cell;
-import Model.Game;
-import Model.GameState;
 
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * Shows a single board (for one player).
+ * לא מכיר בכלל את Board / Cell / Game – רק GameController.
+ */
 public class BoardPanel extends JPanel {
 
     private final GameController controller;
-    private final Board board;
-    private final int boardNumber;              // 1 or 2
-    private final Runnable moveCallback;       // called after a successful move
+    private final int boardNumber;   // 1 or 2
+    private final Runnable moveCallback;
 
     private JButton[][] buttons;
     private JLabel waitLabel;
-    private boolean waiting;                   // true = "WAIT FOR YOUR TURN"
+    private boolean waiting;         // true = "WAIT FOR YOUR TURN"
 
     public BoardPanel(GameController controller,
-                      Board board,
                       int boardNumber,
                       boolean initiallyWaiting,
                       Runnable moveCallback) {
         this.controller = controller;
-        this.board = board;
         this.boardNumber = boardNumber;
         this.waiting = initiallyWaiting;
         this.moveCallback = moveCallback;
@@ -35,10 +32,10 @@ public class BoardPanel extends JPanel {
     }
 
     private void initComponents() {
-        int rows = board.getRows();
-        int cols = board.getCols();
+        int rows = controller.getBoardRows(boardNumber);
+        int cols = controller.getBoardCols(boardNumber);
 
-        setLayout(new OverlayLayout(this));      // grid + overlay text
+        setLayout(new OverlayLayout(this));
         setBackground(Color.BLACK);
 
         JPanel gridPanel = new JPanel(new GridLayout(rows, cols));
@@ -81,23 +78,18 @@ public class BoardPanel extends JPanel {
     }
 
     private void handleClick(int r, int c) {
-        Game game = controller.getCurrentGame();
-        if (game == null) return;
+        if (!controller.isGameRunning()) return;
 
-        // Game over? no moves.
-        if (game.getGameState() != GameState.RUNNING) return;
-
-        // Not this board's turn? ignore.
-        if (game.getCurrentPlayerTurn() != boardNumber) return;
+        // Not this board's turn?
+        if (controller.getCurrentPlayerTurn() != boardNumber) return;
 
         // Also ignore if this panel is marked as waiting
         if (waiting) return;
 
-        board.revealCell(r, c);   // uses your existing Board logic
+        controller.revealCellUI(boardNumber, r, c);
 
         refresh();
 
-        // notify parent (GamePanel) that a move happened
         if (moveCallback != null) {
             moveCallback.run();
         }
@@ -114,52 +106,20 @@ public class BoardPanel extends JPanel {
     }
 
     /**
-     * Repaint buttons according to cell state/content.
+     * Repaint buttons according to cell state/content via controller.
      */
     public void refresh() {
-        int rows = board.getRows();
-        int cols = board.getCols();
+        int rows = controller.getBoardRows(boardNumber);
+        int cols = controller.getBoardCols(boardNumber);
 
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
-                Cell cell = board.getCell(r, c);
                 JButton btn = buttons[r][c];
+                GameController.CellViewData data =
+                        controller.getCellViewData(boardNumber, r, c);
 
-                if (cell == null) continue;
-
-                switch (cell.getState()) {
-                    case HIDDEN:
-                        btn.setText("");
-                        btn.setEnabled(true);
-                        break;
-
-                    case FLAGGED:
-                        btn.setText("F");
-                        btn.setEnabled(true);
-                        break;
-
-                    case REVEALED:
-                        btn.setEnabled(false);
-                        switch (cell.getContent()) {
-                            case MINE:
-                                btn.setText("M");
-                                break;
-                            case NUMBER:
-                                btn.setText(String.valueOf(cell.getAdjacentMines()));
-                                break;
-                            case QUESTION:
-                                btn.setText("Q");
-                                break;
-                            case SURPRISE:
-                                btn.setText("S");
-                                break;
-                            case EMPTY:
-                            default:
-                                btn.setText("");
-                                break;
-                        }
-                        break;
-                }
+                btn.setEnabled(data.enabled);
+                btn.setText(data.text);
             }
         }
     }

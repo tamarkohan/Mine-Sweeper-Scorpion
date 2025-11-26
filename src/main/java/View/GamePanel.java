@@ -1,21 +1,19 @@
 package View;
 
 import Controller.GameController;
-import Model.Board;
-import Model.Cell;
-import Model.Difficulty;
-import Model.Game;
-import Model.GameState;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Main in-game panel: shows two boards, players, score, lives, controls.
+ * מדבר רק עם GameController – בלי Model ישיר.
+ */
 public class GamePanel extends JPanel {
 
     private final GameController controller;
-    private final Game game;
 
     private final String player1Name;
     private final String player2Name;
@@ -39,10 +37,9 @@ public class GamePanel extends JPanel {
     private JPanel heartsPanel;
     private List<JLabel> heartLabels;
 
-    public GamePanel(GameController controller, Game game,
+    public GamePanel(GameController controller,
                      String player1Name, String player2Name) {
         this.controller = controller;
-        this.game = game;
         this.player1Name = player1Name;
         this.player2Name = player2Name;
 
@@ -55,7 +52,7 @@ public class GamePanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(Color.BLACK);
 
-        Difficulty diff = game.getDifficulty();
+        String levelName = controller.getDifficultyName();
 
         // ===== TOP: title + level =====
         JPanel topPanel = new JPanel();
@@ -67,7 +64,7 @@ public class GamePanel extends JPanel {
         lblTitle.setFont(new Font("Arial", Font.BOLD, 32));
         lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        lblLevel = new JLabel("LEVEL:  " + diff.name(), SwingConstants.CENTER);
+        lblLevel = new JLabel("LEVEL:  " + levelName, SwingConstants.CENTER);
         lblLevel.setForeground(Color.WHITE);
         lblLevel.setFont(new Font("Arial", Font.BOLD, 20));
         lblLevel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -90,13 +87,12 @@ public class GamePanel extends JPanel {
         leftSide.setLayout(new BoxLayout(leftSide, BoxLayout.Y_AXIS));
         leftSide.setBackground(Color.BLACK);
 
-        lblPlayer1Box = createPlayerBoxLabel(
-                player1Name);
+        lblPlayer1Box = createPlayerBoxLabel(player1Name);
         leftSide.add(lblPlayer1Box);
 
         leftSide.add(Box.createVerticalStrut(5));
 
-        lblMinesLeft1 = new JLabel("MINES LEFT: " + game.getBoard1().getTotalMines(),
+        lblMinesLeft1 = new JLabel("MINES LEFT: " + controller.getTotalMines(1),
                 SwingConstants.CENTER);
         lblMinesLeft1.setForeground(Color.WHITE);
         lblMinesLeft1.setFont(new Font("Arial", Font.BOLD, 14));
@@ -106,8 +102,7 @@ public class GamePanel extends JPanel {
         leftSide.add(Box.createVerticalStrut(5));
 
         // Player 1 starts → not waiting
-        boardPanel1 = new BoardPanel(controller, game.getBoard1(),
-                1, false, this::handleMoveMade);
+        boardPanel1 = new BoardPanel(controller, 1, false, this::handleMoveMade);
         leftSide.add(boardPanel1);
 
         // ----- Player 2 side -----
@@ -120,7 +115,7 @@ public class GamePanel extends JPanel {
 
         rightSide.add(Box.createVerticalStrut(5));
 
-        lblMinesLeft2 = new JLabel("MINES LEFT: " + game.getBoard2().getTotalMines(),
+        lblMinesLeft2 = new JLabel("MINES LEFT: " + controller.getTotalMines(2),
                 SwingConstants.CENTER);
         lblMinesLeft2.setForeground(Color.WHITE);
         lblMinesLeft2.setFont(new Font("Arial", Font.BOLD, 14));
@@ -130,8 +125,7 @@ public class GamePanel extends JPanel {
         rightSide.add(Box.createVerticalStrut(5));
 
         // Player 2 waits at start
-        boardPanel2 = new BoardPanel(controller, game.getBoard2(),
-                2, true, this::handleMoveMade);
+        boardPanel2 = new BoardPanel(controller, 2, true, this::handleMoveMade);
         rightSide.add(boardPanel2);
 
         centerPanel.add(leftSide);
@@ -152,8 +146,8 @@ public class GamePanel extends JPanel {
         lblScore.setForeground(Color.WHITE);
         lblScore.setFont(new Font("Arial", Font.BOLD, 18));
 
-        lblLives = new JLabel("LIVES: " + game.getSharedLives() + "/" +
-                game.getDifficulty().getStartingLives());
+        lblLives = new JLabel("LIVES: " + controller.getSharedLives() + "/" +
+                controller.getStartingLives());
         lblLives.setForeground(Color.WHITE);
         lblLives.setFont(new Font("Arial", Font.BOLD, 18));
 
@@ -169,22 +163,31 @@ public class GamePanel extends JPanel {
 
         bottomOuter.add(heartsPanel);
 
-        // Control buttons (pause, undo, exit) – simple for now
+        // Control buttons (pause, restart, exit)
         JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 25, 5));
         controlsPanel.setBackground(Color.BLACK);
 
         JButton btnPause = new JButton("Pause");
-        JButton btnUndo = new JButton("Restart");
+        JButton btnRestart = new JButton("Restart");
         JButton btnExit = new JButton("Exit");
 
         styleControlButton(btnPause);
-        styleControlButton(btnUndo);
+        styleControlButton(btnRestart);
         styleControlButton(btnExit);
 
         btnExit.addActionListener(e -> SwingUtilities.getWindowAncestor(this).dispose());
+        btnRestart.addActionListener(e -> {
+            controller.restartGame();
+            // Rebuild hearts and status after restart
+            buildHearts();
+            updateStatus();
+            updateTurnUI();
+            boardPanel1.refresh();
+            boardPanel2.refresh();
+        });
 
         controlsPanel.add(btnPause);
-        controlsPanel.add(btnUndo);
+        controlsPanel.add(btnRestart);
         controlsPanel.add(btnExit);
 
         bottomOuter.add(Box.createVerticalStrut(5));
@@ -213,7 +216,7 @@ public class GamePanel extends JPanel {
 
     private void buildHearts() {
         heartLabels = new ArrayList<>();
-        int maxLives = game.getDifficulty().getStartingLives();
+        int maxLives = controller.getStartingLives();
 
         heartsPanel.removeAll();
         for (int i = 0; i < maxLives; i++) {
@@ -223,13 +226,14 @@ public class GamePanel extends JPanel {
             heartLabels.add(heart);
             heartsPanel.add(heart);
         }
+        heartsPanel.revalidate();
+        heartsPanel.repaint();
     }
 
     /** Called after each move from a BoardPanel. */
     private void handleMoveMade() {
-        // Game already updated score/lives/status inside Board/Game
-        if (game.getGameState() == GameState.RUNNING) {
-            game.switchTurn();       // switch to the other player
+        if (controller.isGameRunning()) {
+            controller.switchTurn();
         }
         updateStatus();
         updateTurnUI();
@@ -237,12 +241,12 @@ public class GamePanel extends JPanel {
 
     /** Refresh SCORE, LIVES, MINES LEFT, HEARTS. */
     public void updateStatus() {
-        lblMinesLeft1.setText("MINES LEFT: " + computeMinesLeft(game.getBoard1()));
-        lblMinesLeft2.setText("MINES LEFT: " + computeMinesLeft(game.getBoard2()));
+        lblMinesLeft1.setText("MINES LEFT: " + controller.getMinesLeft(1));
+        lblMinesLeft2.setText("MINES LEFT: " + controller.getMinesLeft(2));
 
-        lblScore.setText("SCORE: " + game.getSharedScore());
-        lblLives.setText("LIVES: " + game.getSharedLives() + "/" +
-                game.getDifficulty().getStartingLives());
+        lblScore.setText("SCORE: " + controller.getSharedScore());
+        lblLives.setText("LIVES: " + controller.getSharedLives() + "/" +
+                controller.getStartingLives());
 
         updateHearts();
         revalidate();
@@ -251,35 +255,14 @@ public class GamePanel extends JPanel {
 
     /** Show “WAIT FOR YOUR TURN” on the board that is not active. */
     private void updateTurnUI() {
-        int current = game.getCurrentPlayerTurn();  // 1 or 2
+        int current = controller.getCurrentPlayerTurn();  // 1 or 2
         boardPanel1.setWaiting(current != 1);
         boardPanel2.setWaiting(current != 2);
     }
 
-    private int computeMinesLeft(Board board) {
-        int total = board.getTotalMines();
-        int foundMines = 0;
-
-        for (int r = 0; r < board.getRows(); r++) {
-            for (int c = 0; c < board.getCols(); c++) {
-                Cell cell = board.getCell(r, c);
-                if (cell == null) continue;
-
-                // Mine that is already revealed OR correctly flagged
-                if (cell.isMine() && (cell.isRevealed() || cell.isFlagged())) {
-                    foundMines++;
-                }
-            }
-        }
-
-        int remaining = total - foundMines;
-        return Math.max(remaining, 0);
-    }
-
-
     private void updateHearts() {
-        int lives = game.getSharedLives();
-        int max = game.getDifficulty().getStartingLives();
+        int lives = controller.getSharedLives();
+        int max = controller.getStartingLives();
 
         for (int i = 0; i < max && i < heartLabels.size(); i++) {
             JLabel heart = heartLabels.get(i);

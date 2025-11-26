@@ -1,14 +1,15 @@
 package View;
 
-import Model.Difficulty;
-
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * Start screen: gets player names and difficulty from the user.
+ */
 public class StartPanel extends JPanel {
 
     public interface StartGameListener {
-        void onStartGame(String player1Name, String player2Name, Difficulty difficulty);
+        void onStartGame(String player1Name, String player2Name, String difficultyKey);
     }
 
     private final StartGameListener listener;
@@ -44,7 +45,6 @@ public class StartPanel extends JPanel {
         gbc.gridwidth = 2;
         add(title, gbc);
 
-        // Reset width for next elements
         gbc.gridwidth = 1;
 
         // ================= Names Row =================
@@ -103,7 +103,6 @@ public class StartPanel extends JPanel {
         gbc.gridy = 4;
         add(btnStart, gbc);
 
-        // Start action
         btnStart.addActionListener(e -> handleStart());
     }
 
@@ -114,10 +113,10 @@ public class StartPanel extends JPanel {
         if (p1.isEmpty()) p1 = "Player 1";
         if (p2.isEmpty()) p2 = "Player 2";
 
-        Difficulty difficulty = Difficulty.EASY;
-        if (rbMedium.isSelected()) difficulty = Difficulty.MEDIUM;
-        else if (rbHard.isSelected()) difficulty = Difficulty.HARD;
+        String difficultyKey = "EASY";
+        if (rbMedium.isSelected()) difficultyKey = "MEDIUM";
+        else if (rbHard.isSelected()) difficultyKey = "HARD";
 
-        listener.onStartGame(p1, p2, difficulty);
+        listener.onStartGame(p1, p2, difficultyKey);
     }
 }

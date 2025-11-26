@@ -1,12 +1,14 @@
 package View;
 
 import Controller.GameController;
-import Model.Difficulty;
-import Model.Game;
 
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * Main application frame – switches between StartPanel and GamePanel.
+ * מדברת עם המודל רק דרך GameController.
+ */
 public class MainFrame extends JFrame implements StartPanel.StartGameListener {
 
     private final GameController controller;
@@ -23,14 +25,12 @@ public class MainFrame extends JFrame implements StartPanel.StartGameListener {
         this.cardLayout = new CardLayout();
         this.cardPanel = new JPanel(cardLayout);
 
-        // ----- create screens -----
-        startPanel = new StartPanel(this); // this implements StartGameListener
-
+        // create screens
+        startPanel = new StartPanel(this);
         cardPanel.add(startPanel, "START");
 
         setContentPane(cardPanel);
 
-        // ----- frame settings -----
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(900, 700);
         setLocationRelativeTo(null);
@@ -41,11 +41,10 @@ public class MainFrame extends JFrame implements StartPanel.StartGameListener {
      * Called by StartPanel when the user clicks "Start Game".
      */
     @Override
-    public void onStartGame(String player1Name, String player2Name, Difficulty difficulty) {
-        controller.startNewGame(difficulty);
-        Game game = controller.getCurrentGame();
+    public void onStartGame(String player1Name, String player2Name, String difficultyKey) {
+        controller.startNewGame(difficultyKey);
 
-        gamePanel = new GamePanel(controller, game, player1Name, player2Name);
+        gamePanel = new GamePanel(controller, player1Name, player2Name);
         cardPanel.add(gamePanel, "GAME");
         cardLayout.show(cardPanel, "GAME");
     }
