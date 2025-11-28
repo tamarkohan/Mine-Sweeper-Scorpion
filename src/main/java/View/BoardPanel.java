@@ -4,6 +4,8 @@ import Controller.GameController;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter; // NEW
+import java.awt.event.MouseEvent;   // NEW
 
 /**
  * Shows a single board (for one player).
@@ -53,7 +55,19 @@ public class BoardPanel extends JPanel {
                 btn.setFocusable(false);
                 btn.setPreferredSize(new Dimension(25, 25));
 
-                btn.addActionListener(e -> handleClick(rr, cc));
+                // 1. ActionListener for standard LEFT-CLICK (Reveal)
+                btn.addActionListener(e -> handleClick(rr, cc, false)); // false = isFlagging
+
+                // 2. MouseListener for RIGHT-CLICK (Flagging)
+                btn.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        // Check for right-click (usually BUTTON3)
+                        if (SwingUtilities.isRightMouseButton(e)) {
+                            handleClick(rr, cc, true); // true = isFlagging
+                        }
+                    }
+                });
 
                 buttons[r][c] = btn;
                 gridPanel.add(btn);
@@ -77,7 +91,10 @@ public class BoardPanel extends JPanel {
         refresh();
     }
 
-    private void handleClick(int r, int c) {
+    /**
+     * Handles both revealing (isFlagging=false) and flagging (isFlagging=true).
+     */
+    private void handleClick(int r, int c, boolean isFlagging) {
         if (!controller.isGameRunning()) return;
 
         // Not this board's turn?
@@ -86,11 +103,18 @@ public class BoardPanel extends JPanel {
         // Also ignore if this panel is marked as waiting
         if (waiting) return;
 
-        controller.revealCellUI(boardNumber, r, c);
+        if (isFlagging) {
+            // Right-click: Toggle flag state (Model/Controller action)
+            controller.toggleFlagUI(boardNumber, r, c);
+        } else {
+            // Left-click: Reveal cell (Model/Controller action)
+            controller.revealCellUI(boardNumber, r, c);
+        }
 
         refresh();
 
         if (moveCallback != null) {
+            // Both revealing and flagging count as a move, triggering turn switch
             moveCallback.run();
         }
     }

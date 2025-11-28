@@ -122,7 +122,6 @@ public class GameController {
 
     /**
      * Computes remaining mines on a board, based on revealed/flagged correct mines.
-     * This is the logic that was in GamePanel.computeMinesLeft – עכשיו זה בקונטרולר.
      */
     public int getMinesLeft(int boardNumber) {
         Board b = getBoard(boardNumber);
@@ -153,10 +152,9 @@ public class GameController {
     /**
      * Used by the UI to reveal a cell following MVC (View -> Controller -> Model).
      * This delegates to Board.revealCell, which contains the game logic.
-     * It does NOT change the existing Game/Board/Cell logic.
      */
     public boolean revealCellUI(int boardNumber, int row, int col) {
-        if (currentGame == null) return false;
+        if (currentGame == null || !isGameRunning()) return false;
 
         Board board = getBoard(boardNumber);
         if (board == null) return false;
@@ -168,6 +166,25 @@ public class GameController {
         board.revealCell(row, col);
         return true;
     }
+
+    /**
+     * 🔥 NEW: Used by the UI (right-click) to toggle the flag state of a cell.
+     * This delegates to Board.toggleFlag, which contains the game logic and scoring.
+     */
+    public void toggleFlagUI(int boardNumber, int row, int col) {
+        if (currentGame == null || !isGameRunning()) return;
+
+        Board board = getBoard(boardNumber);
+        if (board == null) return;
+
+        if (row < 0 || row >= board.getRows() || col < 0 || col >= board.getCols()) {
+            return;
+        }
+
+        // Call the Model's logic method to toggle the flag, update score, etc.
+        board.toggleFlag(row, col);
+    }
+
 
     /**
      * Returns display data for a single cell.
@@ -283,11 +300,7 @@ public class GameController {
 
             // Trigger the special effect via Game class
             currentGame.activateSpecialCell(cell.getContent(), cell.getQuestionId());
-            return true;
         }
 
-        // For other cell types (EMPTY, MINE, NUMBER), reveal normally
-        cell.setState(Cell.CellState.REVEALED);
-        return true;
-    }
-}
+    return false;
+}}

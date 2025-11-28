@@ -16,7 +16,7 @@ public class Board {
     private final Cell[][] cells;
     private final Game game;
 
-    // NEW: Counter to track how many safe cells are left to reveal
+    // Counter to track how many safe cells are left to reveal
     private int safeCellsRemaining;
 
     public Board(Difficulty difficulty, Game game) {
@@ -103,11 +103,14 @@ public class Board {
 
         cell.reveal();
 
-        // NEW: If we revealed a safe cell, decrement the counter
+        // 1. Scoring and Safe Cell Tracking
         if (!cell.isMine()) {
             safeCellsRemaining--;
+            // CORRECTION: Grant +1 point for revealing any safe cell (Empty, Number, Q, S)
+            game.setSharedScore(game.getSharedScore() + 1);
         }
 
+        // 2. Content Handling
         switch (cell.getContent()) {
             case MINE:
                 // SRS 2.1: Mine -> -1 life
@@ -121,9 +124,8 @@ public class Board {
 
             case QUESTION:
             case SURPRISE:
-                // SRS Appendix A: Deduct activation cost
-                int cost = game.getDifficulty().getActivationCost();
-                game.setSharedScore(game.getSharedScore() - cost);
+                // CORRECTION: Removed premature score deduction. Delegate activation cost deduction to Game.
+                game.activateSpecialCell(cell.getContent(), cell.getQuestionId());
                 break;
 
             case NUMBER:
@@ -136,66 +138,133 @@ public class Board {
 
 
     private void autoRevealEmptyCells ( int r, int c){
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    int nr = r + i;
-                    int nc = c + j;
-                    if (isValid(nr, nc)) {
-                        Cell neighbor = cells[nr][nc];
-                        if (!neighbor.isRevealed() && !neighbor.isFlagged() && !neighbor.isMine()) {
-                            // Recursion flows back through revealCell to update safeCellsRemaining
-                            revealCell(nr, nc);
-                        }
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                int nr = r + i;
+                int nc = c + j;
+                if (isValid(nr, nc)) {
+                    Cell neighbor = cells[nr][nc];
+                    if (!neighbor.isRevealed() && !neighbor.isFlagged() && !neighbor.isMine()) {
+                        // Recursion flows back through revealCell to update state, score, and safeCellsRemaining
+                        revealCell(nr, nc);
                     }
                 }
             }
         }
+    }
 
-        public void toggleFlag ( int r, int c){
-            if (!isValid(r, c) || game.getGameState() != GameState.RUNNING) return;
+    /**
+     * Toggles flag state and applies points based on rule.
+     * SRS 3.1.1: Mine +1pt, Non-Mine -3pts.
+     */
+    public void toggleFlag ( int r, int c){
+        if (!isValid(r, c) || game.getGameState() != GameState.RUNNING) return;
 
+        Cell cell = cells[r][c];
+        boolean isNowFlagged = cell.toggleFlag();
+
+        if (isNowFlagged) {
+            if (cell.isMine()) {
+                // CORRECTED: Use Difficulty value (+1pt)
+                game.setSharedScore(game.getSharedScore() + game.getDifficulty().getMineFlagReward());
+            } else {
+                // CORRECTED: Use Difficulty value (-3pts)
+                game.setSharedScore(game.getSharedScore() + game.getDifficulty().getNonMineFlagPenalty());
+            }
+        }
+    }
+
+    /**
+     * Implements "Reveal Mine" reward (Easy/Medium, Correct).
+     * Reveals a single, random, unrevealed, unflagged mine.
+     */
+    public void revealRandomMine() {
+        Random rand = new Random();
+        int attempts = rows * cols * 2; // Limit attempts to prevent infinite loop
+
+        while (attempts > 0) {
+            int r = rand.nextInt(rows);
+            int c = rand.nextInt(cols);
             Cell cell = cells[r][c];
-            boolean isNowFlagged = cell.toggleFlag();
-            int points = 10; // Standard points for flagging (can be moved to Difficulty later)
 
-            if (isNowFlagged) {
-                if (cell.isMine()) {
-                    game.setSharedScore(game.getSharedScore() + points);
-                } else {
-                    game.setSharedScore(game.getSharedScore() - points);
+            if (cell.isMine() && !cell.isRevealed() && !cell.isFlagged()) {
+                cell.reveal();
+                System.out.println("Reward: A mine at (" + r + "," + c + ") was safely revealed.");
+                // Note: The rule states "חשיפת משבצת מוקש" (Mine cell reveal) as the reward.
+                // The footnote states no score for automatic mine reveal.
+                return;
+            }
+            attempts--;
+        }
+        System.out.println("Reward: Could not find an unrevealed mine to show.");
+    }
+
+    /**
+     * Implements "Show 3x3 random cells" reward (Easy/Hard, Correct).
+     */
+    public void revealRandom3x3Area() {
+        Random rand = new Random();
+        int r = rand.nextInt(rows - 2); // Ensure 3x3 area fits
+        int c = rand.nextInt(cols - 2);
+
+        System.out.println("Reward: Revealing 3x3 area starting at (" + r + "," + c + ")");
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                // Use revealCell to correctly update state, score, and safeCellsRemaining,
+                // and handle any mines found in the area.
+                revealCell(r + i, c + j);
+            }
+        }
+    }
+
+    private boolean isValid ( int r, int c){
+        return r >= 0 && r < rows && c >= 0 && c < cols;
+    }
+    public boolean isSolved() {
+        // A board is solved when all non-mine cells have been revealed.
+        // This state is tracked by the safeCellsRemaining counter.
+        return safeCellsRemaining == 0;
+    }
+    public void revealAll() {
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                Cell cell = cells[r][c];
+                // Only set to REVEALED if it hasn't been revealed yet.
+                if (cell.getState() != Cell.CellState.REVEALED) {
+                    cell.setState(Cell.CellState.REVEALED);
+                    // Note: We don't call revealCell() here to avoid triggering score/life changes
+                    // or recursive reveals during the final state update.
                 }
             }
         }
-
-        private boolean isValid ( int r, int c){
-            return r >= 0 && r < rows && c >= 0 && c < cols;
-        }
-
-        // NEW: Getter used by Game to check win condition
-        public int getSafeCellsRemaining () {
-            return safeCellsRemaining;
-        }
-
-        public int getRows () {
-            return rows;
-        }
-        public int getCols () {
-            return cols;
-        }
-        public int getTotalMines () {
-            return totalMines;
-        }
-        public int getTotalQuestionCells () {
-            return totalQuestionCells;
-        }
-        public int getTotalSurpriseCells () {
-            return totalSurpriseCells;
-        }
-        public Cell[][] getCells () {
-            return cells;
-        }
-        public Cell getCell ( int row, int col){
-            if (isValid(row, col)) return cells[row][col];
-            return null;
-        }
     }
+    // --- Getters ---
+
+    public int getSafeCellsRemaining () {
+        return safeCellsRemaining;
+    }
+
+    public int getRows () {
+        return rows;
+    }
+    public int getCols () {
+        return cols;
+    }
+    public int getTotalMines () {
+        return totalMines;
+    }
+    public int getTotalQuestionCells () {
+        return totalQuestionCells;
+    }
+    public int getTotalSurpriseCells () {
+        return totalSurpriseCells;
+    }
+    public Cell[][] getCells () {
+        return cells;
+    }
+    public Cell getCell ( int row, int col){
+        if (isValid(row, col)) return cells[row][col];
+        return null;
+    }
+}
