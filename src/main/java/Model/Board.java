@@ -43,23 +43,76 @@ public class Board {
         placeMinesAndSpecialCells();
     }
 
+    /**
+     * USER STORY 1 - RANDOM PLACEMENT:
+     * Randomly places mines, question cells, and surprise cells on the board,
+     * then calculates number cells based on adjacent mine counts.
+     * 
+     * The placement ensures fair and balanced distribution:
+     * - Mines are placed first
+     * - Question cells are placed second
+     * - Surprise cells are placed third
+     * - Number cells are calculated last based on adjacent mines
+     * 
+     * The algorithm uses random placement with collision detection to ensure
+     * each cell type is placed in a unique, empty cell.
+     */
     private void placeMinesAndSpecialCells() {
+        int totalCells = rows * cols;
+        int totalSpecialCells = totalMines + totalQuestionCells + totalSurpriseCells;
+        
+        // Validation: Ensure we don't try to place more cells than available spaces
+        if (totalSpecialCells > totalCells) {
+            throw new IllegalStateException(
+                String.format("Cannot place %d special cells on a %dx%d board (%d cells). " +
+                    "Total special cells: %d (mines: %d, questions: %d, surprises: %d)",
+                    totalSpecialCells, rows, cols, totalCells,
+                    totalSpecialCells, totalMines, totalQuestionCells, totalSurpriseCells));
+        }
+        
         placeContent(totalMines, Cell.CellContent.MINE);
         placeContent(totalQuestionCells, Cell.CellContent.QUESTION);
         placeContent(totalSurpriseCells, Cell.CellContent.SURPRISE);
         calculateNumbers();
     }
 
+    /**
+     * USER STORY 1 - RANDOM PLACEMENT:
+     * Randomly places a specified number of cells of a given type on the board.
+     * Uses a random placement algorithm with collision detection to ensure
+     * each cell is placed in a unique, empty location.
+     * 
+     * @param count The number of cells of the specified type to place
+     * @param type The type of cell content to place (MINE, QUESTION, or SURPRISE)
+     * @throws IllegalStateException if it's impossible to place the requested number
+     *         of cells (e.g., not enough empty spaces remaining)
+     */
     private void placeContent(int count, Cell.CellContent type) {
+        if (count <= 0) {
+            return; // Nothing to place
+        }
+        
         Random random = new Random();
         int placed = 0;
-        while (placed < count) {
+        int maxAttempts = rows * cols * 10; // Prevent infinite loops
+        int attempts = 0;
+        
+        while (placed < count && attempts < maxAttempts) {
             int r = random.nextInt(rows);
             int c = random.nextInt(cols);
             if (cells[r][c].getContent() == Cell.CellContent.EMPTY) {
                 cells[r][c].setContent(type);
                 placed++;
             }
+            attempts++;
+        }
+        
+        // Validation: Ensure we placed all requested cells
+        if (placed < count) {
+            throw new IllegalStateException(
+                String.format("Failed to place %d %s cells. Only placed %d. " +
+                    "Board may be too full or configuration is invalid.",
+                    count, type, placed));
         }
     }
 
@@ -124,7 +177,15 @@ public class Board {
 
             case QUESTION:
             case SURPRISE:
-                // CORRECTION: Removed premature score deduction. Delegate activation cost deduction to Game.
+                // USER STORY 2: Check if cell is already used
+                if (cell.isUsed()) {
+                    // Cell was already used - skip special effect
+                    // Just reveal it without triggering the effect again
+                    break;
+                }
+                // Mark cell as used before activating
+                cell.setUsed(true);
+                // Delegate activation cost deduction to Game
                 game.activateSpecialCell(cell.getContent(), cell.getQuestionId());
                 break;
 
