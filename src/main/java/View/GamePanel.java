@@ -231,13 +231,58 @@ public class GamePanel extends JPanel {
     }
 
     /** Called after each move from a BoardPanel. */
+    /** Called after each move from a BoardPanel. */
+    /** Called after each move from a BoardPanel. */
     private void handleMoveMade() {
+        // First update score / lives / mines counters
+        updateStatus();
+
+        // If the game has ended (win or loss) after this move:
+        if (controller.isGameOver()) {
+            // Model already did board1.revealAll() and board2.revealAll()
+            // → we must refresh BOTH panels so the UI shows all revealed cells
+            boardPanel1.refresh();
+            boardPanel2.refresh();
+
+            // Update turn UI so it doesn't look like players can still play
+            updateTurnUI();
+
+            // Show final dialog to players
+            showGameOverDialog();
+            return;  // Do not switch turn after the game ended
+        }
+
+        // If the game is still running – switch turn to the other player
         if (controller.isGameRunning()) {
             controller.switchTurn();
         }
-        updateStatus();
         updateTurnUI();
     }
+
+
+    /** מציג הודעה בסיום המשחק – ניצחון או הפסד. */
+    private void showGameOverDialog() {
+        String title;
+        String message;
+
+        // אם אין יותר לבבות – הפסד
+        if (controller.getSharedLives() <= 0) {
+            title = "Game Over";
+            message = "All lives are gone.\nFinal score: " + controller.getSharedScore();
+        } else {
+            // אחרת – הנחנו שכל הלוחות נפתרו -> ניצחון
+            title = "Victory!";
+            message = "All safe cells are revealed!\nFinal score: " + controller.getSharedScore();
+        }
+
+        JOptionPane.showMessageDialog(
+                this,
+                message,
+                title,
+                JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+
 
     /** Refresh SCORE, LIVES, MINES LEFT, HEARTS. */
     public void updateStatus() {

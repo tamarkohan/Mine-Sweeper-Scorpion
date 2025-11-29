@@ -70,7 +70,7 @@ public class Game {
 
             System.out.println("Final Life Bonus: " + sharedLives + " lives * " + lifeValue + " pts = +" + lifeBonus + " points.");
 
-            // 2. Auto-reveal all cells (Requires Board.revealAll() implemented in Board class)
+            // 2. Auto-reveal all cells
             if (board1 != null) board1.revealAll();
             if (board2 != null) board2.revealAll();
 

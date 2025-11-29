@@ -23,7 +23,6 @@ public class Cell {
         this.questionId = null;
     }
 
-    // --- CRITICAL FIXES: Getters and Setters needed by Board.java ---
 
     // REQUIRED by Board.placeContent, Board.calculateNumbers, GameStartTest.findCellWithContent
     public CellContent getContent() {
@@ -42,9 +41,8 @@ public class Cell {
 
     public int getRow() { return row; }
     public int getCol() { return col; }
-    // ... (other getters/setters for state, used, questionId)
 
-    // --- HELPER METHODS FOR LOGIC (From your provided snippet) ---
+    // --- HELPER METHODS FOR LOGIC  ---
 
 
     public boolean isRevealed() {

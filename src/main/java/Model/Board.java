@@ -43,76 +43,23 @@ public class Board {
         placeMinesAndSpecialCells();
     }
 
-    /**
-     * USER STORY 1 - RANDOM PLACEMENT:
-     * Randomly places mines, question cells, and surprise cells on the board,
-     * then calculates number cells based on adjacent mine counts.
-     * 
-     * The placement ensures fair and balanced distribution:
-     * - Mines are placed first
-     * - Question cells are placed second
-     * - Surprise cells are placed third
-     * - Number cells are calculated last based on adjacent mines
-     * 
-     * The algorithm uses random placement with collision detection to ensure
-     * each cell type is placed in a unique, empty cell.
-     */
     private void placeMinesAndSpecialCells() {
-        int totalCells = rows * cols;
-        int totalSpecialCells = totalMines + totalQuestionCells + totalSurpriseCells;
-        
-        // Validation: Ensure we don't try to place more cells than available spaces
-        if (totalSpecialCells > totalCells) {
-            throw new IllegalStateException(
-                String.format("Cannot place %d special cells on a %dx%d board (%d cells). " +
-                    "Total special cells: %d (mines: %d, questions: %d, surprises: %d)",
-                    totalSpecialCells, rows, cols, totalCells,
-                    totalSpecialCells, totalMines, totalQuestionCells, totalSurpriseCells));
-        }
-        
         placeContent(totalMines, Cell.CellContent.MINE);
         placeContent(totalQuestionCells, Cell.CellContent.QUESTION);
         placeContent(totalSurpriseCells, Cell.CellContent.SURPRISE);
         calculateNumbers();
     }
 
-    /**
-     * USER STORY 1 - RANDOM PLACEMENT:
-     * Randomly places a specified number of cells of a given type on the board.
-     * Uses a random placement algorithm with collision detection to ensure
-     * each cell is placed in a unique, empty location.
-     * 
-     * @param count The number of cells of the specified type to place
-     * @param type The type of cell content to place (MINE, QUESTION, or SURPRISE)
-     * @throws IllegalStateException if it's impossible to place the requested number
-     *         of cells (e.g., not enough empty spaces remaining)
-     */
     private void placeContent(int count, Cell.CellContent type) {
-        if (count <= 0) {
-            return; // Nothing to place
-        }
-        
         Random random = new Random();
         int placed = 0;
-        int maxAttempts = rows * cols * 10; // Prevent infinite loops
-        int attempts = 0;
-        
-        while (placed < count && attempts < maxAttempts) {
+        while (placed < count) {
             int r = random.nextInt(rows);
             int c = random.nextInt(cols);
             if (cells[r][c].getContent() == Cell.CellContent.EMPTY) {
                 cells[r][c].setContent(type);
                 placed++;
             }
-            attempts++;
-        }
-        
-        // Validation: Ensure we placed all requested cells
-        if (placed < count) {
-            throw new IllegalStateException(
-                String.format("Failed to place %d %s cells. Only placed %d. " +
-                    "Board may be too full or configuration is invalid.",
-                    count, type, placed));
         }
     }
 
@@ -159,34 +106,23 @@ public class Board {
         // 1. Scoring and Safe Cell Tracking
         if (!cell.isMine()) {
             safeCellsRemaining--;
-            // CORRECTION: Grant +1 point for revealing any safe cell (Empty, Number, Q, S)
             game.setSharedScore(game.getSharedScore() + 1);
         }
 
         // 2. Content Handling
         switch (cell.getContent()) {
             case MINE:
-                // SRS 2.1: Mine -> -1 life
                 game.setSharedLives(game.getSharedLives() - 1);
                 break;
 
             case EMPTY:
-                // SRS 3.2.1.2.10: Recursive reveal
                 autoRevealEmptyCells(r, c);
                 break;
 
             case QUESTION:
+                break;
+
             case SURPRISE:
-                // USER STORY 2: Check if cell is already used
-                if (cell.isUsed()) {
-                    // Cell was already used - skip special effect
-                    // Just reveal it without triggering the effect again
-                    break;
-                }
-                // Mark cell as used before activating
-                cell.setUsed(true);
-                // Delegate activation cost deduction to Game
-                game.activateSpecialCell(cell.getContent(), cell.getQuestionId());
                 break;
 
             case NUMBER:
@@ -196,6 +132,40 @@ public class Board {
         // After every move, check if we Won or Lost
         game.checkGameStatus();
     }
+
+    /**
+     * מפעיל משבצת QUESTION / SURPRISE לפי בחירת השחקן.
+     * מפעיל רק פעם אחת – אם USED כבר true לא עושה כלום.
+     */
+    public boolean activateSpecialCell(int r, int c) {
+        if (!isValid(r, c)) return false;
+
+        Cell cell = cells[r][c];
+
+        // חייבת להיות כבר משבצת שנחשפה
+        if (!cell.isRevealed()) {
+            return false;
+        }
+
+        // רק על שאלות והפתעות
+        if (cell.getContent() != Cell.CellContent.QUESTION &&
+                cell.getContent() != Cell.CellContent.SURPRISE) {
+            return false;
+        }
+
+        // אם כבר הופעל בעבר – לא מפעילים שוב
+        if (cell.isUsed()) {
+            return false;
+        }
+
+        // מסמנים כ-used ומפעילים לוגיקה במשחק
+        cell.setUsed(true);
+        game.activateSpecialCell(cell.getContent(), cell.getQuestionId());
+        return true;
+    }
+
+
+
 
 
     private void autoRevealEmptyCells ( int r, int c){
@@ -218,22 +188,22 @@ public class Board {
      * Toggles flag state and applies points based on rule.
      * SRS 3.1.1: Mine +1pt, Non-Mine -3pts.
      */
-    public void toggleFlag ( int r, int c){
+    public void toggleFlag(int r, int c) {
         if (!isValid(r, c) || game.getGameState() != GameState.RUNNING) return;
 
         Cell cell = cells[r][c];
-        boolean isNowFlagged = cell.toggleFlag();
+        cell.toggleFlag();  // רק משנה סטייט
 
-        if (isNowFlagged) {
+        // ניקוד רק אם עכשיו התא ב־FLAGGED
+        if (cell.getState() == Cell.CellState.FLAGGED) {
             if (cell.isMine()) {
-                // CORRECTED: Use Difficulty value (+1pt)
                 game.setSharedScore(game.getSharedScore() + game.getDifficulty().getMineFlagReward());
             } else {
-                // CORRECTED: Use Difficulty value (-3pts)
                 game.setSharedScore(game.getSharedScore() + game.getDifficulty().getNonMineFlagPenalty());
             }
         }
     }
+
 
     /**
      * Implements "Reveal Mine" reward (Easy/Medium, Correct).

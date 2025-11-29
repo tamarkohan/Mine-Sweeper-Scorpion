@@ -212,27 +212,49 @@ public class GameController {
             case FLAGGED:
                 return new CellViewData(true, "F");
 
-            case REVEALED:
-                // Revealed cells are disabled
+            case REVEALED: {
+                boolean enabled;
+                String text;
+
                 switch (cell.getContent()) {
                     case MINE:
-                        return new CellViewData(false, "M");
+                        text = "M";
+                        enabled = false; // מוקש נחשף – אי אפשר ללחוץ
+                        break;
+
                     case NUMBER:
-                        return new CellViewData(false,
-                                String.valueOf(cell.getAdjacentMines()));
+                        text = String.valueOf(cell.getAdjacentMines());
+                        enabled = false; // מספר – כמו מיניסוויפר רגיל
+                        break;
+
                     case QUESTION:
-                        return new CellViewData(false, "Q");
+                        text = "Q";
+                        // אפשר ללחוץ ולהפעיל *רק אם עדיין לא used*
+                        enabled = !cell.isUsed();
+                        break;
+
                     case SURPRISE:
-                        return new CellViewData(false, "S");
+                        text = "S";
+                        enabled = !cell.isUsed();
+                        break;
+
                     case EMPTY:
                     default:
-                        return new CellViewData(false, "");
+                        text = "";
+                        enabled = false;
+                        break;
                 }
+
+                return new CellViewData(enabled, text);
+            }
 
             default:
                 return new CellViewData(true, "");
         }
     }
+
+
+
 
     /**
      * Small DTO for what the View needs for each cell.
@@ -267,40 +289,32 @@ public class GameController {
      * @param col the column index of the cell
      * @return true if the cell was successfully revealed/activated, false otherwise
      */
-    public boolean revealCell(int boardNumber, int row, int col) {
-        if (currentGame == null) {
-            return false;
-        }
 
-        Board board = (boardNumber == 1) ? currentGame.getBoard1() : currentGame.getBoard2();
-        if (board == null || row < 0 || row >= board.getRows() || col < 0 || col >= board.getCols()) {
-            return false;
-        }
-
+    public boolean activateSpecialCellUI(int boardNumber, int row, int col) {
+        if (currentGame == null || !isGameRunning()) return false;
+        Board board = getBoard(boardNumber);
+        if (board == null) return false;
+        return board.activateSpecialCell(row, col);
+    }
+    public boolean isQuestionOrSurprise(int boardNumber, int row, int col) {
+        Board board = getBoard(boardNumber);
+        if (board == null) return false;
         Cell cell = board.getCell(row, col);
-        if (cell == null || cell.getState() == Cell.CellState.REVEALED) {
-            return false;
-        }
+        if (cell == null) return false;
 
-        // Handle question and surprise cells
-        if (cell.getContent() == Cell.CellContent.QUESTION ||
-                cell.getContent() == Cell.CellContent.SURPRISE) {
+        Cell.CellContent content = cell.getContent();
+        return content == Cell.CellContent.QUESTION ||
+                content == Cell.CellContent.SURPRISE;
+    }
+    public boolean isCellRevealed(int boardNumber, int row, int col) {
+        Board board = getBoard(boardNumber);
+        if (board == null) return false;
+        Cell cell = board.getCell(row, col);
+        if (cell == null) return false;
+        return cell.isRevealed();
+    }
 
-            // Check if cell is already used
-            if (cell.isUsed()) {
-                // Cell was already used, skip the special effect
-                // Just reveal it (change state to REVEALED) without triggering effect
-                cell.setState(Cell.CellState.REVEALED);
-                return true;
-            }
 
-            // Cell is not used yet - activate it for the first time
-            cell.setUsed(true);
-            cell.setState(Cell.CellState.REVEALED);
+}
 
-            // Trigger the special effect via Game class
-            currentGame.activateSpecialCell(cell.getContent(), cell.getQuestionId());
-        }
 
-    return false;
-}}

@@ -96,28 +96,50 @@ public class BoardPanel extends JPanel {
      */
     private void handleClick(int r, int c, boolean isFlagging) {
         if (!controller.isGameRunning()) return;
-
-        // Not this board's turn?
         if (controller.getCurrentPlayerTurn() != boardNumber) return;
-
-        // Also ignore if this panel is marked as waiting
         if (waiting) return;
 
         if (isFlagging) {
-            // Right-click: Toggle flag state (Model/Controller action)
-            controller.toggleFlagUI(boardNumber, r, c);
+            // Right-click → דגלים רק על תאים סגורים
+            if (!controller.isCellRevealed(boardNumber, r, c)) {
+                controller.toggleFlagUI(boardNumber, r, c);
+            }
         } else {
-            // Left-click: Reveal cell (Model/Controller action)
-            controller.revealCellUI(boardNumber, r, c);
+            // LEFT CLICK
+
+            boolean wasRevealed = controller.isCellRevealed(boardNumber, r, c);
+
+            // 1) אם התא לא היה נחשף → קודם נחשוף אותו (כולל קסקדה אם צריך)
+            if (!wasRevealed) {
+                controller.revealCellUI(boardNumber, r, c);
+                // נרענן כדי שהשחקן יראה את ה-Q/S לפני החלון
+                refresh();
+            }
+
+            // 2) אם התא הוא QUESTION/SURPRISE → אפשר לשאול על הפעלה
+            if (controller.isQuestionOrSurprise(boardNumber, r, c)) {
+                int choice = JOptionPane.showConfirmDialog(
+                        this,
+                        "Activate this special cell?\n(cost according to difficulty)",
+                        "Special Cell",
+                        JOptionPane.YES_NO_OPTION
+                );
+
+                if (choice == JOptionPane.YES_OPTION) {
+                    controller.activateSpecialCellUI(boardNumber, r, c);
+                }
+            }
         }
 
+        // רענון סופי אחרי הפעלה/דגל/חשיפה
         refresh();
 
         if (moveCallback != null) {
-            // Both revealing and flagging count as a move, triggering turn switch
             moveCallback.run();
         }
     }
+
+
 
     /**
      * Called by GamePanel when the turn changes.
