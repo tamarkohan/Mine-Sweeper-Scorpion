@@ -67,16 +67,14 @@ public class UsedCellTest {
         
         // Reveal via Board.revealCell() - this should mark as used and trigger effect
         board.revealCell(0, 0);
-        
-        allPassed &= check("Question cell should be marked as used after first activation", 
-                questionCell.isUsed());
-        allPassed &= check("Cell should be REVEALED after activation", 
+
+        allPassed &= check("Question cell should NOT be marked as used after reveal only",
+                !questionCell.isUsed());
+        allPassed &= check("Cell should be REVEALED after revealCell()",
                 questionCell.getState() == Cell.CellState.REVEALED);
-        // Score calculation: +1 for revealing safe cell, -activationCost for activating
-        // Net change: +1 - activationCost = -(activationCost - 1)
-        int expectedNetChange = 1 - activationCost;
-        allPassed &= check("Score should change by " + expectedNetChange + " (+1 reveal, -" + activationCost + " activation)", 
-                game.getSharedScore() == initialScore + expectedNetChange);
+        allPassed &= check("Score should change by +1 for safe reveal (no activation yet)",
+                game.getSharedScore() == initialScore + 1);
+
 
         // ----- Test 2: Second activation attempt (should skip effect) -----
         System.out.println("\nTest 2: Second activation attempt (should skip effect)");
@@ -89,41 +87,64 @@ public class UsedCellTest {
         // Try to reveal again - should skip effect since cell is already used
         // Note: Even though effect is skipped, revealing a safe cell still gives +1 point
         board.revealCell(0, 0);
-        
-        allPassed &= check("Question cell should still be marked as used", questionCell.isUsed());
-        // When cell is already used, special effect is skipped, but revealing still gives +1 point
-        // So score should increase by +1 (not by +1 - activationCost)
-        allPassed &= check("Score should increase by +1 only (effect skipped, no activation cost)", 
+
+        allPassed &= check("Question cell should still NOT be marked as used",
+                !questionCell.isUsed());
+        allPassed &= check("Score should increase by +1 for second reveal",
                 game.getSharedScore() == scoreBeforeSecondClick + 1);
+
         allPassed &= check("Cell should be REVEALED after second click", 
                 questionCell.getState() == Cell.CellState.REVEALED);
 
         // ----- Test 3: Surprise cell -----
         System.out.println("\nTest 3: Surprise cell usage via Board.revealCell()");
-        Cell surpriseCell = board.getCell(1, 1);
+
+// Find a guaranteed SAFE cell (not a mine)
+        Cell surpriseCell = null;
+        int sr = -1, sc = -1;
+
+        for (int r = 0; r < board.getRows(); r++) {
+            for (int c = 0; c < board.getCols(); c++) {
+                Cell candidate = board.getCell(r, c);
+                if (!candidate.isMine()) {
+                    surpriseCell = candidate;
+                    sr = r;
+                    sc = c;
+                    break;
+                }
+            }
+            if (surpriseCell != null) break;
+        }
+
+// Safety check (should never fail in normal game)
+        if (surpriseCell == null) {
+            System.out.println("[FAIL] Could not find a safe cell for surprise test");
+            return false;
+        }
+
+// Turn that safe cell into a SURPRISE
         surpriseCell.setContent(Cell.CellContent.SURPRISE);
         surpriseCell.setState(Cell.CellState.HIDDEN);
         surpriseCell.setUsed(false);
-        
+
         int scoreBeforeSurprise = game.getSharedScore();
-        
-        // First activation
-        board.revealCell(1, 1);
-        allPassed &= check("First surprise cell activation should mark as used", 
-                surpriseCell.isUsed());
-        // Score calculation for surprise: +1 for revealing, -activationCost, then +/- surpriseValue
-        // The exact final score depends on whether it's a good or bad surprise (random)
-        // So we just check that the score changed (activation cost was deducted)
-        boolean scoreChanged = game.getSharedScore() != scoreBeforeSurprise;
-        allPassed &= check("Score should change after surprise activation (cost deducted + surprise effect)", 
-                scoreChanged);
-        
+
+// First reveal – should give +1
+        board.revealCell(sr, sc);
+        allPassed &= check("SURPRISE cell should NOT be marked as used on reveal only",
+                !surpriseCell.isUsed());
+        allPassed &= check("Score should increase by +1 for safe reveal",
+                game.getSharedScore() == scoreBeforeSurprise + 1);
+
+
+
         // Try to activate again
         surpriseCell.setState(Cell.CellState.HIDDEN);
         int scoreBeforeSecondSurprise = game.getSharedScore();
         board.revealCell(1, 1);
-        allPassed &= check("Second surprise activation should skip effect", 
-                surpriseCell.isUsed());
+        allPassed &= check("Second surprise reveal should NOT mark as used (no activation here)",
+                !surpriseCell.isUsed());
+
         // When cell is already used, special effect is skipped, but revealing still gives +1 point
         allPassed &= check("Score should increase by +1 only (effect skipped, no activation cost)", 
                 game.getSharedScore() == scoreBeforeSecondSurprise + 1);
@@ -174,15 +195,22 @@ public class UsedCellTest {
         // First activation via controller
         System.out.println("Test: First activation via GameController");
         allPassed &= check("Question cell should not be used initially", !questionCell.isUsed());
-        
+
         controller.revealCellUI(1, 0, 0);
-        allPassed &= check("Question cell should be marked as used after first activation", 
+        allPassed &= check("Question cell should NOT be used after reveal only",
+                !questionCell.isUsed());
+        allPassed &= check("Score should be +1 after reveal",
+                game.getSharedScore() == initialScore + 1);
+
+// Now activate
+        int scoreBeforeActivation = game.getSharedScore();
+        controller.activateSpecialCellUI(1, 0, 0);
+
+        allPassed &= check("Question cell should be marked as used after activation",
                 questionCell.isUsed());
-        // Score calculation: +1 for revealing safe cell, -activationCost for activating
-        // Net change: +1 - activationCost = -(activationCost - 1)
-        int expectedNetChange = 1 - activationCost;
-        allPassed &= check("Score should change by " + expectedNetChange + " (+1 reveal, -" + activationCost + " activation)", 
-                game.getSharedScore() == initialScore + expectedNetChange);
+        allPassed &= check("Score should decrease by activationCost on activation",
+                game.getSharedScore() == scoreBeforeActivation - activationCost);
+
 
         // Second activation attempt (cell is already revealed, so should be blocked)
         System.out.println("\nTest: Second activation attempt via GameController");
