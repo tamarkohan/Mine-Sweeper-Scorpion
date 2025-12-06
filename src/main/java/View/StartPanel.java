@@ -110,8 +110,13 @@ public class StartPanel extends JPanel {
         String p1 = txtPlayer1.getText().trim();
         String p2 = txtPlayer2.getText().trim();
 
-        if (p1.isEmpty()) p1 = "Player 1";
-        if (p2.isEmpty()) p2 = "Player 2";
+        if (p1.isEmpty() || p2.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Please enter a name for both players.",
+                    "Missing Names",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
         String difficultyKey = "EASY";
         if (rbMedium.isSelected()) difficultyKey = "MEDIUM";

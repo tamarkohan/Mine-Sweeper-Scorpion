@@ -41,8 +41,6 @@ public class Game {
 
     // --- Game Status & End Game Logic ---
 
-    // Inside Model/Game.java
-
     public void checkGameStatus() {
         if (gameState != GameState.RUNNING) return;
 
@@ -54,9 +52,8 @@ public class Game {
             return;
         }
 
-        // 2. Win Condition Check (All safe cells cleared on EITHER board)
-        // 🔥 CRITICAL CHANGE: Use OR (||) instead of AND (&&)
-        if (board1.getSafeCellsRemaining() == 0 || board2.getSafeCellsRemaining() == 0) {
+        // 2. Win Condition Check (All mines found on EITHER board)
+        if (board1.areAllMinesFound() || board2.areAllMinesFound()) {
             gameState = GameState.WON;
             endGameProcessing();
         }
@@ -103,47 +100,28 @@ public class Game {
 
     // --- Life Management (Restored and Corrected) ---
 
-    /**
-     * 🔥 RESTORED & CORRECTED: Setter for sharedLives.
-     * Used by external classes (like Board) that deduct or add lives.
-     */
     public void setSharedLives(int newLives) {
-        // 1. Apply Life Cap and Score Conversion
         if (newLives > MAX_LIVES) {
             int excess = newLives - MAX_LIVES;
             this.sharedLives = MAX_LIVES;
-            // Convert excess lives to score using the activation cost as a multiplier
             this.sharedScore += excess * difficulty.getActivationCost();
             System.out.println("Life cap reached! Converted " + excess + " excess lives to " + (excess * difficulty.getActivationCost()) + " points.");
         } else {
             this.sharedLives = newLives;
         }
-
-        // 2. Check Game Status (for Loss or Win)
         checkGameStatus();
     }
 
-    /**
-     * NEW: A method to add lives, enforcing the MAX_LIVES limit and conversion to score.
-     * Used internally by rewards/surprises.
-     * @param pointsValue The score to award if the life is capped.
-     */
     public void addLife(int pointsValue) {
         if (sharedLives < MAX_LIVES) {
             sharedLives++;
-            // Note: score for the action (e.g. correct answer) must be added separately.
         } else {
-            // Convert surplus life to the value associated with the action
             sharedScore += pointsValue;
             System.out.println("Life cap reached! Converted life gain to " + pointsValue + " points.");
         }
         checkGameStatus();
     }
 
-    /**
-     * NEW: A clean method to deduct lives, triggering the loss check.
-     * Used internally by penalties/surprises.
-     */
     public void deductLife(int lives) {
         this.sharedLives -= lives;
         checkGameStatus();
@@ -153,7 +131,6 @@ public class Game {
 
     public void setSharedScore(int sharedScore) {
         this.sharedScore = sharedScore;
-        // CRITICAL: Ensure every score change checks the win/loss state.
         checkGameStatus();
     }
 
@@ -170,16 +147,13 @@ public class Game {
 
         int cost = difficulty.getActivationCost();
 
-        // 1. Check Cost
         if (sharedScore < cost) {
-            System.out.println("Not enough points to activate special cell! (Cost: " + cost + ")");
+            this.lastActionMessage = "You need at least " + cost + " points to activate this " + cellContent.name().toLowerCase() + " cell.";
             return;
         }
 
-        // Deduct cost
         sharedScore -= cost;
 
-        // 2. Route Logic
         if (cellContent == Cell.CellContent.SURPRISE) {
             handleSurprise();
         } else if (cellContent == Cell.CellContent.QUESTION) {
@@ -187,28 +161,22 @@ public class Game {
         }
     }
 
-    // 🔥 MODIFIED METHOD 2: Store the message in the new field
     private void handleSurprise() {
         Random rand = new Random();
         boolean isGoodSurprise = rand.nextBoolean();
         int pointsValue = difficulty.getSurpriseValue();
 
+        String intro = "You've activated a Surprise cell! There's a 50/50 chance of a reward or a penalty. Let's see what you got...\n\n";
+
         if (isGoodSurprise) {
-            // Good Surprise: Gained points AND attempted 1 life.
             sharedScore += pointsValue;
-            addLife(pointsValue); // Add 1 life (handles cap using pointsValue for conversion)
-
-            // Replaced System.out.println with setting the message field
-            this.lastActionMessage = "You gained " + pointsValue + " points and attempted 1 Life!";
+            addLife(pointsValue);
+            this.lastActionMessage = intro + "A stroke of luck! You've been awarded " + pointsValue + " points and an extra life!";
         } else {
-            // Bad Surprise: Lost points AND lost 1 life.
             sharedScore -= pointsValue;
-            deductLife(1); // Lost 1 life (triggers loss check)
-
-            // Replaced System.out.println with setting the message field
-            this.lastActionMessage = "You lost " + pointsValue + " points and 1 Life.";
+            deductLife(1);
+            this.lastActionMessage = intro + "An unfortunate turn of events! You've lost " + pointsValue + " points and a life.";
         }
-        // Note: System.out.println is removed here, as the View will now show the message.
     }
 
     public void processQuestionAnswer(QuestionLevel qLevel, boolean isCorrect) {
@@ -216,7 +184,6 @@ public class Game {
 
         Random rand = new Random();
 
-        // --- EASY GAME DIFFICULTY ---
         if (difficulty == Difficulty.EASY) {
             if (isCorrect) {
                 switch (qLevel) {
@@ -233,10 +200,7 @@ public class Game {
                     case EXPERT: applyPenalties(15, 1); break;
                 }
             }
-        }
-
-        // --- MEDIUM GAME DIFFICULTY ---
-        else if (difficulty == Difficulty.MEDIUM) {
+        } else if (difficulty == Difficulty.MEDIUM) {
             if (isCorrect) {
                 switch (qLevel) {
                     case EASY:   addRewards(8, 1); break;
@@ -255,10 +219,7 @@ public class Game {
                         break;
                 }
             }
-        }
-
-        // --- HARD GAME DIFFICULTY ---
-        else if (difficulty == Difficulty.HARD) {
+        } else if (difficulty == Difficulty.HARD) {
             if (isCorrect) {
                 switch (qLevel) {
                     case EASY:   addRewards(10, 1); break;
@@ -278,14 +239,11 @@ public class Game {
                 }
             }
         }
-
-        // Final check just in case, though it's run by life changes.
         checkGameStatus();
     }
 
     private void addRewards(int points, int lives) {
         this.sharedScore += points;
-        // Use the dedicated life management method, passing the point reward value for cap conversion
         for (int i = 0; i < lives; i++) {
             addLife(points);
         }
@@ -294,7 +252,6 @@ public class Game {
 
     private void applyPenalties(int points, int lives) {
         this.sharedScore -= points;
-        // Use the dedicated life deduction method (triggers loss check)
         deductLife(lives);
         System.out.println("Incorrect! -" + points + " pts, -" + lives + " lives.");
     }
@@ -314,10 +271,9 @@ public class Game {
         currentPlayerTurn = (currentPlayerTurn == 1) ? 2 : 1;
     }
 
-    // 🔥 NEW ADDITION 3: Public method for Controller to retrieve and clear the message
     public String getAndClearLastActionMessage() {
         String message = this.lastActionMessage;
-        this.lastActionMessage = null; // Clear the message so it doesn't pop up again
+        this.lastActionMessage = null;
         return message;
     }
 
@@ -329,4 +285,5 @@ public class Game {
     public Difficulty getDifficulty() { return difficulty; }
     public int getSharedLives() { return sharedLives; }
     public int getSharedScore() { return sharedScore; }
+    public int getMaxLives() { return MAX_LIVES; }
 }

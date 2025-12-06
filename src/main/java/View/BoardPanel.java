@@ -10,7 +10,6 @@ import java.awt.event.MouseEvent;
 /**
  * Shows a single board (for one player).
  * לא מכיר בכלל את Board / Cell / Game – רק GameController.
- * 🔥 UPDATED: Grace period system - flagging doesn't immediately end turn.
  */
 public class BoardPanel extends JPanel {
 
@@ -21,11 +20,6 @@ public class BoardPanel extends JPanel {
     private JButton[][] buttons;
     private JLabel waitLabel;
     private boolean waiting;         // true = "WAIT FOR YOUR TURN"
-
-    // 🔥 NEW: Grace period tracking
-    private boolean inGracePeriod = false;  // True after flagging, before turn actually ends
-    private int gracePeriodFlagRow = -1;
-    private int gracePeriodFlagCol = -1;
 
     public BoardPanel(GameController controller,
                       int boardNumber,
@@ -97,103 +91,31 @@ public class BoardPanel extends JPanel {
     }
 
     /**
-     * Handles both revealing (isFlagging=false) and flagging (isFlagging=true).
-     * 🔥 KEY FIX: Flagging enters a "grace period" where you can immediately unflag.
+     * Main click handler. Routes to the correct logic based on click type.
      */
     private void handleClick(int r, int c, boolean isFlagging) {
-        if (!controller.isGameRunning()) return;
-
-        // 1. Check turn and alert if necessary
-        if (waiting) {
-            JOptionPane.showMessageDialog(this,
-                    "It is Player " + controller.getCurrentPlayerTurn() + "'s turn. Please wait.",
-                    "Not Your Turn",
-                    JOptionPane.WARNING_MESSAGE);
+        if (!controller.isGameRunning() || waiting) {
+            if (waiting) {
+                JOptionPane.showMessageDialog(this,
+                        "It is Player " + controller.getCurrentPlayerTurn() + "'s turn. Please wait.",
+                        "Not Your Turn",
+                        JOptionPane.WARNING_MESSAGE);
+            }
             return;
         }
 
-        // 2. Handle the action based on type
         if (isFlagging) {
-            boolean currentlyFlagged = controller.isCellFlagged(boardNumber, r, c);
-
-            if (currentlyFlagged) {
-                // User is trying to UNFLAG
-
-                // Check if we're in grace period and this is the flagged cell
-                if (inGracePeriod && gracePeriodFlagRow == r && gracePeriodFlagCol == c) {
-                    // ✅ GRACE PERIOD UNFLAG: Unflag and stay in turn
-                    controller.toggleFlagUI(boardNumber, r, c);
-                    refresh();
-
-                    // Exit grace period
-                    inGracePeriod = false;
-                    gracePeriodFlagRow = -1;
-                    gracePeriodFlagCol = -1;
-
-                    // Turn does NOT end - player can make another move
-                    return;
-                } else {
-                    // ❌ REGULAR UNFLAG: Unflag and end turn
-                    controller.toggleFlagUI(boardNumber, r, c);
-                    refresh();
-
-                    // Clear grace period
-                    inGracePeriod = false;
-                    gracePeriodFlagRow = -1;
-                    gracePeriodFlagCol = -1;
-
-                    // End turn
-                    if (moveCallback != null) {
-                        moveCallback.run();
-                    }
-                }
-            } else {
-                // User is FLAGGING a cell
-
-                // If we're already in grace period, that means they're flagging a DIFFERENT cell
-                // So we need to end the previous grace period and start a new one
-                if (inGracePeriod) {
-                    // End the previous grace period by ending the turn
-                    inGracePeriod = false;
-                    gracePeriodFlagRow = -1;
-                    gracePeriodFlagCol = -1;
-
-                    // Perform the new flag
-                    controller.toggleFlagUI(boardNumber, r, c);
-                    refresh();
-
-                    // End turn
-                    if (moveCallback != null) {
-                        moveCallback.run();
-                    }
-                } else {
-                    // Normal flag - enter grace period
-                    controller.toggleFlagUI(boardNumber, r, c);
-                    refresh();
-
-                    // Enter grace period (turn doesn't end YET)
-                    inGracePeriod = true;
-                    gracePeriodFlagRow = r;
-                    gracePeriodFlagCol = c;
-
-                    // 🔥 KEY CHANGE: DO NOT call moveCallback yet!
-                }
-            }
+            controller.toggleFlagUI(boardNumber, r, c);
         } else {
-            // REVEAL action
             controller.revealCellUI(boardNumber, r, c);
-            refresh();
-
-            // Clear grace period
-            inGracePeriod = false;
-            gracePeriodFlagRow = -1;
-            gracePeriodFlagCol = -1;
-
-            // End turn
-            if (moveCallback != null) {
-                moveCallback.run();
-            }
         }
+
+        // Any action ends the turn.
+        if (moveCallback != null) {
+            moveCallback.run();
+        }
+
+        refresh();
     }
 
     /**
@@ -203,13 +125,6 @@ public class BoardPanel extends JPanel {
         this.waiting = waiting;
         if (waitLabel != null) {
             waitLabel.setVisible(waiting);
-        }
-
-        // Clear grace period when becoming the active player
-        if (!waiting) {
-            inGracePeriod = false;
-            gracePeriodFlagRow = -1;
-            gracePeriodFlagCol = -1;
         }
     }
 
@@ -237,5 +152,7 @@ public class BoardPanel extends JPanel {
                 btn.setText(data.text);
             }
         }
+        revalidate();
+        repaint();
     }
 }

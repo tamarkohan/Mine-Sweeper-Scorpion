@@ -184,7 +184,8 @@ public class Board {
                 // No score reversal is implemented here, just the state change.
             }
         }
-        // No explicit return statement is needed now.
+        // After every move, check if we Won or Lost
+        game.checkGameStatus();
     }
 
     /**
@@ -260,6 +261,23 @@ public class Board {
         if (r < 0 || r >= rows || c < 0 || c >= cols) return false;
         // Assuming 'cells' is the array of Cell objects
         return cells[r][c].isFlagged();
+    }
+
+    /**
+     * Checks if all mines on the board have been found (revealed or flagged).
+     * @return true if all mines are found, false otherwise.
+     */
+    public boolean areAllMinesFound() {
+        int foundMines = 0;
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                Cell cell = cells[r][c];
+                if (cell.isMine() && (cell.isRevealed() || cell.isFlagged())) {
+                    foundMines++;
+                }
+            }
+        }
+        return foundMines == totalMines;
     }
 
     // --- Getters ---
