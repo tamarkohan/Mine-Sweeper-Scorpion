@@ -5,6 +5,7 @@ import Model.Cell;
 import Model.Difficulty;
 import Model.Game;
 import Model.GameState;
+import Model.QuestionManager;
 
 /**
  * Controller class between the UI (View) and the Game model.
@@ -13,13 +14,17 @@ import Model.GameState;
 public class GameController {
 
     private Game currentGame;
+    private QuestionManager questionManager;
 
     /**
      * Creates a new Game instance with the selected difficulty.
      * This is the main entry point for starting a cooperative game.
      */
     public void startNewGame(Difficulty difficulty) {
+        ensureQuestionManager();
         currentGame = new Game(difficulty);
+        currentGame.setQuestionManager(questionManager);
+        // Presenter is set by the View layer via registerQuestionPresenter
     }
 
     /**
@@ -52,6 +57,30 @@ public class GameController {
      */
     public Game getCurrentGame() {
         return currentGame;
+    }
+
+    /**
+     * Provides access to the shared QuestionManager, creating/loading if needed.
+     */
+    public QuestionManager getQuestionManager() {
+        ensureQuestionManager();
+        return questionManager;
+    }
+
+    private void ensureQuestionManager() {
+        if (questionManager == null) {
+            questionManager = new QuestionManager();
+            questionManager.loadQuestions();
+        }
+    }
+
+    /**
+     * Registers the UI question presenter (popup) to be invoked on QUESTION cells.
+     */
+    public void registerQuestionPresenter(Game.QuestionPresenter presenter) {
+        if (currentGame != null) {
+            currentGame.setQuestionPresenter(presenter);
+        }
     }
 
     // ======================================================

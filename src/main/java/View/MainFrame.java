@@ -25,6 +25,9 @@ public class MainFrame extends JFrame implements StartPanel.StartGameListener {
         this.cardLayout = new CardLayout();
         this.cardPanel = new JPanel(cardLayout);
 
+        // Admin/debug menu for question management
+        setJMenuBar(buildMenuBar());
+
         // create screens
         startPanel = new StartPanel(this);
         cardPanel.add(startPanel, "START");
@@ -47,6 +50,19 @@ public class MainFrame extends JFrame implements StartPanel.StartGameListener {
         gamePanel = new GamePanel(controller, player1Name, player2Name);
         cardPanel.add(gamePanel, "GAME");
         cardLayout.show(cardPanel, "GAME");
+    }
+
+    private JMenuBar buildMenuBar() {
+        JMenuBar bar = new JMenuBar();
+        JMenu admin = new JMenu("Admin");
+        JMenuItem manageQuestions = new JMenuItem("Question Management");
+        manageQuestions.addActionListener(e -> {
+            QuestionManagementFrame frame = new QuestionManagementFrame(controller.getQuestionManager());
+            frame.setVisible(true);
+        });
+        admin.add(manageQuestions);
+        bar.add(admin);
+        return bar;
     }
 
     public static void main(String[] args) {

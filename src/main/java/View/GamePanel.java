@@ -43,6 +43,10 @@ public class GamePanel extends JPanel {
         this.player1Name = player1Name;
         this.player2Name = player2Name;
 
+        // Register the question presenter so QUESTION cells will show a popup.
+        controller.registerQuestionPresenter(question ->
+                QuestionDialog.showQuestionDialog(SwingUtilities.getWindowAncestor(this), question));
+
         initComponents();
         updateStatus();
         updateTurnUI();
