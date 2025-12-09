@@ -329,6 +329,23 @@ public class GameController {
         return content == Cell.CellContent.QUESTION ||
                 content == Cell.CellContent.SURPRISE;
     }
+
+    public boolean isQuestionCell(int boardNumber, int row, int col) {
+        Board board = getBoard(boardNumber);
+        if (board == null) return false;
+        Cell cell = board.getCell(row, col);
+        if (cell == null) return false;
+        return cell.getContent() == Cell.CellContent.QUESTION;
+    }
+
+    public boolean isSurpriseCell(int boardNumber, int row, int col) {
+        Board board = getBoard(boardNumber);
+        if (board == null) return false;
+        Cell cell = board.getCell(row, col);
+        if (cell == null) return false;
+        return cell.getContent() == Cell.CellContent.SURPRISE;
+    }
+
     public boolean isCellRevealed(int boardNumber, int row, int col) {
         Board board = getBoard(boardNumber);
         if (board == null) return false;

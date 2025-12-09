@@ -75,5 +75,34 @@ public class Question {
         }
         return s;
     }
+    // inside Model.Question
+
+    public Game.QuestionLevel getQuestionLevel() {
+        // Map the CSV difficultyLevel string to the enum used in Game
+        String d = difficultyLevel == null ? "" : difficultyLevel.trim().toUpperCase();
+
+        switch (d) {
+            case "EASY":
+            case "1":
+                return Game.QuestionLevel.EASY;
+
+            case "MEDIUM":
+            case "2":
+                return Game.QuestionLevel.MEDIUM;
+
+            case "HARD":
+            case "3":
+                return Game.QuestionLevel.HARD;
+
+            case "EXPERT":
+            case "4":
+                return Game.QuestionLevel.EXPERT;
+
+            default:
+                // fallback – treat as medium if unknown
+                return Game.QuestionLevel.MEDIUM;
+        }
+    }
+
 }
 
