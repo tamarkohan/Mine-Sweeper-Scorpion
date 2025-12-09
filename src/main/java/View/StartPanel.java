@@ -126,14 +126,40 @@ public class StartPanel extends JPanel {
         String p1 = txtPlayer1.getText().trim();
         String p2 = txtPlayer2.getText().trim();
 
-        if (p1.isEmpty() || p2.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Please enter a name for both players.",
-                    "Missing Names",
-                    JOptionPane.WARNING_MESSAGE);
+        // אם שני השמות חסרים
+        if (p1.isEmpty() && p2.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please enter a name for Player 1 and Player 2.",
+                    "Missing Player Names",
+                    JOptionPane.WARNING_MESSAGE
+            );
             return;
         }
 
+        // אם חסר שם לשחקן 1
+        if (p1.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please enter a name for Player 1.",
+                    "Missing Player 1",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        // אם חסר שם לשחקן 2
+        if (p2.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please enter a name for Player 2.",
+                    "Missing Player 2",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        // בחירת רמת קושי
         String difficultyKey = "EASY";
         if (rbMedium.isSelected()) difficultyKey = "MEDIUM";
         else if (rbHard.isSelected()) difficultyKey = "HARD";
