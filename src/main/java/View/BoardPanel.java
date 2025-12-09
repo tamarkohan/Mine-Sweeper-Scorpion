@@ -15,8 +15,13 @@ public class BoardPanel extends JPanel {
 
     private final GameController controller;
     private final int boardNumber;   // 1 or 2
-    private final Runnable moveCallback;
+    public interface MoveCallback {
+        // endedTurn = true → a real reveal happened
+        // endedTurn = false → only flag/unflag
+        void onMove(boolean endedTurn);
+    }
 
+    private final MoveCallback moveCallback;
     private JButton[][] buttons;
     private JLabel waitLabel;
     private boolean waiting;         // true = this player is currently not allowed to play
@@ -24,7 +29,7 @@ public class BoardPanel extends JPanel {
     public BoardPanel(GameController controller,
                       int boardNumber,
                       boolean initiallyWaiting,
-                      Runnable moveCallback) {
+                      MoveCallback  moveCallback) {
         this.controller = controller;
         this.boardNumber = boardNumber;
         this.waiting = initiallyWaiting;
@@ -100,24 +105,23 @@ public class BoardPanel extends JPanel {
         if (controller.getCurrentPlayerTurn() != boardNumber) return;
         if (waiting) return;
 
+        boolean endedTurn = false; // will become true only if we revealed a hidden cell
+
         if (isFlagging) {
-            // Right-click: only flag non-revealed cells
+            // Right-click: flag/unflag only if not revealed
             if (!controller.isCellRevealed(boardNumber, r, c)) {
                 controller.toggleFlagUI(boardNumber, r, c);
             }
         } else {
-            // Left-click: reveal cell
-
+            // Left-click: reveal
             boolean wasRevealed = controller.isCellRevealed(boardNumber, r, c);
 
-            // 1) If the cell was hidden, reveal it (including cascade if needed)
             if (!wasRevealed) {
                 controller.revealCellUI(boardNumber, r, c);
-                // Refresh to show QUESTION/SURPRISE before asking activation
+                endedTurn = true;  // this is a real move
                 refresh();
             }
 
-            // 2) If the cell is QUESTION/SURPRISE → ask player whether to activate it
             if (controller.isQuestionOrSurprise(boardNumber, r, c)) {
                 int choice = JOptionPane.showConfirmDialog(
                         this,
@@ -125,22 +129,21 @@ public class BoardPanel extends JPanel {
                         "Special Cell",
                         JOptionPane.YES_NO_OPTION
                 );
-
                 if (choice == JOptionPane.YES_OPTION) {
                     controller.activateSpecialCellUI(boardNumber, r, c);
                 }
             }
         }
 
-        // Final refresh after reveal/flag/activation
         refresh();
 
         if (moveCallback != null) {
-            moveCallback.run();
+            moveCallback.onMove(endedTurn);   // tell GamePanel if we should end turn
         }
 
         refresh();
     }
+
 
 
 

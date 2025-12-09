@@ -267,23 +267,31 @@ public class GamePanel extends JPanel {
      * Called after each move from a BoardPanel.
      * Updates status, handles game over, and switches turns when appropriate.
      */
-    private void handleMoveMade() {
+    // endedTurn = true → revealed a cell, switch player
+// endedTurn = false → only flag, same player continues
+    private void handleMoveMade(boolean endedTurn) {
         updateStatus();
+
         String outcomeMessage = controller.getAndClearLastActionMessage();
         if (outcomeMessage != null) {
             displayOutcomePopup(outcomeMessage);
         }
+
         if (controller.isGameOver()) {
             handleGameOverUI();
             return;
         }
-        if (controller.isGameRunning()) {
+
+        // switch turn only if a reveal happened
+        if (endedTurn && controller.isGameRunning()) {
             controller.processTurnEnd();
         }
+
         updateTurnUI();
         boardPanel1.refresh();
         boardPanel2.refresh();
     }
+
 
 
     /**
