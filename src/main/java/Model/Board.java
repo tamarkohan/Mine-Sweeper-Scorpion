@@ -18,7 +18,10 @@ public class Board {
 
     // Counter to track how many safe cells are left to reveal
     private int safeCellsRemaining;
-
+    /**
+     * Initializes a board according to the given difficulty and parent Game.
+     * Places mines, question cells, surprise cells, and computes number cells.
+     */
     public Board(Difficulty difficulty, Game game) {
         this.game = game;
         this.rows = difficulty.getRows();
@@ -28,8 +31,7 @@ public class Board {
         this.totalSurpriseCells = difficulty.getSurpriseCells();
         this.cells = new Cell[rows][cols];
 
-        // Calculate total cells that must be revealed to win:
-        // Total Cells - Mines = Safe Cells
+        // Total safe cells = all cells minus mines
         this.safeCellsRemaining = (rows * cols) - totalMines;
 
         // Initialize cells
@@ -42,14 +44,18 @@ public class Board {
         // Place logic
         placeMinesAndSpecialCells();
     }
-
+    /**
+     * Places mines, question cells and surprise cells, then calculates number cells.
+     */
     private void placeMinesAndSpecialCells() {
         placeContent(totalMines, Cell.CellContent.MINE);
         placeContent(totalQuestionCells, Cell.CellContent.QUESTION);
         placeContent(totalSurpriseCells, Cell.CellContent.SURPRISE);
         calculateNumbers();
     }
-
+    /**
+     * Randomly assigns a given content type to EMPTY cells until count is reached.
+     */
     private void placeContent(int count, Cell.CellContent type) {
         Random random = new Random();
         int placed = 0;
@@ -62,7 +68,9 @@ public class Board {
             }
         }
     }
-
+    /**
+     * Converts suitable EMPTY cells to NUMBER cells based on adjacent mines.
+     */
     private void calculateNumbers() {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
@@ -75,7 +83,9 @@ public class Board {
             }
         }
     }
-
+    /**
+     * Counts how many neighboring cells (8-directional) contain mines.
+     */
     private int countNeighborMines(int r, int c) {
         int count = 0;
         for (int i = -1; i <= 1; i++) {
@@ -92,7 +102,7 @@ public class Board {
     }
 
     /**
-     * Reveals a cell and checks for Game Over / Victory conditions.
+     * Reveals a cell, applies scoring and lives logic, and checks game status.
      */
     public void revealCell(int r, int c) {
         if (!isValid(r, c)) return;
@@ -106,26 +116,23 @@ public class Board {
         // 1. Scoring and Safe Cell Tracking
         if (!cell.isMine()) {
             safeCellsRemaining--;
-            // CORRECTION: Grant +1 point for revealing any safe cell (Empty, Number, Q, S)
             game.setSharedScore(game.getSharedScore() + 1);
         }
 
         // 2. Content Handling
         switch (cell.getContent()) {
             case MINE:
-                // SRS 2.1: Mine -> -1 life
                 game.setSharedLives(game.getSharedLives() - 1);
                 break;
 
             case EMPTY:
-                // SRS 3.2.1.2.10: Recursive reveal
                 autoRevealEmptyCells(r, c);
                 break;
 
             case QUESTION:
+                break;
+
             case SURPRISE:
-                // CORRECTION: Removed premature score deduction. Delegate activation cost deduction to Game.
-                game.activateSpecialCell(cell.getContent(), cell.getQuestionId());
                 break;
 
             case NUMBER:
@@ -136,7 +143,43 @@ public class Board {
         game.checkGameStatus();
     }
 
+    /**
+     * Activates a QUESTION or SURPRISE cell once, if it was revealed and not used.
+     *
+     * @return true if activation was successful, false otherwise
+     */
+    public boolean activateSpecialCell(int r, int c) {
+        if (!isValid(r, c)) return false;
 
+        Cell cell = cells[r][c];
+
+        // Must be already revealed
+        if (!cell.isRevealed()) {
+            return false;
+        }
+
+        // Only for QUESTION or SURPRISE cells
+        if (cell.getContent() != Cell.CellContent.QUESTION &&
+                cell.getContent() != Cell.CellContent.SURPRISE) {
+            return false;
+        }
+
+        // Can be activated only once
+        if (cell.isUsed()) {
+            return false;
+        }
+
+        cell.setUsed(true);
+        game.activateSpecialCell(cell.getContent(), cell.getQuestionId());
+        return true;
+    }
+
+
+
+
+    /**
+     * Recursively reveals neighbors around an EMPTY cell (flood-fill behavior).
+     */
     private void autoRevealEmptyCells ( int r, int c){
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
@@ -188,9 +231,9 @@ public class Board {
         game.checkGameStatus();
     }
 
+
     /**
-     * Implements "Reveal Mine" reward (Easy/Medium, Correct).
-     * Reveals a single, random, unrevealed, unflagged mine.
+     * Reveals a single random mine cell without affecting score (reward type).
      */
     public void revealRandomMine() {
         Random rand = new Random();
@@ -214,7 +257,7 @@ public class Board {
     }
 
     /**
-     * Implements "Show 3x3 random cells" reward (Easy/Hard, Correct).
+     * Reveals a random 3x3 area using the standard reveal logic.
      */
     public void revealRandom3x3Area() {
         Random rand = new Random();
@@ -231,15 +274,23 @@ public class Board {
             }
         }
     }
-
+    /**
+     * Returns true if (r,c) is inside the board boundaries.
+     */
     private boolean isValid ( int r, int c){
         return r >= 0 && r < rows && c >= 0 && c < cols;
     }
+    /**
+     * Returns true when all non-mine cells have been revealed.
+     */
     public boolean isSolved() {
         // A board is solved when all non-mine cells have been revealed.
         // This state is tracked by the safeCellsRemaining counter.
         return safeCellsRemaining == 0;
     }
+    /**
+     * Reveals all cells without changing score or lives (used at game end).
+     */
     public void revealAll() {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
@@ -247,8 +298,7 @@ public class Board {
                 // Only set to REVEALED if it hasn't been revealed yet.
                 if (cell.getState() != Cell.CellState.REVEALED) {
                     cell.setState(Cell.CellState.REVEALED);
-                    // Note: We don't call revealCell() here to avoid triggering score/life changes
-                    // or recursive reveals during the final state update.
+                    // Intentionally avoids calling revealCell() to skip side effects.
                 }
             }
         }

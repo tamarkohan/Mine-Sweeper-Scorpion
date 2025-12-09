@@ -6,8 +6,9 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Main application frame – switches between StartPanel and GamePanel.
- * מדברת עם המודל רק דרך GameController.
+ * Main application frame.
+ * Manages screen navigation between StartPanel and GamePanel using CardLayout.
+ * Communicates with the Model layer only through GameController.
  */
 public class MainFrame extends JFrame implements StartPanel.StartGameListener {
 
@@ -18,7 +19,7 @@ public class MainFrame extends JFrame implements StartPanel.StartGameListener {
     public MainFrame() {
         super("Scorpion Minesweeper");
 
-        this.controller = new GameController();
+        this.controller = GameController.getInstance();
         this.cardLayout = new CardLayout();
         
         createAndShowGUI();
@@ -26,6 +27,9 @@ public class MainFrame extends JFrame implements StartPanel.StartGameListener {
 
     private void createAndShowGUI() {
         this.cardPanel = new JPanel(cardLayout);
+
+        // Admin/debug menu for question management
+        setJMenuBar(buildMenuBar());
 
         // create screens
         final StartPanel startPanel = new StartPanel(this);
@@ -40,7 +44,8 @@ public class MainFrame extends JFrame implements StartPanel.StartGameListener {
     }
 
     /**
-     * Called by StartPanel when the user clicks "Start Game".
+     * Callback from StartPanel when the user starts a new game.
+     * Initializes the game in the controller and switches to the GamePanel.
      */
     @Override
     public void onStartGame(String player1Name, String player2Name, String difficultyKey) {
@@ -51,6 +56,22 @@ public class MainFrame extends JFrame implements StartPanel.StartGameListener {
         cardLayout.show(cardPanel, "GAME");
     }
 
+    private JMenuBar buildMenuBar() {
+        JMenuBar bar = new JMenuBar();
+        JMenu admin = new JMenu("Admin");
+        JMenuItem manageQuestions = new JMenuItem("Question Management");
+        manageQuestions.addActionListener(e -> {
+            QuestionManagementFrame frame = new QuestionManagementFrame(controller.getQuestionManager());
+            frame.setVisible(true);
+        });
+        admin.add(manageQuestions);
+        bar.add(admin);
+        return bar;
+    }
+
+    /**
+     * Application entry point. Launches the main frame on the EDT.
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(MainFrame::new);
     }

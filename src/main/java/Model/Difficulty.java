@@ -1,5 +1,8 @@
 package Model;
-
+/**
+ * Defines game difficulty levels and their configuration parameters.
+ * Each level controls board size, mines, special cells, lives and scoring rules.
+ */
 public enum Difficulty {
     EASY(
             9, 9,      // rows, cols
@@ -9,8 +12,8 @@ public enum Difficulty {
             10,        // starting lives
             5,         // activation cost (score points)
             8,         // surprise value (points)
-            1,         // NEW: mineFlagReward (+1pt)
-            -3         // NEW: nonMineFlagPenalty (-3pts)
+            1,         //  mineFlagReward (+1pt)
+            -3         // nonMineFlagPenalty (-3pts)
     ),
     MEDIUM(
             13, 13,
@@ -34,7 +37,7 @@ public enum Difficulty {
             1,          // mineFlagReward (+1pt)
             -3          // nonMineFlagPenalty (-3pts)
     );
-
+    // Board dimensions and content
     private final int rows;
     private final int cols;
     private final int mines;
@@ -43,8 +46,8 @@ public enum Difficulty {
     private final int startingLives;
     private final int activationCost;
     private final int surpriseValue;
-    private final int mineFlagReward;     // NEW: +1 pt for correctly flagging a mine
-    private final int nonMineFlagPenalty; // NEW: -3 pts for incorrectly flagging
+    private final int mineFlagReward;     //  +1 pt for correctly flagging a mine
+    private final int nonMineFlagPenalty; //  -3 pts for incorrectly flagging
 
     Difficulty(int rows, int cols, int mines, int questionCells, int surpriseCells, int startingLives, int activationCost, int surpriseValue, int mineFlagReward, int nonMineFlagPenalty) {
         this.rows = rows;
@@ -58,7 +61,7 @@ public enum Difficulty {
         this.mineFlagReward = mineFlagReward;
         this.nonMineFlagPenalty = nonMineFlagPenalty;
     }
-
+    // --- Getters ---
     public int getRows() { return rows; }
     public int getCols() { return cols; }
     public int getMines() { return mines; }

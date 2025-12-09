@@ -5,21 +5,39 @@ import Model.Cell;
 import Model.Difficulty;
 import Model.Game;
 import Model.GameState;
+import Model.QuestionManager;
 
 /**
  * Controller class between the UI (View) and the Game model.
- * All communication between View and Model should pass through here.
+ * All communication between View and Model pass through here.
  */
 public class GameController {
 
-    private Game currentGame;
+    // Singleton pattern – ensures only one controller exists for the whole app
+    private static GameController instance;
 
+    private Game currentGame;
+    private QuestionManager questionManager;
+    // Private constructor – prevents external instantiation
+
+    private GameController() {
+    }
+    // Returns the single shared Controller instance
+    public static GameController getInstance() {
+        if (instance == null) {
+            instance = new GameController();
+        }
+        return instance;
+    }
     /**
      * Creates a new Game instance with the selected difficulty.
      * This is the main entry point for starting a cooperative game.
      */
     public void startNewGame(Difficulty difficulty) {
+        ensureQuestionManager();
         currentGame = new Game(difficulty);
+        currentGame.setQuestionManager(questionManager);
+        // Presenter is set by the View layer via registerQuestionPresenter
     }
 
     /**
@@ -48,27 +66,58 @@ public class GameController {
 
     /**
      * Returns the current Game instance.
-     * NOTE: Views should avoid using this directly – it's mostly for tests or debugging.
      */
     public Game getCurrentGame() {
         return currentGame;
+    }
+
+    /**
+     * Provides access to the shared QuestionManager, creating/loading if needed.
+     */
+    public QuestionManager getQuestionManager() {
+        ensureQuestionManager();
+        return questionManager;
+    }
+
+    private void ensureQuestionManager() {
+        if (questionManager == null) {
+            questionManager = new QuestionManager();
+            questionManager.loadQuestions();
+        }
+    }
+
+    /**
+     * Registers the UI question presenter (popup) to be invoked on QUESTION cells.
+     */
+    public void registerQuestionPresenter(Game.QuestionPresenter presenter) {
+        if (currentGame != null) {
+            currentGame.setQuestionPresenter(presenter);
+        }
     }
 
     // ======================================================
     //  GAME STATE / TURN INFO FOR THE VIEW
     // ======================================================
 
+    // Returns true if a game exists and is currently in RUNNING state.
+
     public boolean isGameRunning() {
         return currentGame != null && currentGame.getGameState() == GameState.RUNNING;
     }
-
+    // Returns true if the game has ended with WIN or LOSS.
     public boolean isGameOver() {
         if (currentGame == null) return false;
         return currentGame.getGameState() != GameState.RUNNING;
     }
-
+    // Returns the current player's turn
     public int getCurrentPlayerTurn() {
         return (currentGame != null) ? currentGame.getCurrentPlayerTurn() : 0;
+    }
+    // Switches turn between players.
+    public void switchTurn() {
+        if (currentGame != null) {
+            currentGame.switchTurn();
+        }
     }
 
     public String getDifficultyName() {
@@ -109,21 +158,22 @@ public class GameController {
     //  BOARD-LEVEL INFO FOR THE VIEW
     // ======================================================
 
+    // Returns board instance based on board number
     private Board getBoard(int boardNumber) {
         if (currentGame == null) return null;
         return (boardNumber == 1) ? currentGame.getBoard1() : currentGame.getBoard2();
     }
-
+    // Returns the number of rows for the specified board.
     public int getBoardRows(int boardNumber) {
         Board b = getBoard(boardNumber);
         return (b != null) ? b.getRows() : 0;
     }
-
+    // Returns the number of columns for the specified board.
     public int getBoardCols(int boardNumber) {
         Board b = getBoard(boardNumber);
         return (b != null) ? b.getCols() : 0;
     }
-
+    // Returns the total number of mines placed on the specified board.
     public int getTotalMines(int boardNumber) {
         Board b = getBoard(boardNumber);
         return (b != null) ? b.getTotalMines() : 0;
@@ -151,18 +201,23 @@ public class GameController {
         return Math.max(remaining, 0);
     }
 
-    // ======================================================
-    //  CELL-LEVEL OPERATIONS FOR THE VIEW
-    // ======================================================
+    /**
+     * Used by the UI to reveal a cell following MVC (View -> Controller -> Model).
+     * This delegates to Board.revealCell, which contains the game logic.
+     */
+    public boolean revealCellUI(int boardNumber, int row, int col) {
+        if (currentGame == null || !isGameRunning()) return false;
 
-    public void revealCellUI(int boardNumber, int row, int col) {
-        if (currentGame == null || !isGameRunning()) return;
         Board board = getBoard(boardNumber);
         if (board == null) return;
         if (row < 0 || row >= board.getRows() || col < 0 || col >= board.getCols()) return;
         board.revealCell(row, col);
     }
 
+    /**
+     * Used by the UI (right-click) to toggle the flag state of a cell.
+     * This delegates to Board.toggleFlag, which contains the game logic and scoring.
+     */
     public void toggleFlagUI(int boardNumber, int row, int col) {
         if (currentGame == null || !isGameRunning()) return;
         Board board = getBoard(boardNumber);
@@ -171,6 +226,10 @@ public class GameController {
         board.toggleFlag(row, col);
     }
 
+
+    /**
+     * Provides UI-only cell data (text + enabled state) without exposing Model internals.
+     */
     public CellViewData getCellViewData(int boardNumber, int row, int col) {
         Board board = getBoard(boardNumber);
         if (board == null) return new CellViewData(true, "");
@@ -183,25 +242,55 @@ public class GameController {
                 return new CellViewData(true, "");
             case FLAGGED:
                 return new CellViewData(true, "F");
-            case REVEALED:
+
+            case REVEALED: {
+                boolean enabled;
+                String text;
+
                 switch (cell.getContent()) {
                     case MINE:
-                        return new CellViewData(false, "M");
+                        text = "M";
+                        enabled = false; // מוקש נחשף – אי אפשר ללחוץ
+                        break;
+
                     case NUMBER:
-                        return new CellViewData(false, String.valueOf(cell.getAdjacentMines()));
+                        text = String.valueOf(cell.getAdjacentMines());
+                        enabled = false; // מספר – כמו מיניסוויפר רגיל
+                        break;
+
                     case QUESTION:
-                        return new CellViewData(false, "Q");
+                        text = "Q";
+                        // אפשר ללחוץ ולהפעיל *רק אם עדיין לא used*
+                        enabled = !cell.isUsed();
+                        break;
+
                     case SURPRISE:
-                        return new CellViewData(false, "S");
+                        text = "S";
+                        enabled = !cell.isUsed();
+                        break;
+
                     case EMPTY:
                     default:
-                        return new CellViewData(false, "");
+                        text = "";
+                        enabled = false;
+                        break;
                 }
+
+                return new CellViewData(enabled, text);
+            }
+
             default:
                 return new CellViewData(true, "");
         }
     }
 
+
+
+
+    /**
+     * Small DTO for what the View needs for each cell.
+     * No direct Model enums/types נחשפים ל-View.
+     */
     public static class CellViewData {
         public final boolean enabled;
         public final String text;
@@ -212,8 +301,43 @@ public class GameController {
         }
     }
 
-    public boolean isCellFlagged(int boardNumber, int row, int col) {
+    /**
+     * Reveals a cell on the specified board.
+     * For question and surprise cells, this method:
+     * - Checks if the cell was already used
+     * - If already used, skips the special effect and does nothing
+     * - If not used, marks it as used and triggers the special effect
+     * @param boardNumber 1 for board1, 2 for board2
+     * @param row the row index of the cell
+     * @param col the column index of the cell
+     * @return true if the cell was successfully revealed/activated, false otherwise
+     */
+
+    public boolean activateSpecialCellUI(int boardNumber, int row, int col) {
+        if (currentGame == null || !isGameRunning()) return false;
         Board board = getBoard(boardNumber);
-        return board != null && board.isFlagged(row, col);
+        if (board == null) return false;
+        return board.activateSpecialCell(row, col);
     }
+    public boolean isQuestionOrSurprise(int boardNumber, int row, int col) {
+        Board board = getBoard(boardNumber);
+        if (board == null) return false;
+        Cell cell = board.getCell(row, col);
+        if (cell == null) return false;
+
+        Cell.CellContent content = cell.getContent();
+        return content == Cell.CellContent.QUESTION ||
+                content == Cell.CellContent.SURPRISE;
+    }
+    public boolean isCellRevealed(int boardNumber, int row, int col) {
+        Board board = getBoard(boardNumber);
+        if (board == null) return false;
+        Cell cell = board.getCell(row, col);
+        if (cell == null) return false;
+        return cell.isRevealed();
+    }
+
+
 }
+
+

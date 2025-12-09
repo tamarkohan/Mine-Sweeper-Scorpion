@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Main in-game panel: shows two boards, players, score, lives, controls.
- * מדבר רק עם GameController – בלי Model ישיר.
+ * Main in-game panel: displays two boards, player info, score, lives and controls.
+ * Communicates only with GameController (no direct access to the Model layer).
  */
 public class GamePanel extends JPanel {
 
@@ -49,11 +49,17 @@ public class GamePanel extends JPanel {
         this.player1Name = player1Name;
         this.player2Name = player2Name;
 
+        // Register the question presenter so QUESTION cells will show a popup.
+        controller.registerQuestionPresenter(question ->
+                QuestionDialog.showQuestionDialog(SwingUtilities.getWindowAncestor(this), question));
+
         initComponents();
         updateStatus();
         updateTurnUI();
     }
-
+    /**
+     * Builds the UI layout: title, two player areas, and bottom status/control area.
+     */
     private void initComponents() {
         setLayout(new BorderLayout());
         setBackground(Color.BLACK);
@@ -202,7 +208,9 @@ public class GamePanel extends JPanel {
 
         add(bottomOuter, BorderLayout.SOUTH);
     }
-
+    /**
+     * Creates a styled label for a player's name header box.
+     */
     private JLabel createPlayerBoxLabel(String text) {
         JLabel lbl = new JLabel(text, SwingConstants.CENTER);
         lbl.setForeground(Color.WHITE);
@@ -213,13 +221,17 @@ public class GamePanel extends JPanel {
         lbl.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
         return lbl;
     }
-
+    /**
+     * Applies consistent styling to control buttons.
+     */
     private void styleControlButton(JButton btn) {
         btn.setFont(new Font("Arial", Font.BOLD, 18));
         btn.setFocusPainted(false);
         btn.setMargin(new Insets(3, 12, 3, 12));
     }
-
+    /**
+     * Builds the row of heart icons according to the starting number of lives.
+     */
     private void buildHearts() {
         heartLabels = new ArrayList<>();
         int maxLives = controller.getMaxLives();
@@ -236,7 +248,10 @@ public class GamePanel extends JPanel {
         heartsPanel.repaint();
     }
 
-    /** Called after each move from a BoardPanel. */
+    /**
+     * Called after each move from a BoardPanel.
+     * Updates status, handles game over, and switches turns when appropriate.
+     */
     private void handleMoveMade() {
         updateStatus();
         String outcomeMessage = controller.getAndClearLastActionMessage();
@@ -255,7 +270,36 @@ public class GamePanel extends JPanel {
         boardPanel2.refresh();
     }
 
-    /** Refresh SCORE, LIVES, MINES LEFT, HEARTS. */
+
+    /**
+     * Displays a dialog at the end of the game (victory or game over) with final score.
+     */
+    private void showGameOverDialog() {
+        String title;
+        String message;
+
+        // אם אין יותר לבבות – הפסד
+        if (controller.getSharedLives() <= 0) {
+            title = "Game Over";
+            message = "All lives are gone.\nFinal score: " + controller.getSharedScore();
+        } else {
+            // אחרת – הנחנו שכל הלוחות נפתרו -> ניצחון
+            title = "Victory!";
+            message = "All safe cells are revealed!\nFinal score: " + controller.getSharedScore();
+        }
+
+        JOptionPane.showMessageDialog(
+                this,
+                message,
+                title,
+                JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+
+
+    /**
+     * Updates score, lives, mines-left labels and heart colors.
+     */
     public void updateStatus() {
         lblMinesLeft1.setText("MINES LEFT: " + controller.getMinesLeft(1));
         lblMinesLeft2.setText("MINES LEFT: " + controller.getMinesLeft(2));
@@ -292,7 +336,9 @@ public class GamePanel extends JPanel {
             lblPlayer2Box.setBackground(new Color(60, 60, 80));
         }
     }
-
+    /**
+     * Colors heart icons according to current lives.
+     */
     private void updateHearts() {
         int lives = controller.getSharedLives();
         int max = controller.getMaxLives();

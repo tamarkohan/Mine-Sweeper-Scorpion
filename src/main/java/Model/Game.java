@@ -1,8 +1,12 @@
 package Model;
 
 import java.util.Random;
-
+/**
+ * Represents a cooperative Minesweeper game with two boards.
+ * Manages shared lives, shared score, difficulty settings, questions and turns.
+ */
 public class Game {
+    // Maximum number of lives allowed (extra lives are converted to score)
     private final int MAX_LIVES = 10;
     private Board board1;
     private Board board2;
@@ -11,16 +15,26 @@ public class Game {
     private int sharedScore;
     private GameState gameState;
     private int currentPlayerTurn;
+    private QuestionManager questionManager;
+    private QuestionPresenter questionPresenter;
 
     // 🔥 NEW ADDITION 1: Field to store the message for the View
     private String lastActionMessage;
 
+    /**
+     * Question difficulty levels used for scoring and life rewards/penalties.
+     */
     public enum QuestionLevel { EASY, MEDIUM, HARD, EXPERT }
-
+    /**
+     * Creates a new game with the given difficulty.
+     */
     public Game(Difficulty difficulty) {
         startNewGame(difficulty);
     }
-
+    /**
+     * Initializes or resets all game data for the given difficulty.
+     * Creates two boards, sets initial lives, score and game state.
+     */
     public void startNewGame(Difficulty difficulty) {
         this.difficulty = difficulty;
         this.sharedLives = difficulty.getStartingLives();
@@ -32,7 +46,9 @@ public class Game {
         this.board1 = new Board(difficulty, this);
         this.board2 = new Board(difficulty, this);
     }
-
+    /**
+     * Restarts the game using the last selected difficulty (if available).
+     */
     public void restartGame() {
         if (this.difficulty != null) {
             startNewGame(this.difficulty);
@@ -40,7 +56,10 @@ public class Game {
     }
 
     // --- Game Status & End Game Logic ---
-
+    /**
+     * Checks if the game has been won or lost, based on lives and safe cells.
+     * Updates the game state and triggers end-of-game processing if needed.
+     */
     public void checkGameStatus() {
         if (gameState != GameState.RUNNING) return;
 
@@ -74,14 +93,16 @@ public class Game {
 
             System.out.println("Final Life Bonus: " + sharedLives + " lives * " + lifeValue + " pts = +" + lifeBonus + " points.");
 
-            // 2. Auto-reveal all cells (Requires Board.revealAll() implemented in Board class)
+            // 2. Auto-reveal all cells
             if (board1 != null) board1.revealAll();
             if (board2 != null) board2.revealAll();
 
             printGameStatus();
         }
     }
-
+    /**
+     * Prints game state to the console (for debugging).
+     */
     public void printGameStatus() {
         System.out.println("=== GAME STATUS UPDATE ===");
         System.out.println("State: " + gameState);
@@ -98,8 +119,12 @@ public class Game {
         System.out.println("==========================");
     }
 
-    // --- Life Management (Restored and Corrected) ---
+    // --- Life Management ---
 
+    /**
+     * Sets the shared lives value, enforcing the MAX_LIVES cap.
+     * Extra lives above the cap are converted to score.
+     */
     public void setSharedLives(int newLives) {
         if (newLives > MAX_LIVES) {
             int excess = newLives - MAX_LIVES;
@@ -112,6 +137,12 @@ public class Game {
         checkGameStatus();
     }
 
+    /**
+     * Adds one life if below MAX_LIVES; otherwise converts it to score.
+     * Used by positive rewards (e.g. correct questions, surprises).
+     *
+     * @param pointsValue score value to add if life is converted due to cap.
+     */
     public void addLife(int pointsValue) {
         if (sharedLives < MAX_LIVES) {
             sharedLives++;
@@ -122,6 +153,9 @@ public class Game {
         checkGameStatus();
     }
 
+    /**
+     * Deducts lives and triggers a status check for possible loss.
+     */
     public void deductLife(int lives) {
         this.sharedLives -= lives;
         checkGameStatus();
@@ -139,7 +173,10 @@ public class Game {
     }
 
     // --- LOGIC FROM IMAGES ---
-
+    /**
+     * Activates the behavior of a QUESTION or SURPRISE cell after it was revealed and chosen.
+     * Deducts activation cost from score, then routes to surprise logic or question handling.
+     */
     public void activateSpecialCell(Cell.CellContent cellContent, Integer questionId) {
         if (cellContent != Cell.CellContent.QUESTION && cellContent != Cell.CellContent.SURPRISE) {
             return;
@@ -160,7 +197,10 @@ public class Game {
             System.out.println("Question Activated! Waiting for answer...");
         }
     }
-
+    /**
+     * Handles SURPRISE cell effects: randomly applies good or bad outcome.
+     * Good: points + life; Bad: lose points + lose life.
+     */
     private void handleSurprise() {
         Random rand = new Random();
         boolean isGoodSurprise = rand.nextBoolean();
@@ -178,7 +218,10 @@ public class Game {
             this.lastActionMessage = intro + "An unfortunate turn of events! You've lost " + pointsValue + " points and a life.";
         }
     }
-
+    /**
+     * Processes the result of a question answer and applies points/lives
+     * according to game difficulty and question level.
+     */
     public void processQuestionAnswer(QuestionLevel qLevel, boolean isCorrect) {
         if (gameState != GameState.RUNNING) return;
 
@@ -242,6 +285,28 @@ public class Game {
         checkGameStatus();
     }
 
+    /**
+     * Hook for UI to present a question and return true/false for correctness.
+     */
+    public interface QuestionPresenter {
+        boolean presentQuestion(Question question);
+    }
+
+    public void setQuestionPresenter(QuestionPresenter presenter) {
+        this.questionPresenter = presenter;
+    }
+
+    public void setQuestionManager(QuestionManager manager) {
+        this.questionManager = manager;
+    }
+
+    public QuestionManager getQuestionManager() {
+        return questionManager;
+    }
+
+    /**
+     * Applies positive rewards after a correct answer: adds points and lives.
+     */
     private void addRewards(int points, int lives) {
         this.sharedScore += points;
         for (int i = 0; i < lives; i++) {
@@ -249,7 +314,9 @@ public class Game {
         }
         System.out.println("Correct! +" + points + " pts, +" + lives + " lives.");
     }
-
+    /**
+     * Applies penalties after an incorrect answer: removes points and lives.
+     */
     private void applyPenalties(int points, int lives) {
         this.sharedScore -= points;
         deductLife(lives);

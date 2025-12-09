@@ -4,10 +4,14 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Start screen: gets player names and difficulty from the user.
+ * Start screen UI.
+ * Collects player names and difficulty level, then notifies MainFrame to start the game.
  */
 public class StartPanel extends JPanel {
-
+    /**
+     * Listener interface used to notify the MainFrame when "Start Game" is pressed.
+     * Decouples the panel from specific navigation logic.
+     */
     public interface StartGameListener {
         void onStartGame(String player1Name, String player2Name, String difficultyKey);
     }
@@ -20,12 +24,17 @@ public class StartPanel extends JPanel {
     private JRadioButton rbMedium;
     private JRadioButton rbHard;
     private JButton btnStart;
-
+    /**
+     * Creates the start screen and initializes UI components.
+     */
     public StartPanel(StartGameListener listener) {
         this.listener = listener;
         initComponents();
     }
-
+    /**
+     * Builds the UI elements: name fields, difficulty selection and start button.
+     * Uses GridBagLayout to center all controls on screen.
+     */
     private void initComponents() {
         setLayout(new GridBagLayout());   // center everything
         setBackground(Color.WHITE);       // white background
@@ -105,7 +114,10 @@ public class StartPanel extends JPanel {
 
         btnStart.addActionListener(e -> handleStart());
     }
-
+    /**
+     * Reads the player names and chosen difficulty,
+     * applies defaults if needed, and triggers the start-game callback.
+     */
     private void handleStart() {
         String p1 = txtPlayer1.getText().trim();
         String p2 = txtPlayer2.getText().trim();

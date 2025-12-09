@@ -1,8 +1,12 @@
 package Model;
-
+/**
+ * Represents a single cell on the Minesweeper board.
+ * Stores position, content type, current state, and metadata for special cell logic.
+ */
 public class Cell {
-
+    // Cell content types
     public enum CellContent { EMPTY, MINE, QUESTION, SURPRISE, NUMBER }
+    // Cell visibility states
     public enum CellState { HIDDEN, REVEALED, FLAGGED }
 
     private final int row;
@@ -12,7 +16,9 @@ public class Cell {
     private int adjacentMines;
     private boolean used;
     private Integer questionId;
-
+    /**
+     * Creates a new EMPTY, HIDDEN cell at the specified board coordinates.
+     */
     public Cell(int row, int col) {
         this.row = row;
         this.col = col;
@@ -23,29 +29,24 @@ public class Cell {
         this.questionId = null;
     }
 
-    // --- CRITICAL FIXES: Getters and Setters needed by Board.java ---
+    // --- Basic getters/setters used by Board and Game ---
 
-    // REQUIRED by Board.placeContent, Board.calculateNumbers, GameStartTest.findCellWithContent
     public CellContent getContent() {
         return content;
     }
 
-    // REQUIRED by Board.placeContent, Board.calculateNumbers
     public void setContent(CellContent content) {
         this.content = content;
     }
 
-    // REQUIRED by Board.calculateNumbers
     public void setAdjacentMines(int adjacentMines) {
         this.adjacentMines = adjacentMines;
     }
 
     public int getRow() { return row; }
     public int getCol() { return col; }
-    // ... (other getters/setters for state, used, questionId)
 
-    // --- HELPER METHODS FOR LOGIC (From your provided snippet) ---
-
+    // --- HELPER METHODS FOR LOGIC  ---
 
     public boolean isRevealed() {
         return state == CellState.REVEALED;
@@ -59,11 +60,7 @@ public class Cell {
         return content == CellContent.QUESTION || content == CellContent.SURPRISE;
     }
 
-    /**
-     * Toggles flag state. Returns true if the cell is now FLAGGED, false if HIDDEN.
-     * Only works if cell is not REVEALED.
-     */
-
+    // --- Game actions ---
 
     /**
      * Marks the cell as REVEALED.
@@ -105,7 +102,7 @@ public class Cell {
         return false;
     }
 
-    // --- REQUIRED getters and setters for controller logic ---
+    // --- getters and setters for controller logic ---
 
     public CellState getState() {
         return state;
