@@ -209,9 +209,10 @@ public class GameController {
         if (currentGame == null || !isGameRunning()) return false;
 
         Board board = getBoard(boardNumber);
-        if (board == null) return;
-        if (row < 0 || row >= board.getRows() || col < 0 || col >= board.getCols()) return;
+        if (board == null) return false;
+        if (row < 0 || row >= board.getRows() || col < 0 || col >= board.getCols()) return true;
         board.revealCell(row, col);
+        return true;
     }
 
     /**
