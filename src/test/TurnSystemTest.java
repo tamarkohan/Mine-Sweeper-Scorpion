@@ -28,7 +28,7 @@ public class TurnSystemTest {
     @BeforeEach
     void setup() {
         controller = GameController.getInstance();
-        controller.startNewGame("MEDIUM");   // כפי שכתוב בטסטים
+        controller.startNewGame("MEDIUM");
         game = controller.getCurrentGame();
         assertNotNull(game);
         assertEquals(Difficulty.MEDIUM, game.getDifficulty());
@@ -54,7 +54,7 @@ public class TurnSystemTest {
     @Test
     @DisplayName("TC-BB-TURNS-001: Click on opponent board is ignored")
     void clickOnOpponentBoard_isIgnored_noScoreNoLivesNoTurnChange() {
-        // Precondition: Player 1 is active (ברירת מחדל אחרי startNewGame)
+        // Precondition: Player 1 is active
         int initialTurn = controller.getCurrentPlayerTurn();
         assertEquals(1, initialTurn, "Expected Player 1 to start");
 
@@ -64,13 +64,11 @@ public class TurnSystemTest {
         Board opponentBoardModel = game.getBoard2();
         assertNotNull(opponentBoardModel);
 
-        // יוצרים BoardPanel עבור הלוח של השחקן השני (Board 2)
-        // שימי לב: moveCallback ריק – אנחנו לא רוצים לשנות turn פה
         BoardPanel opponentPanel = new BoardPanel(
                 controller,
-                2,          // boardNumber = 2 (לוח היריב)
-                true,       // waiting = true (כי תור של Player 1)
-                () -> {}    // moveCallback – לא עושה כלום
+                2,
+                true,
+                () -> {}
         );
 
         // בוחרים תא חוקי כלשהו – נגיד (0,0)
@@ -202,7 +200,7 @@ public class TurnSystemTest {
         BoardPanel board2Panel = new BoardPanel(
                 controller,
                 2,
-                true,                        // P2 מחכה בשלב זה
+                true,                        
                 controller::processTurnEnd
         );
 
