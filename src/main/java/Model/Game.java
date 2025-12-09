@@ -18,9 +18,10 @@ public class Game {
     private QuestionManager questionManager;
     private QuestionPresenter questionPresenter;
 
-    // 🔥 NEW ADDITION 1: Field to store the message for the View
+    //  Field to store the message for the View
     private String lastActionMessage;
-
+    private int totalQuestionsAnswered;
+    private int totalCorrectAnswers;
     /**
      * Question difficulty levels used for scoring and life rewards/penalties.
      */
@@ -42,6 +43,8 @@ public class Game {
         this.gameState = GameState.RUNNING;
         this.currentPlayerTurn = 1;
         this.lastActionMessage = null; // Initialize the message field
+        this.totalQuestionsAnswered = 0;
+        this.totalCorrectAnswers = 0;
 
         this.board1 = new Board(difficulty, this);
         this.board2 = new Board(difficulty, this);
@@ -224,7 +227,10 @@ public class Game {
      */
     public void processQuestionAnswer(QuestionLevel qLevel, boolean isCorrect) {
         if (gameState != GameState.RUNNING) return;
-
+        totalQuestionsAnswered++;
+        if (isCorrect) {
+            totalCorrectAnswers++;
+        }
         Random rand = new Random();
 
         if (difficulty == Difficulty.EASY) {
@@ -353,4 +359,12 @@ public class Game {
     public int getSharedLives() { return sharedLives; }
     public int getSharedScore() { return sharedScore; }
     public int getMaxLives() { return MAX_LIVES; }
+    public int getTotalQuestionsAnswered() {
+        return totalQuestionsAnswered;
+    }
+
+    public int getTotalCorrectAnswers() {
+        return totalCorrectAnswers;
+    }
+
 }

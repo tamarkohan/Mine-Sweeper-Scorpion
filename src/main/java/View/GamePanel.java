@@ -7,6 +7,8 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
+
 /**
  * Main in-game panel: displays two boards, player info, score, lives and controls.
  * Communicates only with GameController (no direct access to the Model layer).
@@ -41,6 +43,7 @@ public class GamePanel extends JPanel {
     private JButton btnPause;
     private JButton btnRestart;
     private JButton btnExit;
+    private final long startTimeMillis;
 
 
     public GamePanel(GameController controller,
@@ -48,6 +51,8 @@ public class GamePanel extends JPanel {
         this.controller = controller;
         this.player1Name = player1Name;
         this.player2Name = player2Name;
+        this.startTimeMillis = System.currentTimeMillis();
+
 
         // Register the question presenter so QUESTION cells will show a popup.
         controller.registerQuestionPresenter(question ->
@@ -187,7 +192,17 @@ public class GamePanel extends JPanel {
         styleControlButton(btnRestart);
         styleControlButton(btnExit);
 
-        btnExit.addActionListener(e -> SwingUtilities.getWindowAncestor(this).dispose());
+        btnExit.addActionListener(e -> {
+            // stop or reset game state if needed
+            controller.endGame();
+
+            // go back to menu
+            Window window = SwingUtilities.getWindowAncestor(this);
+            if (window instanceof MainFrame frame) {
+                frame.showMainMenu();
+            }
+        });
+
         btnRestart.addActionListener(e -> {
             controller.restartGame();
             buildHearts();
@@ -383,5 +398,7 @@ public class GamePanel extends JPanel {
             title,
             isWin ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE
         );
-    }
-}
+
+        long durationSeconds = (System.currentTimeMillis() - startTimeMillis) / 1000L;
+        controller.recordFinishedGame(player1Name, player2Name, durationSeconds);
+}}

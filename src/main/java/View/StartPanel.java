@@ -8,12 +8,10 @@ import java.awt.*;
  * Collects player names and difficulty level, then notifies MainFrame to start the game.
  */
 public class StartPanel extends JPanel {
-    /**
-     * Listener interface used to notify the MainFrame when "Start Game" is pressed.
-     * Decouples the panel from specific navigation logic.
-     */
+
     public interface StartGameListener {
         void onStartGame(String player1Name, String player2Name, String difficultyKey);
+        void onBackToMenu();  // <-- FIXED
     }
 
     private final StartGameListener listener;
@@ -24,27 +22,27 @@ public class StartPanel extends JPanel {
     private JRadioButton rbMedium;
     private JRadioButton rbHard;
     private JButton btnStart;
-    /**
-     * Creates the start screen and initializes UI components.
-     */
+    private JButton btnBack;
+
     public StartPanel(StartGameListener listener) {
         this.listener = listener;
         initComponents();
     }
-    /**
-     * Builds the UI elements: name fields, difficulty selection and start button.
-     * Uses GridBagLayout to center all controls on screen.
-     */
+
     private void initComponents() {
-        setLayout(new GridBagLayout());   // center everything
-        setBackground(Color.WHITE);       // white background
+        setLayout(new BorderLayout()); // instead of GridBag on whole panel
+        setBackground(Color.WHITE);
+
+        // ================= CENTER PANEL =================
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.setBackground(Color.WHITE);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(12, 12, 12, 12);
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
 
-        // ================= Title =================
+        // ----- Title -----
         JLabel title = new JLabel("SCORPION MINESWEEPER");
         title.setFont(new Font("Arial", Font.BOLD, 28));
         title.setForeground(Color.BLACK);
@@ -52,11 +50,11 @@ public class StartPanel extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
-        add(title, gbc);
+        centerPanel.add(title, gbc);
 
         gbc.gridwidth = 1;
 
-        // ================= Names Row =================
+        // ----- Player names -----
         JLabel lblP1 = new JLabel("Player 1:");
         lblP1.setFont(new Font("Arial", Font.PLAIN, 16));
         txtPlayer1 = new JTextField(10);
@@ -65,21 +63,17 @@ public class StartPanel extends JPanel {
         lblP2.setFont(new Font("Arial", Font.PLAIN, 16));
         txtPlayer2 = new JTextField(10);
 
-        gbc.gridy = 1;
-        gbc.gridx = 0;
-        add(lblP1, gbc);
-
+        gbc.gridy = 1; gbc.gridx = 0;
+        centerPanel.add(lblP1, gbc);
         gbc.gridx = 1;
-        add(txtPlayer1, gbc);
+        centerPanel.add(txtPlayer1, gbc);
 
-        gbc.gridy = 2;
-        gbc.gridx = 0;
-        add(lblP2, gbc);
-
+        gbc.gridy = 2; gbc.gridx = 0;
+        centerPanel.add(lblP2, gbc);
         gbc.gridx = 1;
-        add(txtPlayer2, gbc);
+        centerPanel.add(txtPlayer2, gbc);
 
-        // ================= Difficulty =================
+        // ----- Difficulty -----
         JLabel lblDifficulty = new JLabel("Difficulty:");
         lblDifficulty.setFont(new Font("Arial", Font.PLAIN, 16));
 
@@ -102,22 +96,32 @@ public class StartPanel extends JPanel {
         gbc.gridy = 3;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
-        add(diffPanel, gbc);
+        centerPanel.add(diffPanel, gbc);
 
-        // ================= Button =================
+        // ----- START button (center) -----
         btnStart = new JButton("START");
         btnStart.setFont(new Font("Arial", Font.BOLD, 18));
         btnStart.setPreferredSize(new Dimension(160, 40));
+        btnStart.addActionListener(e -> handleStart());
 
         gbc.gridy = 4;
-        add(btnStart, gbc);
+        centerPanel.add(btnStart, gbc);
 
-        btnStart.addActionListener(e -> handleStart());
+        // Add the center panel to the layout
+        add(centerPanel, BorderLayout.CENTER);
+
+        // ================= BOTTOM PANEL =================
+        btnBack = new JButton("BACK");
+        btnBack.setPreferredSize(new Dimension(120, 35));
+        btnBack.addActionListener(e -> listener.onBackToMenu());
+
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        bottomPanel.setBackground(Color.WHITE);
+        bottomPanel.add(btnBack);
+
+        add(bottomPanel, BorderLayout.SOUTH);
     }
-    /**
-     * Reads the player names and chosen difficulty,
-     * applies defaults if needed, and triggers the start-game callback.
-     */
+
     private void handleStart() {
         String p1 = txtPlayer1.getText().trim();
         String p2 = txtPlayer2.getText().trim();

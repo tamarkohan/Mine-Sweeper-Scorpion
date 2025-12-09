@@ -1,11 +1,10 @@
 package Controller;
 
-import Model.Board;
-import Model.Cell;
-import Model.Difficulty;
-import Model.Game;
-import Model.GameState;
-import Model.QuestionManager;
+import Model.*;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 /**
  * Controller class between the UI (View) and the Game model.
@@ -337,6 +336,246 @@ public class GameController {
         if (cell == null) return false;
         return cell.isRevealed();
     }
+
+    // =======================
+    //  HISTORY VIEW DATA (DTOs)
+    // =======================
+
+    public static class GameHistoryRow {
+        public final String players;
+        public final String dateTime;
+        public final String difficulty;
+        public final int finalScore;
+        public final int remainingLives;
+        public final String correctAnswers;
+        public final String accuracy;
+        public final String duration;
+
+        public GameHistoryRow(String players, String dateTime, String difficulty,
+                              int finalScore, int remainingLives,
+                              String correctAnswers, String accuracy, String duration) {
+            this.players = players;
+            this.dateTime = dateTime;
+            this.difficulty = difficulty;
+            this.finalScore = finalScore;
+            this.remainingLives = remainingLives;
+            this.correctAnswers = correctAnswers;
+            this.accuracy = accuracy;
+            this.duration = duration;
+        }
+    }
+
+    public static class PlayerHistoryRow {
+        public final String player;
+        public final int totalGames;
+        public final int bestScore;
+        public final String averageAccuracy;
+        public final String preferredDifficulty;
+
+        public PlayerHistoryRow(String player, int totalGames, int bestScore,
+                                String averageAccuracy, String preferredDifficulty) {
+            this.player = player;
+            this.totalGames = totalGames;
+            this.bestScore = bestScore;
+            this.averageAccuracy = averageAccuracy;
+            this.preferredDifficulty = preferredDifficulty;
+        }
+    }
+
+    /**
+     * Called by the View when a game ends.
+     * Stores a GameHistoryEntry in the Model layer.
+     */
+    public void recordFinishedGame(String player1Name, String player2Name, long durationSeconds) {
+        if (currentGame == null) return;
+
+        boolean isWin = currentGame.getGameState() == GameState.WON;
+
+        int totalQ = currentGame.getTotalQuestionsAnswered();
+        int correctQ = currentGame.getTotalCorrectAnswers();
+
+        GameHistoryEntry entry = new GameHistoryEntry(
+                LocalDateTime.now(),
+                player1Name,
+                player2Name,
+                getDifficultyName(),
+                isWin ? "WON" : "LOST",
+                getSharedScore(),
+                getSharedLives(),
+                durationSeconds,
+                totalQ,
+                correctQ
+        );
+
+        GameHistoryManager.getInstance().addEntry(entry);
+    }
+
+    public List<GameHistoryRow> getGameHistory(String difficultyFilter,
+                                               String resultFilter,
+                                               String searchTerm) {
+        String diff = (difficultyFilter == null) ? "All" : difficultyFilter;
+        String res  = (resultFilter == null) ? "All" : resultFilter;
+        String search = (searchTerm == null) ? "" : searchTerm.trim().toLowerCase();
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yy HH:mm");
+
+        List<GameHistoryRow> rows = new ArrayList<>();
+
+        for (GameHistoryEntry e : GameHistoryManager.getInstance().getEntries()) {
+
+            if (!"All".equalsIgnoreCase(diff) &&
+                    !e.getDifficulty().equalsIgnoreCase(diff)) {
+                continue;
+            }
+
+            if (!"All".equalsIgnoreCase(res) &&
+                    !e.getResult().equalsIgnoreCase(res)) {
+                continue;
+            }
+
+            String p1 = e.getPlayer1Name() == null ? "" : e.getPlayer1Name();
+            String p2 = e.getPlayer2Name() == null ? "" : e.getPlayer2Name();
+            String playersCombined = p1 + " + " + p2;
+
+            if (!search.isEmpty()) {
+                if (!p1.toLowerCase().contains(search) &&
+                        !p2.toLowerCase().contains(search)) {
+                    continue;
+                }
+            }
+
+            rows.add(new GameHistoryRow(
+                    playersCombined,
+                    e.getTimestamp().format(fmt),
+                    e.getDifficulty(),
+                    e.getFinalScore(),
+                    e.getLivesLeft(),
+                    e.getCorrectAnswers() + "/" + e.getTotalQuestions(),
+                    e.getFormattedAccuracy(),
+                    e.getFormattedDuration()
+            ));
+        }
+
+        return rows;
+    }
+    public List<PlayerHistoryRow> getPlayersHistory(String difficultyFilter,
+                                                    String resultFilter,
+                                                    String searchTerm) {
+        // Reuse the same filtered games list
+        List<GameHistoryRow> games = getGameHistory(difficultyFilter, resultFilter, searchTerm);
+
+        // We need to re-read entries to get numeric accuracy etc.
+        // Make a map by "players string" -> underlying entries.
+        // Simpler: rebuild from the raw entries using same filters.
+
+        String diff = (difficultyFilter == null) ? "All" : difficultyFilter;
+        String res  = (resultFilter == null) ? "All" : resultFilter;
+        String search = (searchTerm == null) ? "" : searchTerm.trim().toLowerCase();
+
+        Map<String, PlayerStats> map = new HashMap<>();
+
+        for (GameHistoryEntry e : GameHistoryManager.getInstance().getEntries()) {
+
+            if (!"All".equalsIgnoreCase(diff) &&
+                    !e.getDifficulty().equalsIgnoreCase(diff)) {
+                continue;
+            }
+
+            if (!"All".equalsIgnoreCase(res) &&
+                    !e.getResult().equalsIgnoreCase(res)) {
+                continue;
+            }
+
+            String p1 = e.getPlayer1Name() == null ? "" : e.getPlayer1Name();
+            String p2 = e.getPlayer2Name() == null ? "" : e.getPlayer2Name();
+
+            if (!search.isEmpty()) {
+                if (!p1.toLowerCase().contains(search) &&
+                        !p2.toLowerCase().contains(search)) {
+                    continue;
+                }
+            }
+
+            double gameAcc = e.getAccuracy();
+
+            updatePlayerStats(map, p1, e, gameAcc);
+            updatePlayerStats(map, p2, e, gameAcc);
+        }
+
+        List<PlayerHistoryRow> rows = new ArrayList<>();
+        for (PlayerStats ps : map.values()) {
+            String avgAccStr = ps.totalGames > 0
+                    ? String.format("%.0f%%", ps.totalAccuracy / ps.totalGames)
+                    : "-";
+
+            rows.add(new PlayerHistoryRow(
+                    ps.name,
+                    ps.totalGames,
+                    ps.bestScore,
+                    avgAccStr,
+                    ps.getPreferredDifficulty()
+            ));
+        }
+
+        return rows;
+    }
+
+    // ==== helper used only inside controller ====
+
+    private void updatePlayerStats(Map<String, PlayerStats> map,
+                                   String playerName,
+                                   GameHistoryEntry e,
+                                   double gameAccuracy) {
+        if (playerName == null || playerName.isEmpty()) return;
+
+        PlayerStats ps = map.computeIfAbsent(playerName, PlayerStats::new);
+        ps.totalGames++;
+        ps.bestScore = Math.max(ps.bestScore, e.getFinalScore());
+        ps.totalAccuracy += gameAccuracy;
+        ps.incrementDifficulty(e.getDifficulty());
+    }
+
+    private static class PlayerStats {
+        final String name;
+        int totalGames = 0;
+        int bestScore = 0;
+        double totalAccuracy = 0.0;
+        final Map<String, Integer> difficultyCounts = new HashMap<>();
+
+        PlayerStats(String name) {
+            this.name = name;
+        }
+
+        void incrementDifficulty(String diff) {
+            if (diff == null) return;
+            difficultyCounts.merge(diff.toUpperCase(), 1, Integer::sum);
+        }
+
+        String getPreferredDifficulty() {
+            String best = "-";
+            int max = 0;
+            for (Map.Entry<String, Integer> e : difficultyCounts.entrySet()) {
+                if (e.getValue() > max) {
+                    max = e.getValue();
+                    best = e.getKey();
+                }
+            }
+            return best;
+        }
+
+
+    }
+
+    /**
+     * Ends the current game session and clears the model state.
+     * Called when player exits to Main Menu.
+     */
+    // In GameController
+    public void endGame() {
+        // if you want, you can later add logic like saving state, etc.
+        currentGame = null;
+    }
+
 
 
 }
