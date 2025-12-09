@@ -123,16 +123,29 @@ public class BoardPanel extends JPanel {
             }
 
             if (controller.isQuestionOrSurprise(boardNumber, r, c)) {
+
+                String cellType;
+                if (controller.isQuestionCell(boardNumber, r, c)) {
+                    cellType = "Question";
+                } else if (controller.isSurpriseCell(boardNumber, r, c)) {
+                    cellType = "Surprise";
+                } else {
+                    cellType = "Special";
+                }
+
                 int choice = JOptionPane.showConfirmDialog(
                         this,
-                        "Activate this special cell?\n(cost according to difficulty)",
-                        "Special Cell",
+                        "This is a " + cellType + " cell.\n" +
+                                "Do you want to activate it?\n",
+                        cellType + " Cell",
                         JOptionPane.YES_NO_OPTION
                 );
+
                 if (choice == JOptionPane.YES_OPTION) {
                     controller.activateSpecialCellUI(boardNumber, r, c);
                 }
             }
+
         }
 
         refresh();

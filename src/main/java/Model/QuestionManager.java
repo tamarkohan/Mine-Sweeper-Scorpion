@@ -129,5 +129,10 @@ public class QuestionManager {
         cols.add(sb.toString());
         return cols;
     }
+    public Question getRandomQuestion() {
+        if (questions.isEmpty()) return null;
+        return questions.get(random.nextInt(questions.size()));
+    }
+
 }
 
