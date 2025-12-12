@@ -1,21 +1,29 @@
 package Model;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Singleton Manager – stores all past games.
- * Pure MODEL (no Swing) for clean MVC.
- */
 public class GameHistoryManager {
 
     private static GameHistoryManager instance;
 
-    // list of Model.GameHistoryEntry
+    private static final String DEFAULT_CSV = "game_history.csv";
+    private final String csvPath;
+
     private final List<GameHistoryEntry> entries = new ArrayList<>();
 
-    private GameHistoryManager() { }
+    private GameHistoryManager() {
+        this(DEFAULT_CSV);
+    }
+
+    public GameHistoryManager(String csvPath) {
+        this.csvPath = csvPath;
+        loadFromFile();   // load on startup
+    }
 
     public static GameHistoryManager getInstance() {
         if (instance == null) {
@@ -24,20 +32,140 @@ public class GameHistoryManager {
         return instance;
     }
 
-    /** Adds a completed game to history. */
-    public void addEntry(GameHistoryEntry entry) {
-        if (entry == null) return;
-        // newest first (optional)
-        entries.add(0, entry);
-    }
-
-    /** Returns read-only list (Controller filters it). */
     public List<GameHistoryEntry> getEntries() {
         return Collections.unmodifiableList(entries);
     }
 
-    /** Clears history (optional admin/debug). */
-    public void clear() {
+    public void addEntry(GameHistoryEntry entry) {
+        if (entry == null) return;
+        entries.add(entry);
+        saveToFile();     // save every time
+    }
+
+    // ========================
+    // Persist to CSV
+    // ========================
+
+    private void saveToFile() {
+        try (BufferedWriter bw = new BufferedWriter(
+                new OutputStreamWriter(new FileOutputStream(csvPath), StandardCharsets.UTF_8))) {
+
+            // header
+            bw.write("timestamp,player1,player2,difficulty,result,finalScore,livesLeft,durationSeconds,totalQuestions,correctAnswers");
+            bw.newLine();
+
+            for (GameHistoryEntry e : entries) {
+                bw.write(toCsvLine(e));
+                bw.newLine();
+            }
+
+        } catch (IOException ex) {
+            System.out.println("Failed to save history: " + ex.getMessage());
+        }
+    }
+
+    private void loadFromFile() {
         entries.clear();
+
+        File f = new File(csvPath);
+        if (!f.exists()) return;
+
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8))) {
+
+            String line = br.readLine(); // skip header
+            if (line == null) return;
+
+            while ((line = br.readLine()) != null) {
+                GameHistoryEntry entry = parseCsvLine(line);
+                if (entry != null) entries.add(entry);
+            }
+
+        } catch (IOException ex) {
+            System.out.println("Failed to load history: " + ex.getMessage());
+        }
+    }
+
+    private String toCsvLine(GameHistoryEntry e) {
+        // timestamp stored as ISO string (LocalDateTime.toString())
+        return escape(e.getTimestamp().toString()) + "," +
+                escape(e.getPlayer1Name()) + "," +
+                escape(e.getPlayer2Name()) + "," +
+                escape(e.getDifficulty()) + "," +
+                escape(e.getResult()) + "," +
+                e.getFinalScore() + "," +
+                e.getLivesLeft() + "," +
+                e.getDurationSeconds() + "," +
+                e.getTotalQuestions() + "," +
+                e.getCorrectAnswers();
+    }
+
+    private GameHistoryEntry parseCsvLine(String line) {
+        // Simple CSV parsing with quotes support
+        List<String> parts = splitCsv(line);
+        if (parts.size() < 10) return null;
+
+        try {
+            LocalDateTime ts = LocalDateTime.parse(unescape(parts.get(0)));
+            String p1 = unescape(parts.get(1));
+            String p2 = unescape(parts.get(2));
+            String diff = unescape(parts.get(3));
+            String res = unescape(parts.get(4));
+            int score = Integer.parseInt(parts.get(5));
+            int lives = Integer.parseInt(parts.get(6));
+            long dur = Long.parseLong(parts.get(7));
+            int totalQ = Integer.parseInt(parts.get(8));
+            int correctQ = Integer.parseInt(parts.get(9));
+
+            return new GameHistoryEntry(ts, p1, p2, diff, res, score, lives, dur, totalQ, correctQ);
+
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private String escape(String s) {
+        if (s == null) s = "";
+        // quote if contains comma or quote
+        if (s.contains(",") || s.contains("\"") || s.contains("\n")) {
+            s = s.replace("\"", "\"\"");
+            return "\"" + s + "\"";
+        }
+        return s;
+    }
+
+    private String unescape(String s) {
+        if (s == null) return "";
+        s = s.trim();
+        if (s.startsWith("\"") && s.endsWith("\"") && s.length() >= 2) {
+            s = s.substring(1, s.length() - 1).replace("\"\"", "\"");
+        }
+        return s;
+    }
+
+    private List<String> splitCsv(String line) {
+        List<String> out = new ArrayList<>();
+        StringBuilder cur = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (int i = 0; i < line.length(); i++) {
+            char ch = line.charAt(i);
+
+            if (ch == '"') {
+                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    cur.append('"'); // escaped quote
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (ch == ',' && !inQuotes) {
+                out.add(cur.toString());
+                cur.setLength(0);
+            } else {
+                cur.append(ch);
+            }
+        }
+        out.add(cur.toString());
+        return out;
     }
 }
