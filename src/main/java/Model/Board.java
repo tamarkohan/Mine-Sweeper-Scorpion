@@ -49,10 +49,13 @@ public class Board {
      */
     private void placeMinesAndSpecialCells() {
         placeContent(totalMines, Cell.CellContent.MINE);
-        placeContent(totalQuestionCells, Cell.CellContent.QUESTION);
-        placeContent(totalSurpriseCells, Cell.CellContent.SURPRISE);
+
         calculateNumbers();
+
+        placeSpecialOnlyOnTrueEmpty(totalQuestionCells, Cell.CellContent.QUESTION);
+        placeSpecialOnlyOnTrueEmpty(totalSurpriseCells, Cell.CellContent.SURPRISE);
     }
+
     /**
      * Randomly assigns a given content type to EMPTY cells until count is reached.
      */
@@ -75,14 +78,43 @@ public class Board {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
                 if (cells[r][c].isMine()) continue;
+
                 int mines = countNeighborMines(r, c);
-                if (mines > 0 && cells[r][c].getContent() == Cell.CellContent.EMPTY) {
+                cells[r][c].setAdjacentMines(mines);
+
+                if (mines > 0) {
                     cells[r][c].setContent(Cell.CellContent.NUMBER);
-                    cells[r][c].setAdjacentMines(mines);
+                } else {
+                    // נשאר EMPTY (על זה מותר לשים Q/S)
+                    cells[r][c].setContent(Cell.CellContent.EMPTY);
                 }
             }
         }
     }
+
+    private void placeSpecialOnlyOnTrueEmpty(int count, Cell.CellContent type) {
+        java.util.List<Cell> eligible = new java.util.ArrayList<>();
+
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                Cell cell = cells[r][c];
+
+                // רק תאים שהם EMPTY וגם אין לידם מוקשים
+                if (cell.getContent() == Cell.CellContent.EMPTY && cell.getAdjacentMines() == 0) {
+                    eligible.add(cell);
+                }
+            }
+        }
+
+        java.util.Collections.shuffle(eligible, new java.util.Random());
+
+        int toPlace = Math.min(count, eligible.size());
+        for (int i = 0; i < toPlace; i++) {
+            eligible.get(i).setContent(type);
+        }
+    }
+
+
     /**
      * Counts how many neighboring cells (8-directional) contain mines.
      */
