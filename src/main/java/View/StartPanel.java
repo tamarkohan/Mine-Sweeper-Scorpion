@@ -18,15 +18,17 @@ public class StartPanel extends JPanel {
     private NeonInputField p1Field;
     private NeonInputField p2Field;
 
-    private DifficultyToggle tEasy;
-    private DifficultyToggle tMed;
-    private DifficultyToggle tHard;
+    private IconToggleButton tEasy;
+    private IconToggleButton tMed;
+    private IconToggleButton tHard;
+
 
     private IconButton btnStart;
     private IconButton btnBack;
     private NeonTextLabel lblPlayer1;
     private NeonTextLabel lblPlayer2;
 
+    JLabel lblLevel = new JLabel("LEVEL:");
 
 
     public StartPanel(StartGameListener listener) {
@@ -37,7 +39,7 @@ public class StartPanel extends JPanel {
     private void initComponents() {
         setLayout(new BorderLayout());
 
-        bg = new BackgroundPanel("/ui/start/bg.png");
+        bg = new BackgroundPanel("/ui/start/bG.png");
         bg.setLayout(null);
         add(bg, BorderLayout.CENTER);
         lblPlayer1 = new NeonTextLabel("PLAYER 1", new Color(255, 80, 80));
@@ -45,6 +47,12 @@ public class StartPanel extends JPanel {
 
         bg.add(lblPlayer1);
         bg.add(lblPlayer2);
+        lblLevel.setHorizontalAlignment(SwingConstants.CENTER);
+        lblLevel.setForeground(Color.WHITE);
+        lblLevel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 26)); // no loading
+        lblLevel.setOpaque(false);
+
+        bg.add(lblLevel);
 
 
         p1Field = new NeonInputField("PLAYER 1", new Color(255, 80, 80));
@@ -55,9 +63,22 @@ public class StartPanel extends JPanel {
 
 
 
-        tEasy = new DifficultyToggle("EASY");
-        tMed  = new DifficultyToggle("MEDIUM");
-        tHard = new DifficultyToggle("HARD");
+        tEasy = new IconToggleButton(
+                "/ui/start/easy_btn.png",
+                new Color(120, 255, 170)   // green
+        );
+
+        tMed = new IconToggleButton(
+                "/ui/start/medium_btn.png",
+                new Color(80, 180, 255)    // blue
+        );
+
+        tHard = new IconToggleButton(
+                "/ui/start/hard_btn.png",
+                new Color(255, 80, 80)     // red
+        );
+
+
 
         Font diffFont = new Font("Arial Black", Font.PLAIN, 28);
         tEasy.setFont(diffFont);
@@ -70,8 +91,11 @@ public class StartPanel extends JPanel {
         group.add(tHard);
         tEasy.setSelected(true);
 
-        btnStart = new IconButton("/ui/start/btn_start.png");
+        btnStart = new IconButton("/ui/start/start_btn.png");
         btnStart.setOnClick(this::handleStart);
+        bg.add(btnStart);
+
+
 
         // BACK icon (must exist in resources)
         ImageIcon backIcon = new ImageIcon(
@@ -106,21 +130,22 @@ public class StartPanel extends JPanel {
     private void layoutByRatio() {
         int W = bg.getWidth();
         int H = bg.getHeight();
-        setBoundsRatio(lblPlayer1, 0.20, 0.30, 0.30, 0.06, W, H);
-        setBoundsRatio(lblPlayer2, 0.51, 0.30, 0.30, 0.06, W, H);
+        setBoundsRatio(lblPlayer1, 0.19, 0.28, 0.30, 0.06, W, H);
+        setBoundsRatio(lblPlayer2, 0.51, 0.28, 0.30, 0.06, W, H);
 
-        setBoundsRatio(p1Field, 0.20, 0.36, 0.28, 0.12, W, H);
-        setBoundsRatio(p2Field, 0.52, 0.36, 0.28, 0.12, W, H);
+        setBoundsRatio(p1Field, 0.20, 0.33, 0.28, 0.12, W, H);
+        setBoundsRatio(p2Field, 0.52, 0.33, 0.28, 0.12, W, H);
 
-        setBoundsRatio(tEasy, 0.26, 0.63, 0.16, 0.09, W, H);
-        setBoundsRatio(tMed,  0.42, 0.63, 0.20, 0.09, W, H);
-        setBoundsRatio(tHard, 0.62, 0.63, 0.16, 0.09, W, H);
+        setBoundsRatio(tEasy, 0.20, 0.58, 0.18, 0.08, W, H);
+        setBoundsRatio(tMed,  0.41, 0.58, 0.18, 0.08, W, H);
+        setBoundsRatio(tHard, 0.62, 0.58, 0.18, 0.08, W, H);
 
 
-        setBoundsRatio(btnStart, 0.20, 0.70, 0.64, 0.42, W, H);
+        setBoundsRatio(btnStart, 0.25, 0.65, 0.50, 0.37, W, H);
 
         setBoundsRatio(btnBack, 0.03, 0.90, 0.06, 0.08, W, H);
 
+        setBoundsRatio(lblLevel, 0.41, 0.48, 0.18, 0.06, W, H); // centered above toggles
 
         bg.revalidate();
         bg.repaint();
