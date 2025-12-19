@@ -241,7 +241,7 @@ public class GameController {
             case HIDDEN:
                 return new CellViewData(true, "");
             case FLAGGED:
-                return new CellViewData(true, "F");
+                return new CellViewData(true, "🚩");
 
             case REVEALED: {
                 boolean enabled;

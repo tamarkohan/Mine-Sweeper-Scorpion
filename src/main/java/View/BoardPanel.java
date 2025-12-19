@@ -15,6 +15,7 @@ public class BoardPanel extends JPanel {
 
     private final GameController controller;
     private final int boardNumber;   // 1 or 2
+
     public interface MoveCallback {
         // endedTurn = true → a real reveal happened
         // endedTurn = false → only flag/unflag
@@ -23,13 +24,14 @@ public class BoardPanel extends JPanel {
 
     private final MoveCallback moveCallback;
     private JButton[][] buttons;
-    private JLabel waitLabel;
-    private boolean waiting;         // true = this player is currently not allowed to play
+
+    // האם השחקן מחכה לתור שלו
+    private boolean waiting;
 
     public BoardPanel(GameController controller,
                       int boardNumber,
                       boolean initiallyWaiting,
-                      MoveCallback  moveCallback) {
+                      MoveCallback moveCallback) {
         this.controller = controller;
         this.boardNumber = boardNumber;
         this.waiting = initiallyWaiting;
@@ -37,18 +39,17 @@ public class BoardPanel extends JPanel {
 
         initComponents();
     }
+
     /**
-     * Builds the board UI: grid of buttons + overlay label for "WAIT FOR YOUR TURN".
+     * Builds the board UI: grid of buttons.
      */
     private void initComponents() {
         int rows = controller.getBoardRows(boardNumber);
         int cols = controller.getBoardCols(boardNumber);
 
-        setLayout(new OverlayLayout(this));
+        setLayout(new GridLayout(rows, cols));
         setBackground(Color.BLACK);
-
-        JPanel gridPanel = new JPanel(new GridLayout(rows, cols));
-        gridPanel.setBackground(Color.BLACK);
+        setDoubleBuffered(true);
 
         buttons = new JButton[rows][cols];
 
@@ -62,10 +63,10 @@ public class BoardPanel extends JPanel {
                 btn.setFocusable(false);
                 btn.setPreferredSize(new Dimension(25, 25));
 
-                // 1. ActionListener for standard LEFT-CLICK (Reveal)
+                // LEFT CLICK → reveal
                 btn.addActionListener(e -> handleClick(rr, cc, false));
 
-                // 2. MouseListener for RIGHT-CLICK (Flagging)
+                // RIGHT CLICK → flag / unflag
                 btn.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
@@ -73,28 +74,69 @@ public class BoardPanel extends JPanel {
                             handleClick(rr, cc, true);
                         }
                     }
+
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                        if (waiting) {
+                            // כשמעבירים עכבר – נצייר שוב את שכבת ה-WAIT
+                            BoardPanel.this.repaint();
+                        }
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        if (waiting) {
+                            BoardPanel.this.repaint();
+                        }
+                    }
                 });
 
                 buttons[r][c] = btn;
-                gridPanel.add(btn);
+                add(btn);
             }
         }
 
-        add(gridPanel);
-
-        // Overlay label for "WAIT FOR YOUR TURN"
-        waitLabel = new JLabel("WAIT FOR YOUR TURN", SwingConstants.CENTER);
-        waitLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        waitLabel.setForeground(Color.BLACK);
-        waitLabel.setOpaque(true);
-        waitLabel.setBackground(new Color(255, 255, 255, 170));
-        waitLabel.setAlignmentX(0.5f);
-        waitLabel.setAlignmentY(0.5f);
-        waitLabel.setVisible(waiting);
-
-        add(waitLabel);
-
         refresh();
+    }
+
+
+    @Override
+    protected void paintChildren(Graphics g) {
+        super.paintChildren(g);
+
+        if (!waiting) {
+            return;
+        }
+
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+
+        int margin = 5;
+        int w = getWidth() - 2 * margin;
+        int h = getHeight() - 2 * margin;
+
+
+        g2.setColor(new Color(230, 230, 230, 210));
+        g2.fillRoundRect(margin, margin, w, h, 20, 20);
+
+
+        String text = "WAIT FOR YOUR TURN";
+        g2.setFont(new Font("Arial", Font.BOLD, 24));
+        FontMetrics fm = g2.getFontMetrics();
+        int textWidth = fm.stringWidth(text);
+        int textX = (getWidth() - textWidth) / 2;
+        int textY = getHeight() / 2;
+
+        g2.setColor(Color.BLACK);
+        g2.drawString(text, textX, textY);
+
+
+        int lineY = textY + 15;
+        g2.setStroke(new BasicStroke(2f));
+        g2.drawLine(getWidth() / 6, lineY, getWidth() * 5 / 6, lineY);
+
+        g2.dispose();
     }
 
     /**
@@ -103,22 +145,20 @@ public class BoardPanel extends JPanel {
     private void handleClick(int r, int c, boolean isFlagging) {
         if (!controller.isGameRunning()) return;
         if (controller.getCurrentPlayerTurn() != boardNumber) return;
-        if (waiting) return;
+        if (waiting) return; // כשיש WAIT – אין לחיצות
 
-        boolean endedTurn = false; // will become true only if we revealed a hidden cell
+        boolean endedTurn = false;
 
         if (isFlagging) {
-            // Right-click: flag/unflag only if not revealed
             if (!controller.isCellRevealed(boardNumber, r, c)) {
                 controller.toggleFlagUI(boardNumber, r, c);
             }
         } else {
-            // Left-click: reveal
             boolean wasRevealed = controller.isCellRevealed(boardNumber, r, c);
 
             if (!wasRevealed) {
                 controller.revealCellUI(boardNumber, r, c);
-                endedTurn = true;  // this is a real move
+                endedTurn = true;
                 refresh();
             }
 
@@ -145,30 +185,37 @@ public class BoardPanel extends JPanel {
                     controller.activateSpecialCellUI(boardNumber, r, c);
                 }
             }
-
         }
 
         refresh();
 
         if (moveCallback != null) {
-            moveCallback.onMove(endedTurn);   // tell GamePanel if we should end turn
+            moveCallback.onMove(endedTurn);
         }
 
         refresh();
     }
-
-
-
 
     /**
      * Updates the "waiting" state for this board (used when the turn changes).
      */
     public void setWaiting(boolean waiting) {
         this.waiting = waiting;
-        if (waitLabel != null) {
-            waitLabel.setVisible(waiting);
+
+
+        int rows = controller.getBoardRows(boardNumber);
+        int cols = controller.getBoardCols(boardNumber);
+        if (buttons != null) {
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    buttons[r][c].setEnabled(!waiting && controller.isGameRunning());
+                }
+            }
         }
+
+        repaint();
     }
+
     /**
      * Refreshes the visual state of all buttons according to the controller's cell view data.
      */
@@ -184,7 +231,7 @@ public class BoardPanel extends JPanel {
                 GameController.CellViewData data =
                         controller.getCellViewData(boardNumber, r, c);
 
-                if (!gameIsRunning) {
+                if (!gameIsRunning || waiting) {
                     btn.setEnabled(false);
                 } else {
                     btn.setEnabled(data.enabled);

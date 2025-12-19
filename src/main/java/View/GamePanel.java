@@ -267,7 +267,7 @@ public class GamePanel extends JPanel {
      * Called after each move from a BoardPanel.
      * Updates status, handles game over, and switches turns when appropriate.
      */
-    // endedTurn = true → revealed a cell, switch player
+    // endedTurn = true → revealed a cell, switch player (after small delay)
 // endedTurn = false → only flag, same player continues
     private void handleMoveMade(boolean endedTurn) {
         updateStatus();
@@ -282,14 +282,25 @@ public class GamePanel extends JPanel {
             return;
         }
 
-        // switch turn only if a reveal happened
         if (endedTurn && controller.isGameRunning()) {
-            controller.processTurnEnd();
-        }
+            updateTurnUI();
+            boardPanel1.refresh();
+            boardPanel2.refresh();
 
-        updateTurnUI();
-        boardPanel1.refresh();
-        boardPanel2.refresh();
+            Timer delayTimer = new Timer(500, e -> {
+                controller.processTurnEnd();
+                updateTurnUI();
+                boardPanel1.refresh();
+                boardPanel2.refresh();
+            });
+            delayTimer.setRepeats(false);
+            delayTimer.start();
+
+        } else {
+            updateTurnUI();
+            boardPanel1.refresh();
+            boardPanel2.refresh();
+        }
     }
 
 
