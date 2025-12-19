@@ -104,7 +104,7 @@ public class BoardPanel extends JPanel {
     protected void paintChildren(Graphics g) {
         super.paintChildren(g);
 
-        if (!waiting) {
+        if (!waiting || !controller.isGameRunning()) {
             return;
         }
 
