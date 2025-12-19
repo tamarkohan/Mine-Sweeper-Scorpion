@@ -44,52 +44,47 @@ public class MainMenuPanel extends JPanel {
         bg.add(btnHistory);
         bg.add(btnHowTo);
         bg.add(btnAdmin);
+
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override public void componentResized(java.awt.event.ComponentEvent e) {
+                revalidate();
+                repaint();
+            }
+        });
+
     }
 
     @Override
     public void doLayout() {
         super.doLayout();
 
-        int W = getWidth();
-        int H = getHeight();
+        bg.setBounds(0, 0, getWidth(), getHeight());
 
-        int btnW = Math.min(620, (int)(W * 0.62));
-        int btnH = 74;
-        int gap  = 24;
+        int W = bg.getWidth();
+        int H = bg.getHeight();
 
-        int totalH = btnH * 4 + gap * 3;
-        int x = (W - btnW) / 2;
-        int y = (H - totalH) / 2 + 70; // push down under title
+        // 👇 MANUAL CONTROLS (CHANGE THESE)
+        int leftMargin = (int)(W * 0.18);   // move buttons left/right
+        int topStart   = (int)(H * 0.31);   // move buttons up/down
+        int btnW       = (int)(W * 0.62);   // button width
+        int btnH       = (int)(H * 0.090);  // button height
+        int gap        = (int)(H * 0.030);  // space between buttons
 
-        btnStart.setBounds(
-                140,   // X
-                190,   // Y
-                600,   // WIDTH
-                60     // HEIGHT
-        );
+        int x = leftMargin;
+        int y = topStart;
 
-        // VIEW GAME HISTORY
-        btnHistory.setBounds(
-                140,
-                270,
-                600,
-                60
-        );
+        btnStart.setBounds(x, y, btnW, btnH);
+        y += btnH + gap;
 
-        // HOW TO PLAY
-        btnHowTo.setBounds(
-                140,
-                350,
-                600,
-                60
-        );
+        btnHistory.setBounds(x, y, btnW, btnH);
+        y += btnH + gap;
 
-        // QUESTION MANAGER
-        btnAdmin.setBounds(
-                140,
-                430,
-                600,
-                60
-        );
+        btnHowTo.setBounds(x, y, btnW, btnH);
+        y += btnH + gap;
+
+        btnAdmin.setBounds(x, y, btnW, btnH);
     }
+
+
+
 }

@@ -2,7 +2,6 @@ package View;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Objects;
 
 public class StartPanel extends JPanel {
 
@@ -136,14 +135,31 @@ public class StartPanel extends JPanel {
         setBoundsRatio(p1Field, 0.20, 0.33, 0.28, 0.12, W, H);
         setBoundsRatio(p2Field, 0.52, 0.33, 0.28, 0.12, W, H);
 
-        setBoundsRatio(tEasy, 0.20, 0.58, 0.18, 0.08, W, H);
-        setBoundsRatio(tMed,  0.41, 0.58, 0.18, 0.08, W, H);
-        setBoundsRatio(tHard, 0.62, 0.58, 0.18, 0.08, W, H);
+        // --- Difficulty buttons: same size, same Y, one line ---
+        // --- Difficulty buttons: same size, same Y, one line ---
+        // ===== LEVEL BUTTONS (PIXEL CONTROL – LIKE MAIN MENU) =====
+        int btnW = (int)(W * 0.27);   // width
+        int btnH = (int)(H * 0.29);   // height
+        int gap  = 0;
+
+        int total = btnW * 3 + gap * 2;
+        int startX = (W - total) / 2;
+        int y = (int)(H * 0.50);
+
+        tEasy.setBounds(startX,               y, btnW, btnH);
+        tMed .setBounds(startX + btnW + gap,  y, btnW, btnH);
+        tHard.setBounds(startX + (btnW + gap)*2, y, btnW, btnH);
 
 
-        setBoundsRatio(btnStart, 0.25, 0.65, 0.50, 0.37, W, H);
 
-        setBoundsRatio(btnBack, 0.03, 0.90, 0.06, 0.08, W, H);
+
+
+
+
+
+        setBoundsRatio(btnStart, 0.30, 0.56, 0.40, 0.41, W, H);
+
+        setBoundsRatio(btnBack, 0.03, 0.92, 0.04, 0.06, W, H);
 
         setBoundsRatio(lblLevel, 0.41, 0.48, 0.18, 0.06, W, H); // centered above toggles
 

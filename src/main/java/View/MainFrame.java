@@ -156,7 +156,8 @@ public class MainFrame extends JFrame
                         "Cell types:\n" +
                         "Mine – losing a life if revealed.\n" +
                         "Number – tells how many mines around.\n" +
-                        "Question (Q) – after reveal, you can pay points and answer a quiz\n" +
+                        "Question (Q) – " +
+                        "after reveal, you can pay points and answer a quiz\n" +
                         "(correct gives bonus, wrong can hurt).\n" +
                         "Surprise (S) – after reveal, you can pay points for random good/bad effect.\n\n" +
                         "Win / Lose:\n" +

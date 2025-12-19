@@ -10,10 +10,23 @@ import java.awt.image.BufferedImage;
 public class IconButton extends JComponent {
     private BufferedImage img;
     private boolean hover = false;
+    private boolean pressed = false;
     private Runnable onClick;
 
     // If true, removes black padding around the button (perfect for your menu PNGs)
     private final boolean cropBlackPadding;
+
+    // Glow tuning
+    private float hoverGlowAlpha   = 0.22f;
+    private float pressedGlowAlpha = 0.60f;
+    private int   hoverGlowPx      = 10;
+    private int   pressedGlowPx    = 18;
+
+    // Pop tuning
+    private double pressedScale = 1.03;
+
+    // Safe padding so pop never clips corners
+    private int safePadPx = 0;
 
     public IconButton(String imgPath) {
         this(imgPath, false);
@@ -27,7 +40,7 @@ public class IconButton extends JComponent {
             if (img == null) throw new RuntimeException("Image is null: " + imgPath);
 
             if (cropBlackPadding) {
-                img = cropNearBlack(img, 18); // threshold (0..255). 18 works well for “almost black”
+                img = cropNearBlack(img, 18);
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed loading: " + imgPath, e);
@@ -38,12 +51,23 @@ public class IconButton extends JComponent {
 
         addMouseListener(new MouseAdapter() {
             @Override public void mouseEntered(MouseEvent e) { hover = true; repaint(); }
-            @Override public void mouseExited(MouseEvent e)  { hover = false; repaint(); }
-            @Override public void mouseClicked(MouseEvent e) { if (onClick != null) onClick.run(); }
+            @Override public void mouseExited(MouseEvent e)  { hover = false; pressed = false; repaint(); }
+
+            @Override public void mousePressed(MouseEvent e) { pressed = true; repaint(); }
+            @Override public void mouseReleased(MouseEvent e) {
+                boolean inside = contains(e.getPoint());
+                pressed = false;
+                repaint();
+                if (inside && onClick != null) onClick.run();
+            }
         });
     }
 
     public void setOnClick(Runnable r) { this.onClick = r; }
+
+    // Optional setters if you want to tweak later
+    public void setSafePadPx(int px) { this.safePadPx = Math.max(0, px); repaint(); }
+    public void setPressedScale(double s) { this.pressedScale = Math.max(1.0, s); repaint(); }
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -53,16 +77,43 @@ public class IconButton extends JComponent {
 
         int w = getWidth();
         int h = getHeight();
+        if (w <= 0 || h <= 0 || img == null) {
+            g2.dispose();
+            return;
+        }
 
-        // glow on hover (slightly larger behind)
-        if (hover) {
-            g2.setComposite(AlphaComposite.SrcOver.derive(0.20f));
-            g2.drawImage(img, -8, -8, w + 16, h + 16, null);
+        // Scale (pop) around center, but we draw inside a safe padding
+        double scale = pressed ? pressedScale : 1.0;
+
+        int pad = safePadPx;
+        int iw = Math.max(1, w - pad * 2);
+        int ih = Math.max(1, h - pad * 2);
+
+        // ---- Draw glow (based on padded rect) ----
+        if (pressed) {
+            g2.setComposite(AlphaComposite.SrcOver.derive(pressedGlowAlpha));
+            g2.drawImage(img,
+                    pad - pressedGlowPx, pad - pressedGlowPx,
+                    iw + pressedGlowPx * 2, ih + pressedGlowPx * 2,
+                    null);
+            g2.setComposite(AlphaComposite.SrcOver);
+        } else if (hover) {
+            g2.setComposite(AlphaComposite.SrcOver.derive(hoverGlowAlpha));
+            g2.drawImage(img,
+                    pad - hoverGlowPx, pad - hoverGlowPx,
+                    iw + hoverGlowPx * 2, ih + hoverGlowPx * 2,
+                    null);
             g2.setComposite(AlphaComposite.SrcOver);
         }
 
-        // draw full fill
-        g2.drawImage(img, 0, 0, w, h, null);
+        // ---- Pop transform ----
+        // (we apply scaling around center, but because we draw inside pad, corners won't clip)
+        g2.translate(w / 2.0, h / 2.0);
+        g2.scale(scale, scale);
+        g2.translate(-w / 2.0, -h / 2.0);
+
+        // ---- Main image (inside padding) ----
+        g2.drawImage(img, pad, pad, iw, ih, null);
 
         g2.dispose();
     }
@@ -94,10 +145,8 @@ public class IconButton extends JComponent {
             }
         }
 
-        // If everything is black (or failed), return original
         if (maxX < minX || maxY < minY) return src;
 
-        // small padding so we don't cut the glow frame
         int pad = 6;
         minX = Math.max(0, minX - pad);
         minY = Math.max(0, minY - pad);
