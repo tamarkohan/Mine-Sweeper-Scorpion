@@ -180,31 +180,27 @@ public class Board {
      *
      * @return true if activation was successful, false otherwise
      */
+    // in Board.java
     public boolean activateSpecialCell(int r, int c) {
         if (!isValid(r, c)) return false;
 
         Cell cell = cells[r][c];
 
-        // Must be already revealed
-        if (!cell.isRevealed()) {
-            return false;
-        }
+        if (!cell.isRevealed()) return false;
 
-        // Only for QUESTION or SURPRISE cells
         if (cell.getContent() != Cell.CellContent.QUESTION &&
-                cell.getContent() != Cell.CellContent.SURPRISE) {
-            return false;
-        }
+                cell.getContent() != Cell.CellContent.SURPRISE) return false;
 
-        // Can be activated only once
-        if (cell.isUsed()) {
-            return false;
-        }
+        if (cell.isUsed()) return false;
 
-        cell.setUsed(true);
-        game.activateSpecialCell(cell.getContent(), cell.getQuestionId());
-        return true;
+        //  only mark used if activation actually succeeded
+        boolean activated = game.activateSpecialCell(this, cell.getContent());
+        if (activated) {
+            cell.setUsed(true);
+        }
+        return activated;
     }
+
 
 
 
@@ -288,24 +284,36 @@ public class Board {
         System.out.println("Reward: Could not find an unrevealed mine to show.");
     }
 
-    /**
-     * Reveals a random 3x3 area using the standard reveal logic.
-     */
-    public void revealRandom3x3Area() {
+    public void revealRandom3x3AreaReward() {
         Random rand = new Random();
-        int r = rand.nextInt(rows - 2); // Ensure 3x3 area fits
-        int c = rand.nextInt(cols - 2);
-
-        System.out.println("Reward: Revealing 3x3 area starting at (" + r + "," + c + ")");
+        int r0 = rand.nextInt(rows - 2);
+        int c0 = rand.nextInt(cols - 2);
 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                // Use revealCell to correctly update state, score, and safeCellsRemaining,
-                // and handle any mines found in the area.
-                revealCell(r + i, c + j);
+                int r = r0 + i;
+                int c = c0 + j;
+                Cell cell = cells[r][c];
+
+                // don't touch already processed cells
+                if (cell.isRevealed() || cell.isFlagged()) continue;
+
+                //  reveal visually only (no score/lives side effects)
+                cell.reveal();
+
+                //  if it's NOT a mine, count it as progress like a normal reveal
+                if (!cell.isMine()) {
+                    safeCellsRemaining--;
+                }
             }
         }
+
+        // after reward reveal, check win/loss (win possible)
+        game.checkGameStatus();
     }
+
+
+
     /**
      * Returns true if (r,c) is inside the board boundaries.
      */

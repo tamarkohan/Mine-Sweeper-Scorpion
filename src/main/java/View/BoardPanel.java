@@ -104,7 +104,7 @@ public class BoardPanel extends JPanel {
     protected void paintChildren(Graphics g) {
         super.paintChildren(g);
 
-        if (!waiting) {
+        if (!waiting || !controller.isGameRunning()) {
             return;
         }
 
@@ -145,7 +145,7 @@ public class BoardPanel extends JPanel {
     private void handleClick(int r, int c, boolean isFlagging) {
         if (!controller.isGameRunning()) return;
         if (controller.getCurrentPlayerTurn() != boardNumber) return;
-        if (waiting) return; // כשיש WAIT – אין לחיצות
+        if (waiting) return;
 
         boolean endedTurn = false;
 
@@ -153,36 +153,44 @@ public class BoardPanel extends JPanel {
             if (!controller.isCellRevealed(boardNumber, r, c)) {
                 controller.toggleFlagUI(boardNumber, r, c);
             }
+            // flagging does NOT end turn
         } else {
             boolean wasRevealed = controller.isCellRevealed(boardNumber, r, c);
 
+            // If not revealed -> reveal it now
             if (!wasRevealed) {
                 controller.revealCellUI(boardNumber, r, c);
-                endedTurn = true;
                 refresh();
+
+                // If it's NOT special -> reveal ends turn
+                if (!controller.isQuestionOrSurprise(boardNumber, r, c)) {
+                    endedTurn = true;
+                }
             }
 
+            // If it's special (Q/S), ask activation
             if (controller.isQuestionOrSurprise(boardNumber, r, c)) {
 
-                String cellType;
-                if (controller.isQuestionCell(boardNumber, r, c)) {
-                    cellType = "Question";
-                } else if (controller.isSurpriseCell(boardNumber, r, c)) {
-                    cellType = "Surprise";
-                } else {
-                    cellType = "Special";
-                }
+                String cellType = controller.isQuestionCell(boardNumber, r, c) ? "Question" : "Surprise";
 
                 int choice = JOptionPane.showConfirmDialog(
                         this,
-                        "This is a " + cellType + " cell.\n" +
-                                "Do you want to activate it?\n",
+                        "This is a " + cellType + " cell.\nDo you want to activate it?\n",
                         cellType + " Cell",
                         JOptionPane.YES_NO_OPTION
                 );
 
                 if (choice == JOptionPane.YES_OPTION) {
-                    controller.activateSpecialCellUI(boardNumber, r, c);
+                    boolean activated = controller.activateSpecialCellUI(boardNumber, r, c);
+
+                    //  activation succeeded -> end turn
+                    //  activation failed (not enough points etc.) -> DON'T end turn
+                    endedTurn = activated;
+
+                } else {
+                    // chose not to activate -> reveal still happened -> end turn
+                    // (only if the cell was just revealed this click OR already revealed and user is just skipping)
+                    endedTurn = true;
                 }
             }
         }
@@ -195,6 +203,7 @@ public class BoardPanel extends JPanel {
 
         refresh();
     }
+
 
     /**
      * Updates the "waiting" state for this board (used when the turn changes).

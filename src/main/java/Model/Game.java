@@ -22,6 +22,7 @@ public class Game {
     private String lastActionMessage;
     private int totalQuestionsAnswered;
     private int totalCorrectAnswers;
+
     /**
      * Question difficulty levels used for scoring and life rewards/penalties.
      */
@@ -180,62 +181,98 @@ public class Game {
      * Activates the behavior of a QUESTION or SURPRISE cell after it was revealed and chosen.
      * Deducts activation cost from score, then routes to surprise logic or question handling.
      */
-    public void activateSpecialCell(Cell.CellContent cellContent, Integer questionId) {
+    public boolean activateSpecialCell(Board board, Cell.CellContent cellContent) {
         if (cellContent != Cell.CellContent.QUESTION &&
                 cellContent != Cell.CellContent.SURPRISE) {
-            return;
+            return false;
         }
 
         int cost = difficulty.getActivationCost();
 
-        // Not enough points to activate
+        // Not enough points -> NO activation
         if (sharedScore < cost) {
             this.lastActionMessage = "You need at least " + cost +
                     " points to activate this " +
                     cellContent.name().toLowerCase() + " cell.";
-            return;
+            return false;
         }
 
-        // Pay activation cost
-        sharedScore -= cost;
-
-        // ===== SURPRISE =====
+        // ==========================
+        // SURPRISE
+        // ==========================
         if (cellContent == Cell.CellContent.SURPRISE) {
-            handleSurprise();   // random good/bad, already changes score & lives
-            return;
+            int beforeScore = sharedScore;
+            int beforeLives = sharedLives;
+
+            sharedScore -= cost;     // pay activation cost
+            handleSurprise();        // applies reward/penalty internally
+
+            int afterScore = sharedScore;
+            int afterLives = sharedLives;
+
+            this.lastActionMessage =
+                    "🎲 Surprise activated!\n" +
+                            "Activation cost: -" + cost + " pts\n" +
+                            "Score: " + beforeScore + " → " + afterScore + "\n" +
+                            "Lives: " + beforeLives + " → " + afterLives;
+
+            return true;
         }
 
-        // ===== QUESTION =====
+        // ==========================
+        // QUESTION
+        // ==========================
         if (questionManager == null || questionPresenter == null) {
             this.lastActionMessage = "Question system is not available.";
-            return;
+            return false;
         }
 
-        // If you want, you can later use questionId, for now random:
         Question q = questionManager.getRandomQuestion();
         if (q == null) {
             this.lastActionMessage = "No questions available.";
-            return;
+            return false;
         }
 
-        // Open popup with 4 answers – true if correct, false if wrong
-        boolean isCorrect = questionPresenter.presentQuestion(q);
+        int beforeScore = sharedScore;
+        int beforeLives = sharedLives;
 
-        // Map from CSV level string → QuestionLevel enum
+        // pay cost ONLY now
+        sharedScore -= cost;
+
+        boolean isCorrect = questionPresenter.presentQuestion(q);
         QuestionLevel level = q.getQuestionLevel();
 
-        // Apply scoring EXACTLY like the table (this method you already have)
-        processQuestionAnswer(level, isCorrect);
+        // apply table rules + get explanation
+        ScoreRules.Result r = processQuestionAnswer(level, isCorrect);
 
-        // Text for the info popup after the move
-        if (isCorrect) {
-            this.lastActionMessage =
-                    "Correct! Rewards were applied according to question level and game difficulty.";
-        } else {
-            this.lastActionMessage =
-                    "Wrong answer. Penalties were applied according to question level and game difficulty.";
+        // special effects (EASY GAME only, correct only)
+        String effect = "";
+        if (difficulty == Difficulty.EASY && isCorrect) {
+            if (level == QuestionLevel.MEDIUM) {
+                board.revealRandomMine(); // reward reveal, no extra cost
+                effect = "\nSpecial effect: revealed 1 mine (reward).";
+            } else if (level == QuestionLevel.HARD) {
+                board.revealRandom3x3AreaReward(); // reward reveal, no extra cost
+                effect = "\nSpecial effect: revealed random 3x3 area (reward).";
+            }
         }
+
+        int afterScore = sharedScore;
+        int afterLives = sharedLives;
+
+        this.lastActionMessage =
+                (isCorrect ? "✅ Correct!\n" : "❌ Wrong!\n") +
+                        "Activation cost: -" + cost + " pts\n" +
+                        r.details +
+                        effect +
+                        "\nScore: " + beforeScore + " → " + afterScore +
+                        "\nLives: " + beforeLives + " → " + afterLives;
+
+        return true;
     }
+
+
+
 
 
     /**
@@ -263,133 +300,33 @@ public class Game {
      * Processes the result of a question answer and applies points/lives
      * according to game difficulty and question level.
      */
-    public void processQuestionAnswer(QuestionLevel qLevel, boolean isCorrect) {
-        if (gameState != GameState.RUNNING) return;
-
-        totalQuestionsAnswered++;
-        if (isCorrect) {
-            totalCorrectAnswers++;
+    public ScoreRules.Result processQuestionAnswer(QuestionLevel qLevel, boolean isCorrect) {
+        if (gameState != GameState.RUNNING) {
+            return new ScoreRules.Result(0, 0, "Game not running.");
         }
 
-        Random rand = new Random();
+        totalQuestionsAnswered++;
+        if (isCorrect) totalCorrectAnswers++;
 
-        if (difficulty == Difficulty.EASY) {
-            // ===== GAME LEVEL: EASY =====
-            if (isCorrect) {
-                switch (qLevel) {
-                    case EASY:   // +3 pts & +1 life
-                        addRewards(3, 1);
-                        break;
-                    case MEDIUM: // +6 pts  (+ reveal mine – יעשה בלוגיקת לוח בהמשך)
-                        addRewards(6, 0);
-                        break;
-                    case HARD:   // +10 pts  (+ הצגת 3x3 – גם לוגיקת לוח)
-                        addRewards(10, 0);
-                        break;
-                    case EXPERT: // +15 pts & +2 lives
-                        addRewards(15, 2);
-                        break;
-                }
-            } else {
-                switch (qLevel) {
-                    case EASY:   // (-3 pts) OR nothing
-                        if (rand.nextBoolean()) applyPenalties(3, 0);
-                        break;
-                    case MEDIUM: // (-6 pts) OR nothing
-                        if (rand.nextBoolean()) applyPenalties(6, 0);
-                        break;
-                    case HARD:   // (-10 pts)
-                        applyPenalties(10, 0);
-                        break;
-                    case EXPERT: // (-15 pts & -1 life)
-                        applyPenalties(15, 1);
-                        break;
-                }
-            }
+        ScoreRules.Result r = ScoreRules.compute(difficulty, qLevel, isCorrect);
 
-        } else if (difficulty == Difficulty.MEDIUM) {
-            // ===== GAME LEVEL: MEDIUM =====
-            if (isCorrect) {
-                switch (qLevel) {
-                    case EASY:   // +8 pts & +1 life
-                        addRewards(8, 1);
-                        break;
-                    case MEDIUM: // +10 pts & +1 life
-                        addRewards(10, 1);
-                        break;
-                    case HARD:   // +15 pts & +1 life
-                        addRewards(15, 1);
-                        break;
-                    case EXPERT: // +20 pts & +2 lives
-                        addRewards(20, 2);
-                        break;
-                }
-            } else {
-                switch (qLevel) {
-                    case EASY:   // (-8 pts)
-                        applyPenalties(8, 0);
-                        break;
-                    case MEDIUM: // ((-10 pts & -1 life)) OR nothing
-                        if (rand.nextBoolean()) applyPenalties(10, 1);
-                        break;
-                    case HARD:   // (-15 pts & -1 life)
-                        applyPenalties(15, 1);
-                        break;
-                    case EXPERT: // ((-20 pts & -1 life)) OR ((-20 pts & -2 lives))
-                        if (rand.nextBoolean()) {
-                            applyPenalties(20, 1);
-                        } else {
-                            applyPenalties(20, 2);
-                        }
-                        break;
-                }
-            }
+        // apply score delta
+        sharedScore += r.deltaScore;
 
-        } else if (difficulty == Difficulty.HARD) {
-            // ===== GAME LEVEL: HARD =====
-            if (isCorrect) {
-                switch (qLevel) {
-                    case EASY:   // +10 pts & +1 life
-                        addRewards(10, 1);
-                        break;
-                    case MEDIUM: // ((+15 pts & +1 life)) OR ((+15 pts & +2 lives))
-                        if (rand.nextBoolean()) {
-                            addRewards(15, 1);
-                        } else {
-                            addRewards(15, 2);
-                        }
-                        break;
-                    case HARD:   // +20 pts & +2 lives
-                        addRewards(20, 2);
-                        break;
-                    case EXPERT: // +40 pts & +3 lives
-                        addRewards(40, 3);
-                        break;
-                }
-            } else {
-                switch (qLevel) {
-                    case EASY:   // (-10 pts & -1 life)
-                        applyPenalties(10, 1);
-                        break;
-                    case MEDIUM: // ((-15 pts & -1 life)) OR ((-15 pts & -2 lives))
-                        if (rand.nextBoolean()) {
-                            applyPenalties(15, 1);
-                        } else {
-                            applyPenalties(15, 2);
-                        }
-                        break;
-                    case HARD:   // (-20 pts & -2 lives)
-                        applyPenalties(20, 2);
-                        break;
-                    case EXPERT: // (-40 pts & -3 lives)
-                        applyPenalties(40, 3);
-                        break;
-                }
+        // apply lives delta (with cap handling through addLife)
+        if (r.deltaLives > 0) {
+            for (int i = 0; i < r.deltaLives; i++) {
+                addLife(difficulty.getActivationCost());
             }
+        } else if (r.deltaLives < 0) {
+            deductLife(-r.deltaLives);
         }
 
         checkGameStatus();
+        return r;
     }
+
+
 
 
     /**

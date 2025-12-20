@@ -50,7 +50,10 @@ public class QuestionDialog extends JDialog {
                 JOptionPane.showMessageDialog(this, "Please select an answer.", "No selection", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            correct = selected.charAt(0) == question.getCorrectOption();
+            char selectedChar = normalize(selected.charAt(0));
+            char correctChar  = normalize(question.getCorrectOption());
+
+            correct = (selectedChar == correctChar);
             dispose();
         });
 
@@ -71,4 +74,17 @@ public class QuestionDialog extends JDialog {
         dlg.setVisible(true);
         return dlg.correct;
     }
+
+    private char normalize(char ch) {
+        ch = Character.toUpperCase(ch);
+
+        // numeric → letter mapping
+        if (ch >= '1' && ch <= '4') {
+            return (char) ('A' + (ch - '1'));
+        }
+
+        // already A–D
+        return ch;
+    }
+
 }

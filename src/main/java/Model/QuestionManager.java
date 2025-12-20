@@ -79,18 +79,18 @@ public class QuestionManager {
      * Returns a random question filtered by game difficulty.
      * If no exact difficulty match exists, returns any available question.
      */
-    public Question getRandomQuestionForDifficulty(Difficulty difficulty) {
+    // in Model.QuestionManager
+    public Question getRandomQuestionByLevel(Game.QuestionLevel level) {
         if (questions.isEmpty()) return null;
-        String diffKey = difficulty.name().toUpperCase();
 
         List<Question> filtered = questions.stream()
-                .filter(q -> q.getDifficultyLevel() != null &&
-                        q.getDifficultyLevel().equalsIgnoreCase(diffKey))
-                .collect(Collectors.toList());
+                .filter(q -> q.getQuestionLevel() == level)
+                .toList();
 
         List<Question> pool = filtered.isEmpty() ? questions : filtered;
         return pool.get(random.nextInt(pool.size()));
     }
+
 
     public List<Question> getAllQuestions() {
         return Collections.unmodifiableList(questions);
