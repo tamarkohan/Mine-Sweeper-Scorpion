@@ -391,6 +391,14 @@ public class Game {
         return message;
     }
 
+    public void setLastActionMessage(String msg) {
+        this.lastActionMessage = msg;
+    }
+
+
+
+
+
     // --- Getters ---
 
     public GameState getGameState() { return gameState; }

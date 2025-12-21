@@ -349,7 +349,7 @@ public class GamePanel extends JPanel {
     private void displayOutcomePopup(String message) {
         JOptionPane.showMessageDialog(this,
                 message,
-                "SURPRISE TILE ACTIVATED!",
+                "Message",
                 JOptionPane.INFORMATION_MESSAGE);
     }
 

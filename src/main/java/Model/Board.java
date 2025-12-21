@@ -240,8 +240,11 @@ public class Board {
 
         // If trying to PLACE a new flag, enforce max flags = number of mines
         if (!wasFlagged && flagsPlaced >= totalMines) {
-            // optional feedback message (if you want)
-            // game.setLastActionMessage("No flags left! (" + flagsPlaced + "/" + totalMines + ")");
+            game.setLastActionMessage(
+                    "🚫 No flags left!\n" +
+                            "You already used all " + totalMines + " flags.\n" +
+                            "Remove a flag to place a new one."
+            );
             return;
         }
 
