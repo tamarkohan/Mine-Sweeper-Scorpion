@@ -15,6 +15,8 @@ public class Board {
     private final int totalSurpriseCells;
     private final Cell[][] cells;
     private final Game game;
+    private int flagsPlaced = 0;
+
 
     // Counter to track how many safe cells are left to reveal
     private int safeCellsRemaining;
@@ -229,35 +231,42 @@ public class Board {
      * SRS 3.1.1: Mine +1pt, Non-Mine -3pts.
      * This method must be VOID or return only if the action was successful for the Controller's logic to work.
      */
-    public void toggleFlag(int r, int c) { // 🔥 Changed to VOID
+    public void toggleFlag(int r, int c) {
         if (!isValid(r, c) || cells[r][c].isRevealed() || game.getGameState() != GameState.RUNNING) return;
 
         Cell cell = cells[r][c];
 
-        // Determine the state *before* toggling
         boolean wasFlagged = cell.isFlagged();
 
-        // Toggle the flag (returns true if the state changed successfully)
-        boolean stateChanged = cell.toggleFlag();
-
-        if (stateChanged) {
-            if (!wasFlagged) {
-                // Case 1: Flag was SET (HIDDEN -> FLAGGED) - This ends the turn.
-                if (cell.isMine()) {
-                    game.setSharedScore(game.getSharedScore() + game.getDifficulty().getMineFlagReward());
-                } else {
-                    game.setSharedScore(game.getSharedScore() + game.getDifficulty().getNonMineFlagPenalty());
-                }
-                // No return true/false here, as the Controller handles the turn switch logic using isFlagged() checks.
-
-            } else {
-                // Case 2: Flag was UNSET (FLAGGED -> HIDDEN) - Correction move.
-                // No score reversal is implemented here, just the state change.
-            }
+        // If trying to PLACE a new flag, enforce max flags = number of mines
+        if (!wasFlagged && flagsPlaced >= totalMines) {
+            // optional feedback message (if you want)
+            // game.setLastActionMessage("No flags left! (" + flagsPlaced + "/" + totalMines + ")");
+            return;
         }
-        // After every move, check if we Won or Lost
+
+        boolean stateChanged = cell.toggleFlag();
+        if (!stateChanged) return;
+
+        if (!wasFlagged) {
+            // placed a flag
+            flagsPlaced++;
+
+            // scoring ONLY when placing a flag
+            if (cell.isMine()) {
+                game.setSharedScore(game.getSharedScore() + game.getDifficulty().getMineFlagReward()); // +1
+            } else {
+                game.setSharedScore(game.getSharedScore() + game.getDifficulty().getNonMineFlagPenalty()); // -3
+            }
+        } else {
+            // removed a flag
+            flagsPlaced--;
+            // no score reversal (as per your current design)
+        }
+
         game.checkGameStatus();
     }
+
 
 
     /**
@@ -398,4 +407,12 @@ public class Board {
         if (isValid(row, col)) return cells[row][col];
         return null;
     }
+    public int getFlagsPlaced() {
+        return flagsPlaced;
+    }
+
+    public int getFlagsRemaining() {
+        return totalMines - flagsPlaced;
+    }
+
 }
