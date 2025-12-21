@@ -76,10 +76,11 @@ public class Game {
         }
 
         // 2. Win Condition Check (All mines found on EITHER board)
-        if (board1.areAllMinesFound() || board2.areAllMinesFound()) {
+        if (board1.isSolved() && board2.isSolved()) {
             gameState = GameState.WON;
             endGameProcessing();
         }
+
     }
 
     /**
