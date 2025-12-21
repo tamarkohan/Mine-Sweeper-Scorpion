@@ -67,21 +67,21 @@ public class Game {
     public void checkGameStatus() {
         if (gameState != GameState.RUNNING) return;
 
-        // 1. Loss Condition Check (Lives <= 0)
+        // Loss
         if (sharedLives <= 0) {
-            this.sharedLives = 0;
+            sharedLives = 0;
             gameState = GameState.LOST;
             endGameProcessing();
             return;
         }
 
-        // 2. Win Condition Check (All mines found on EITHER board)
-        if (board1.isSolved() && board2.isSolved()) {
+        // Win: one board found ALL mines
+        if (board1.areAllMinesFound() || board2.areAllMinesFound()) {
             gameState = GameState.WON;
             endGameProcessing();
         }
-
     }
+
 
     /**
      * Performs all necessary steps when the game ends (Win or Loss).
@@ -233,6 +233,8 @@ public class Game {
             this.lastActionMessage = "No questions available.";
             return false;
         }
+
+
 
         int beforeScore = sharedScore;
         int beforeLives = sharedLives;

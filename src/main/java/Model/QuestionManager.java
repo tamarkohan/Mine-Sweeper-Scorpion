@@ -1,10 +1,6 @@
 package Model;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,7 +14,7 @@ import java.util.stream.Collectors;
  */
 public class QuestionManager {
 
-    private static final String DEFAULT_CSV = "questions.csv";
+    private static final String DEFAULT_CSV = "/questions.csv";
     private final List<Question> questions = new ArrayList<>();
     private final Random random = new Random();
     private String csvPath = DEFAULT_CSV;
@@ -36,29 +32,38 @@ public class QuestionManager {
      */
     public void loadQuestions() {
         questions.clear();
-        File csvFile = new File(csvPath);
-        if (!csvFile.exists()) {
-            System.out.println("questions.csv not found. Using empty question list.");
-            return;
-        }
 
-        try (BufferedReader br = new BufferedReader(new FileReader(csvFile, StandardCharsets.UTF_8))) {
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(
+                        getClass().getResourceAsStream("/questions.csv"),
+                        StandardCharsets.UTF_8
+                )
+        )) {
+            if (br == null) {
+                System.out.println("questions.csv not found inside JAR.");
+                return;
+            }
+
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.trim().isEmpty()) continue;
-                // Simple CSV split (supports quoted commas by replacing)
+
                 List<String> cols = parseCsvLine(line);
                 try {
                     Question q = Question.fromCsvRow(cols.toArray(new String[0]));
                     questions.add(q);
                 } catch (Exception ex) {
-                    System.out.println("Failed to parse question row: " + line + " reason: " + ex.getMessage());
+                    System.out.println("Failed to parse question row: " + line);
                 }
             }
+
+            System.out.println("Loaded " + questions.size() + " questions.");
+
         } catch (Exception e) {
-            System.out.println("Error reading questions.csv: " + e.getMessage());
+            System.out.println("Error loading questions.csv: " + e.getMessage());
         }
     }
+
 
     /**
      * Saves current questions to CSV.
