@@ -25,7 +25,6 @@ public class BoardPanel extends JPanel {
     private final MoveCallback moveCallback;
     private JButton[][] buttons;
 
-    // האם השחקן מחכה לתור שלו
     private boolean waiting;
 
     public BoardPanel(GameController controller,

@@ -17,7 +17,6 @@ public class QuestionManager {
     private final List<Question> questions = new ArrayList<>();
     private final Random random = new Random();
 
-    // NOTE: for saving in admin mode (file system path) - your original design
     private String csvPath = DEFAULT_CSV;
 
     // Track used questions per game (by ID)

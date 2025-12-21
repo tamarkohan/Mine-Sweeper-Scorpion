@@ -38,10 +38,7 @@ public class GameHistoryManager {
         if (outFile.exists()) return;
 
         try (InputStream in = getClass().getResourceAsStream(RESOURCE_CSV)) {
-            // אם אין קובץ בריסורסס בכלל – פשוט נתחיל ריק
             if (in == null) return;
-
-            // יוצרים את הקובץ החיצוני ומעתיקים אליו את התוכן מהריסורסס
             try (OutputStream out = new FileOutputStream(outFile)) {
                 in.transferTo(out);
             }

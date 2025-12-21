@@ -287,7 +287,6 @@ public class Board {
             if (cell.isMine() && !cell.isRevealed() && !cell.isFlagged()) {
                 cell.reveal();
                 System.out.println("Reward: A mine at (" + r + "," + c + ") was safely revealed.");
-                // Note: The rule states "חשיפת משבצת מוקש" (Mine cell reveal) as the reward.
                 // The footnote states no score for automatic mine reveal.
                 return;
             }

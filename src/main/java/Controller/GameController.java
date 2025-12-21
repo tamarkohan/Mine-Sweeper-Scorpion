@@ -483,8 +483,6 @@ public class GameController {
         List<GameHistoryRow> games = getGameHistory(difficultyFilter, resultFilter, searchTerm);
 
         // We need to re-read entries to get numeric accuracy etc.
-        // Make a map by "players string" -> underlying entries.
-        // Simpler: rebuild from the raw entries using same filters.
 
         String diff = (difficultyFilter == null) ? "All" : difficultyFilter;
         String res  = (resultFilter == null) ? "All" : resultFilter;
