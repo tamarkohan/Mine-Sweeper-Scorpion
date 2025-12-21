@@ -7,6 +7,7 @@ import Controller.GameController.PlayerHistoryRow;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.net.URL;
 import java.util.List;
 
 /**
@@ -35,6 +36,17 @@ public class GameHistoryFrame extends JFrame {
         super("Game & Players History");
         this.controller = controller;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        // Set window icon
+        try {
+            URL iconUrl = getClass().getResource("/ui/icons/img_1.png");
+            if (iconUrl != null) {
+                ImageIcon icon = new ImageIcon(iconUrl);
+                setIconImage(icon.getImage());
+            }
+        } catch (Exception e) {
+            System.err.println("Could not load icon: " + e.getMessage());
+        }
 
         // ====== TABLE MODELS ======
         gamesModel = new DefaultTableModel(new String[]{

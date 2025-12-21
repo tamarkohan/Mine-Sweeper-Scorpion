@@ -4,6 +4,7 @@ import Controller.GameController;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
 
 /**
  * Main application frame.
@@ -37,6 +38,19 @@ public class MainFrame extends JFrame
     }
 
     private void createAndShowGUI() {
+        // Set window icon
+        try {
+            URL iconUrl = getClass().getResource("/ui/icons/img_1.png");
+            if (iconUrl != null) {
+                ImageIcon icon = new ImageIcon(iconUrl);
+                setIconImage(icon.getImage());
+            } else {
+                System.err.println("Icon image not found at /ui/icons/img_1.png");
+            }
+        } catch (Exception e) {
+            System.err.println("Could not load icon: " + e.getMessage());
+        }
+
         // Admin/debug menu for question management & history
         setJMenuBar(buildMenuBar());
 

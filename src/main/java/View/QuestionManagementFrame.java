@@ -6,6 +6,7 @@ import Model.QuestionManager;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +21,17 @@ public class QuestionManagementFrame extends JFrame {
     public QuestionManagementFrame(QuestionManager manager) {
         super("Question Management");
         this.manager = manager;
+
+        // Set window icon
+        try {
+            URL iconUrl = getClass().getResource("/ui/icons/img_1.png");
+            if (iconUrl != null) {
+                ImageIcon icon = new ImageIcon(iconUrl);
+                setIconImage(icon.getImage());
+            }
+        } catch (Exception e) {
+            System.err.println("Could not load icon: " + e.getMessage());
+        }
 
         String[] cols = {"ID", "Text", "A", "B", "C", "D", "Correct", "Difficulty"};
         model = new DefaultTableModel(cols, 0) {
