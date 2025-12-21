@@ -11,9 +11,13 @@ public class GameHistoryManager {
 
     private static GameHistoryManager instance;
 
-    private static final String DEFAULT_CSV = "game_history.csv";
-    private final String csvPath;
+    //  writeable location (works in JAR + IDE)
+    private static final String RESOURCE_CSV = "/game_history.csv";
+    private static final String HISTORY_FILE_NAME = "game_history.csv";
+    private static final String DEFAULT_CSV =
+            System.getProperty("user.home") + File.separator + HISTORY_FILE_NAME;
 
+    private final String csvPath;
     private final List<GameHistoryEntry> entries = new ArrayList<>();
 
     private GameHistoryManager() {
@@ -22,8 +26,31 @@ public class GameHistoryManager {
 
     public GameHistoryManager(String csvPath) {
         this.csvPath = csvPath;
-        loadFromFile();   // load on startup
+
+        //if external file doesn't exist yet -> copy initial history from resources
+        seedFromResourceIfMissing();
+
+        loadFromFile();
     }
+
+    private void seedFromResourceIfMissing() {
+        File outFile = new File(csvPath);
+        if (outFile.exists()) return;
+
+        try (InputStream in = getClass().getResourceAsStream(RESOURCE_CSV)) {
+            // אם אין קובץ בריסורסס בכלל – פשוט נתחיל ריק
+            if (in == null) return;
+
+            // יוצרים את הקובץ החיצוני ומעתיקים אליו את התוכן מהריסורסס
+            try (OutputStream out = new FileOutputStream(outFile)) {
+                in.transferTo(out);
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to seed history from resources: " + e.getMessage());
+        }
+    }
+
+
 
     public static GameHistoryManager getInstance() {
         if (instance == null) {
@@ -50,7 +77,6 @@ public class GameHistoryManager {
         try (BufferedWriter bw = new BufferedWriter(
                 new OutputStreamWriter(new FileOutputStream(csvPath), StandardCharsets.UTF_8))) {
 
-            // header
             bw.write("timestamp,player1,player2,difficulty,result,finalScore,livesLeft,durationSeconds,totalQuestions,correctAnswers");
             bw.newLine();
 
@@ -87,7 +113,6 @@ public class GameHistoryManager {
     }
 
     private String toCsvLine(GameHistoryEntry e) {
-        // timestamp stored as ISO string (LocalDateTime.toString())
         return escape(e.getTimestamp().toString()) + "," +
                 escape(e.getPlayer1Name()) + "," +
                 escape(e.getPlayer2Name()) + "," +
@@ -101,7 +126,6 @@ public class GameHistoryManager {
     }
 
     private GameHistoryEntry parseCsvLine(String line) {
-        // Simple CSV parsing with quotes support
         List<String> parts = splitCsv(line);
         if (parts.size() < 10) return null;
 
@@ -126,7 +150,6 @@ public class GameHistoryManager {
 
     private String escape(String s) {
         if (s == null) s = "";
-        // quote if contains comma or quote
         if (s.contains(",") || s.contains("\"") || s.contains("\n")) {
             s = s.replace("\"", "\"\"");
             return "\"" + s + "\"";
@@ -153,7 +176,7 @@ public class GameHistoryManager {
 
             if (ch == '"') {
                 if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
-                    cur.append('"'); // escaped quote
+                    cur.append('"');
                     i++;
                 } else {
                     inQuotes = !inQuotes;
@@ -167,5 +190,10 @@ public class GameHistoryManager {
         }
         out.add(cur.toString());
         return out;
+    }
+
+    // optional: useful for debug
+    public String getCsvPath() {
+        return csvPath;
     }
 }

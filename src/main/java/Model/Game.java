@@ -234,6 +234,8 @@ public class Game {
             return false;
         }
 
+
+
         int beforeScore = sharedScore;
         int beforeLives = sharedLives;
 
