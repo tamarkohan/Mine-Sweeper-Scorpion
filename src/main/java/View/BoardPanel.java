@@ -189,7 +189,7 @@ public class BoardPanel extends JPanel {
                 } else {
                     // chose not to activate -> reveal still happened -> end turn
                     // (only if the cell was just revealed this click OR already revealed and user is just skipping)
-                    endedTurn = true;
+                    endedTurn = false;
                 }
             }
         }
