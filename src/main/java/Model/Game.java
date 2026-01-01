@@ -1,6 +1,10 @@
 package Model;
 
 import java.util.Random;
+import Model.specialcell.QuestionActivator;
+import Model.specialcell.SpecialCellActivator;
+import Model.specialcell.SurpriseActivator;
+
 /**
  * Represents a cooperative Minesweeper game with two boards.
  * Manages shared lives, shared score, difficulty settings, questions and turns.
@@ -183,122 +187,24 @@ public class Game {
      * Deducts activation cost from score, then routes to surprise logic or question handling.
      */
     public boolean activateSpecialCell(Board board, Cell.CellContent cellContent) {
-        if (cellContent != Cell.CellContent.QUESTION &&
-                cellContent != Cell.CellContent.SURPRISE) {
-            return false;
-        }
+        SpecialCellActivator activator;
 
-        int cost = difficulty.getActivationCost();
-
-        // Not enough points -> NO activation
-        if (sharedScore < cost) {
-            this.lastActionMessage = "You need at least " + cost +
-                    " points to activate this " +
-                    cellContent.name().toLowerCase() + " cell.";
-            return false;
-        }
-
-        // ==========================
-        // SURPRISE
-        // ==========================
         if (cellContent == Cell.CellContent.SURPRISE) {
-            int beforeScore = sharedScore;
-            int beforeLives = sharedLives;
-
-            sharedScore -= cost;     // pay activation cost
-            handleSurprise();        // applies reward/penalty internally
-
-            int afterScore = sharedScore;
-            int afterLives = sharedLives;
-
-            this.lastActionMessage =
-                    "🎲 Surprise activated!\n" +
-                            "Activation cost: -" + cost + " pts\n" +
-                            "Score: " + beforeScore + " → " + afterScore + "\n" +
-                            "Lives: " + beforeLives + " → " + afterLives;
-
-            return true;
-        }
-
-        // ==========================
-        // QUESTION
-        // ==========================
-        if (questionManager == null || questionPresenter == null) {
-            this.lastActionMessage = "Question system is not available.";
-            return false;
-        }
-
-        Question q = questionManager.getRandomUnusedQuestionAnyLevel();
-        if (q == null) {
-            this.lastActionMessage = "No questions available.";
-            return false;
-        }
-
-
-
-        int beforeScore = sharedScore;
-        int beforeLives = sharedLives;
-
-        // pay cost ONLY now
-        sharedScore -= cost;
-
-        boolean isCorrect = questionPresenter.presentQuestion(q);
-        QuestionLevel level = q.getQuestionLevel();
-
-        // apply table rules + get explanation
-        ScoreRules.Result r = processQuestionAnswer(level, isCorrect);
-
-        // special effects (EASY GAME only, correct only)
-        String effect = "";
-        if (difficulty == Difficulty.EASY && isCorrect) {
-            if (level == QuestionLevel.MEDIUM) {
-                board.revealRandomMine(); // reward reveal, no extra cost
-                effect = "\nSpecial effect: revealed 1 mine (reward).";
-            } else if (level == QuestionLevel.HARD) {
-                board.revealRandom3x3AreaReward(); // reward reveal, no extra cost
-                effect = "\nSpecial effect: revealed random 3x3 area (reward).";
-            }
-        }
-
-        int afterScore = sharedScore;
-        int afterLives = sharedLives;
-
-        this.lastActionMessage =
-                (isCorrect ? "✅ Correct!\n" : "❌ Wrong!\n") +
-                        "Activation cost: -" + cost + " pts\n" +
-                        r.details +
-                        effect +
-                        "\nScore: " + beforeScore + " → " + afterScore +
-                        "\nLives: " + beforeLives + " → " + afterLives;
-
-        return true;
-    }
-
-
-
-
-
-    /**
-     * Handles SURPRISE cell effects: randomly applies good or bad outcome.
-     * Good: points + life; Bad: lose points + lose life.
-     */
-    private void handleSurprise() {
-        Random rand = new Random();
-        boolean isGoodSurprise = rand.nextBoolean();
-        int pointsValue = difficulty.getSurpriseValue();
-
-        String intro = "You've activated a Surprise cell! There's a 50/50 chance of a reward or a penalty. Let's see what you got...\n\n";
-
-        if (isGoodSurprise) {
-            sharedScore += pointsValue;
-            addLife(pointsValue);
-            this.lastActionMessage = intro + "A stroke of luck! You've been awarded " + pointsValue + " points and an extra life!";
+            activator = new SurpriseActivator(this, board);
+        } else if (cellContent == Cell.CellContent.QUESTION) {
+            activator = new QuestionActivator(this, board);
         } else {
-            sharedScore -= pointsValue;
-            deductLife(1);
-            this.lastActionMessage = intro + "An unfortunate turn of events! You've lost " + pointsValue + " points and a life.";
+            return false;
         }
+
+        return activator.activate(); // template method (final) runs the flow
     }
+
+
+
+
+
+
     /**
      * Processes the result of a question answer and applies points/lives
      * according to game difficulty and question level.
@@ -414,6 +320,13 @@ public class Game {
 
     public int getTotalCorrectAnswers() {
         return totalCorrectAnswers;
+    }
+    public boolean hasQuestionPresenter() {
+        return questionPresenter != null;
+    }
+
+    public boolean presentQuestion(Question q) {
+        return questionPresenter.presentQuestion(q);
     }
 
 }

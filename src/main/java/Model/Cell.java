@@ -16,6 +16,8 @@ public class Cell {
     private int adjacentMines;
     private boolean used;
     private Integer questionId;
+    private boolean askedActivation = false;
+
     /**
      * Creates a new EMPTY, HIDDEN cell at the specified board coordinates.
      */
@@ -131,5 +133,11 @@ public class Cell {
         return adjacentMines;
     }
 
+    public boolean wasAskedActivation() {
+        return askedActivation;
+    }
 
+    public void setAskedActivation(boolean asked) {
+        this.askedActivation = asked;
+    }
 }

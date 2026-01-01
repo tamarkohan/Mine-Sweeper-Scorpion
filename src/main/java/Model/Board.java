@@ -164,11 +164,9 @@ public class Board {
                 break;
 
             case QUESTION:
-                break;
-
             case SURPRISE:
+                autoRevealEmptyCells(r, c);
                 break;
-
             case NUMBER:
                 break;
         }

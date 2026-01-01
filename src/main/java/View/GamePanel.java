@@ -40,7 +40,6 @@ public class GamePanel extends JPanel {
     private List<JLabel> heartLabels;
 
     // Control Buttons
-    private JButton btnPause;
     private JButton btnRestart;
     private JButton btnExit;
     private final long startTimeMillis;
@@ -180,15 +179,13 @@ public class GamePanel extends JPanel {
 
         bottomOuter.add(heartsPanel);
 
-        // Control buttons (pause, restart, exit)
+        // Control buttons ( restart, exit)
         JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 25, 5));
         controlsPanel.setBackground(Color.BLACK);
 
-        btnPause = new JButton("Pause");
         btnRestart = new JButton("Restart");
         btnExit = new JButton("Exit");
 
-        styleControlButton(btnPause);
         styleControlButton(btnRestart);
         styleControlButton(btnExit);
 
@@ -210,10 +207,8 @@ public class GamePanel extends JPanel {
             updateTurnUI();
             boardPanel1.refresh();
             boardPanel2.refresh();
-            btnPause.setEnabled(true); // Re-enable pause on restart
         });
 
-        controlsPanel.add(btnPause);
         controlsPanel.add(btnRestart);
         controlsPanel.add(btnExit);
 
@@ -393,7 +388,6 @@ public class GamePanel extends JPanel {
         boardPanel2.setWaiting(true);
         boardPanel1.refresh();
         boardPanel2.refresh();
-        btnPause.setEnabled(false);
 
         boolean isWin = controller.getCurrentGame().getGameState() == Model.GameState.WON;
         String title = isWin ? "Congratulations, You Won!" : "Game Over";

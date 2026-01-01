@@ -154,20 +154,18 @@ public class BoardPanel extends JPanel {
             }
             // flagging does NOT end turn
         } else {
-            boolean wasRevealed = controller.isCellRevealed(boardNumber, r, c);
 
-            // If not revealed -> reveal it now
-            if (!wasRevealed) {
+            boolean wasRevealedBeforeClick = controller.isCellRevealed(boardNumber, r, c);
+            boolean revealedNow = false;
+
+            // reveal only if it wasn't revealed yet
+            if (!wasRevealedBeforeClick) {
                 controller.revealCellUI(boardNumber, r, c);
+                revealedNow = true;   // <-- THIS is the key
                 refresh();
-
-                // If it's NOT special -> reveal ends turn
-                if (!controller.isQuestionOrSurprise(boardNumber, r, c)) {
-                    endedTurn = true;
-                }
             }
 
-            // If it's special (Q/S), ask activation
+            // special? always show popup
             if (controller.isQuestionOrSurprise(boardNumber, r, c)) {
 
                 String cellType = controller.isQuestionCell(boardNumber, r, c) ? "Question" : "Surprise";
@@ -181,16 +179,15 @@ public class BoardPanel extends JPanel {
 
                 if (choice == JOptionPane.YES_OPTION) {
                     boolean activated = controller.activateSpecialCellUI(boardNumber, r, c);
-
-                    //  activation succeeded -> end turn
-                    //  activation failed (not enough points etc.) -> DON'T end turn
-                    endedTurn = activated;
-
+                    endedTurn = activated; // activation success ends turn
                 } else {
-                    // chose not to activate -> reveal still happened -> end turn
-                    // (only if the cell was just revealed this click OR already revealed and user is just skipping)
-                    endedTurn = true;
+                    // ✅ NO ends turn ONLY if the cell was revealed NOW (this click)
+                    endedTurn = revealedNow;
                 }
+
+            } else {
+                // not special -> if we revealed now, turn ends
+                endedTurn = revealedNow;
             }
         }
 
@@ -202,6 +199,8 @@ public class BoardPanel extends JPanel {
 
         refresh();
     }
+
+
 
 
     /**

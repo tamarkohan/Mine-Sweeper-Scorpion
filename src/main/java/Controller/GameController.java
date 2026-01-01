@@ -591,6 +591,22 @@ public class GameController {
         // if you want, you can later add logic like saving state, etc.
         currentGame = null;
     }
+    public boolean wasSpecialAsked(int boardNumber, int row, int col) {
+        Board board = getBoard(boardNumber);
+        if (board == null) return false;
+        Cell cell = board.getCell(row, col);
+        if (cell == null) return false;
+        return cell.wasAskedActivation();
+    }
+
+    public void markSpecialAsked(int boardNumber, int row, int col) {
+        Board board = getBoard(boardNumber);
+        if (board == null) return;
+        Cell cell = board.getCell(row, col);
+        if (cell == null) return;
+        cell.setAskedActivation(true);
+    }
+
 
 
 
