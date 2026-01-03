@@ -65,7 +65,7 @@ public class MainFrame extends JFrame
         setContentPane(cardPanel);
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(900, 700);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
 
         // show first screen
@@ -85,10 +85,27 @@ public class MainFrame extends JFrame
     public void onStartGame(String player1Name, String player2Name, String difficultyKey) {
         controller.startNewGame(difficultyKey);
 
-        gamePanel = new GamePanel(controller, player1Name, player2Name);
+        if (gamePanel != null) {
+            cardPanel.remove(gamePanel);
+        }
+
+        gamePanel = new GamePanel(
+                controller,
+                player1Name,
+                player2Name,
+                () -> {
+                    controller.endGame();
+                    cardLayout.show(cardPanel, "MENU");
+                }
+        );
+
         cardPanel.add(gamePanel, "GAME");
         cardLayout.show(cardPanel, "GAME");
+
+        cardPanel.revalidate();
+        cardPanel.repaint();
     }
+
 
     /**
      * Callback from StartPanel when the user presses the BACK button.

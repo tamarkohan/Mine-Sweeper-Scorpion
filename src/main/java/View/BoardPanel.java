@@ -6,6 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import View.IconCache;
 
 /**
  * View component for a single player's board.
@@ -15,12 +16,14 @@ public class BoardPanel extends JPanel {
 
     private final GameController controller;
     private final int boardNumber;   // 1 or 2
-
     public interface MoveCallback {
         // endedTurn = true → a real reveal happened
         // endedTurn = false → only flag/unflag
         void onMove(boolean endedTurn);
     }
+    private static final int MIN_CELL = 18;
+    private static final int MAX_CELL = 80;   // <-- bigger than 60 so Medium/Hard can grow more
+    private int cellSize = 40;
 
     private final MoveCallback moveCallback;
     private JButton[][] buttons;
@@ -39,6 +42,36 @@ public class BoardPanel extends JPanel {
         initComponents();
     }
 
+    public void setCellSize(int newSize) {
+        int maxCell = 120; // אפשר להשאיר ככה, הגבלת גודל תאים
+        newSize = Math.max(MIN_CELL, Math.min(newSize, maxCell));
+
+        this.cellSize = newSize;
+
+        int rows = controller.getBoardRows(boardNumber);
+        int cols = controller.getBoardCols(boardNumber);
+
+        Dimension pref = new Dimension(cols * cellSize, rows * cellSize);
+
+        setPreferredSize(pref);
+        setMinimumSize(new Dimension(cols * MIN_CELL, rows * MIN_CELL));
+        setMaximumSize(pref); // חשוב ל-GridBag שלא “ישחק” לך עם זה
+
+        if (buttons != null) {
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    buttons[r][c].setPreferredSize(new Dimension(cellSize, cellSize));
+                }
+            }
+        }
+
+        revalidate();
+        repaint();
+    }
+
+
+
+
     /**
      * Builds the board UI: grid of buttons.
      */
@@ -46,46 +79,58 @@ public class BoardPanel extends JPanel {
         int rows = controller.getBoardRows(boardNumber);
         int cols = controller.getBoardCols(boardNumber);
 
-        setLayout(new GridLayout(rows, cols));
-        setBackground(Color.BLACK);
+        // Auto cell size based on grid size - START WITH LARGER VALUES
+        int maxDim = Math.max(rows, cols);
+
+        if (maxDim <= 9) {
+            this.cellSize = 48;  // Easy: 9x9
+        } else if (maxDim <= 13) {  // ← Changed from 12 to 13
+            this.cellSize = 42;  // Medium: 13x13 - START BIGGER
+        } else {
+            this.cellSize = 30;  // Hard: 16x16
+        }
+
+// try 38-45 until it fits your background nicely
+
+        // Let the board have a REAL preferred size (so it won't stretch huge)
+        setLayout(new GridLayout(rows, cols, 0, 0));
+        setOpaque(false);                // important: don't paint a solid bg
         setDoubleBuffered(true);
+
+        // This forces Swing to keep the board at this size (when wrapped properly)
+
+        Dimension pref = new Dimension(cols * this.cellSize, rows * this.cellSize);
+        setPreferredSize(pref);
+
+// minimum should be based on MIN_CELL, not current cellSize
+        Dimension min = new Dimension(cols * MIN_CELL, rows * MIN_CELL);
+        setMinimumSize(min);
 
         buttons = new JButton[rows][cols];
 
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
+
                 final int rr = r;
                 final int cc = c;
 
                 JButton btn = new JButton();
                 btn.setMargin(new Insets(0, 0, 0, 0));
-                btn.setFocusable(false);
-                btn.setPreferredSize(new Dimension(25, 25));
 
-                // LEFT CLICK → reveal
+                //  style AFTER creating button
+                styleCellButton(btn);
+
+                // size
+                btn.setPreferredSize(new Dimension(this.cellSize, this.cellSize));
+
+                // clicks...
                 btn.addActionListener(e -> handleClick(rr, cc, false));
 
-                // RIGHT CLICK → flag / unflag
                 btn.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
                         if (SwingUtilities.isRightMouseButton(e)) {
                             handleClick(rr, cc, true);
-                        }
-                    }
-
-                    @Override
-                    public void mouseEntered(MouseEvent e) {
-                        if (waiting) {
-                            // כשמעבירים עכבר – נצייר שוב את שכבת ה-WAIT
-                            BoardPanel.this.repaint();
-                        }
-                    }
-
-                    @Override
-                    public void mouseExited(MouseEvent e) {
-                        if (waiting) {
-                            BoardPanel.this.repaint();
                         }
                     }
                 });
@@ -96,7 +141,9 @@ public class BoardPanel extends JPanel {
         }
 
         refresh();
+
     }
+
 
 
     @Override
@@ -181,7 +228,7 @@ public class BoardPanel extends JPanel {
                     boolean activated = controller.activateSpecialCellUI(boardNumber, r, c);
                     endedTurn = activated; // activation success ends turn
                 } else {
-                    // ✅ NO ends turn ONLY if the cell was revealed NOW (this click)
+                    //  NO ends turn ONLY if the cell was revealed NOW (this click)
                     endedTurn = revealedNow;
                 }
 
@@ -244,10 +291,97 @@ public class BoardPanel extends JPanel {
                     btn.setEnabled(data.enabled);
                 }
 
-                btn.setText(data.text);
+// reset every time
+                btn.setText("");
+                btn.setIcon(null);
+                btn.setDisabledIcon(null);
+
+                String t = data.text;
+
+// --- FLAGS ---
+                if ("🚩".equals(t)) {
+                    btn.setIcon(IconCache.icon("/ui/cells/flag.png", (int)(cellSize * 0.80)));
+                    btn.setDisabledIcon(btn.getIcon());
+                }
+// --- MINES ---
+                else if ("M".equals(t)) {
+                    btn.setIcon(IconCache.icon("/ui/cells/mine.png", (int)(cellSize * 0.85)));
+                    btn.setDisabledIcon(btn.getIcon());
+                }
+// --- QUESTION ---
+                else if ("Q".equals(t)) {
+                    btn.setIcon(IconCache.icon("/ui/cells/question.png", (int)(cellSize * 0.82)));
+                    btn.setDisabledIcon(btn.getIcon());
+                }
+// --- SURPRISE ---
+                else if ("S".equals(t)) {
+                    btn.setIcon(IconCache.icon("/ui/cells/surprise.png", (int)(cellSize * 0.82)));
+                    btn.setDisabledIcon(btn.getIcon());
+                }
+// --- NUMBERS / EMPTY ---
+                else {
+                    // numbers or empty
+                    btn.setText(t);
+                }
+
+                boolean revealed = controller.isCellRevealed(boardNumber, r, c);
+
+                if (boardNumber == 1) {
+                    if (!revealed) {
+                        btn.setBackground(new Color(255, 165, 165));
+                        btn.setForeground(Color.BLACK);
+                        btn.setBorder(BorderFactory.createLineBorder(
+                                new Color(184, 82, 82, 140), 1)); // ← lighter grid
+                    } else {
+                        btn.setBackground(new Color(255, 215, 215));
+                        btn.setForeground(new Color(40, 40, 40));
+                        btn.setBorder(BorderFactory.createLineBorder(
+                                new Color(200, 150, 150, 120), 1)); // even softer
+                    }
+                }
+                else {
+                    if (!revealed) {
+                        btn.setBackground(new Color(210, 230, 255));
+                        btn.setBorder(BorderFactory.createLineBorder(new Color(40, 90, 160, 180), 1));
+                    } else {
+                        btn.setBackground(new Color(235, 235, 235));
+                        btn.setBorder(BorderFactory.createLineBorder(new Color(120, 120, 120, 120), 1));
+                    }
+                }
+
+
             }
         }
         revalidate();
         repaint();
     }
+
+    private void styleCellButton(JButton btn) {
+        btn.setFocusable(false);
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(true);
+        btn.setContentAreaFilled(true);
+        btn.setOpaque(true);
+        btn.setHorizontalAlignment(SwingConstants.CENTER);
+        btn.setVerticalAlignment(SwingConstants.CENTER);
+        btn.setHorizontalTextPosition(SwingConstants.CENTER);
+        btn.setVerticalTextPosition(SwingConstants.CENTER);
+
+        btn.setFont(new Font("Arial", Font.BOLD, 14));
+        btn.setForeground(new Color(20, 20, 20));
+
+        if (boardNumber == 1) {
+            // red board grid color (a bit darker than cell)
+            btn.setBorder(BorderFactory.createLineBorder(new Color(190, 120, 120, 140), 1));
+            btn.setBackground(new Color(255, 165, 165));
+        } else {
+            // blue board grid color
+            btn.setBorder(BorderFactory.createLineBorder(new Color(40, 90, 160, 180), 1));
+            btn.setBackground(new Color(210, 230, 255));
+        }
+
+    }
+
 }
+
+

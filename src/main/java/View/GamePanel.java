@@ -22,14 +22,9 @@ public class GamePanel extends JPanel {
 
     private BoardPanel boardPanel1;
     private BoardPanel boardPanel2;
-
-    // Top labels
-    private JLabel lblTitle;
-    private JLabel lblLevel;
-
     // Player area labels
-    private JLabel lblPlayer1Box;
-    private JLabel lblPlayer2Box;
+    private NeonInputField playerBox1;
+    private NeonInputField playerBox2;
     private JLabel lblMinesLeft1;
     private JLabel lblMinesLeft2;
 
@@ -37,19 +32,26 @@ public class GamePanel extends JPanel {
     private JLabel lblScore;
     private JLabel lblLives;
     private JPanel heartsPanel;
-    private List<JLabel> heartLabels;
+    private java.util.List<NeonHeart> heartLabels;
 
     // Control Buttons
-    private JButton btnRestart;
-    private JButton btnExit;
+    private IconButton btnRestart;
+    private IconButton btnExit;
     private final long startTimeMillis;
+    private JPanel wrap1;
+    private JPanel wrap2;
+    private JPanel centerPanel;
+    private Timer resizeStabilizer;
+    private final Runnable onBackToMenu;
+
 
 
     public GamePanel(GameController controller,
-                     String player1Name, String player2Name) {
+                     String player1Name, String player2Name,Runnable onBackToMenu) {
         this.controller = controller;
         this.player1Name = player1Name;
         this.player2Name = player2Name;
+        this.onBackToMenu = onBackToMenu;
         this.startTimeMillis = System.currentTimeMillis();
 
 
@@ -61,184 +63,262 @@ public class GamePanel extends JPanel {
         updateStatus();
         updateTurnUI();
     }
+
     /**
      * Builds the UI layout: title, two player areas, and bottom status/control area.
      */
     private void initComponents() {
         setLayout(new BorderLayout());
-        setBackground(Color.BLACK);
+        setOpaque(false);
 
+        // ===== Pick background by difficulty =====
         String levelName = controller.getDifficultyName();
+        String bgPath;
+        switch (levelName) {
+            case "EASY" -> bgPath = "/ui/game/bg_easy.png";
+            case "MEDIUM" -> bgPath = "/ui/game/bg_medium.png";
+            case "HARD" -> bgPath = "/ui/game/bg_hard.png";
+            default -> bgPath = "/ui/game/bg_easy.png";
+        }
 
-        // ===== TOP: title + level =====
-        JPanel topPanel = new JPanel();
-        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
-        topPanel.setBackground(Color.BLACK);
+        BackgroundPanel bg = new BackgroundPanel(bgPath);
+        bg.setLayout(new BorderLayout());
+        bg.setOpaque(false);
+        add(bg, BorderLayout.CENTER);
 
-        lblTitle = new JLabel("SCORPION MINESWEEPER", SwingConstants.CENTER);
-        lblTitle.setForeground(Color.WHITE);
-        lblTitle.setFont(new Font("Arial", Font.BOLD, 32));
-        lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        lblLevel = new JLabel("LEVEL:  " + levelName, SwingConstants.CENTER);
-        lblLevel.setForeground(Color.WHITE);
-        lblLevel.setFont(new Font("Arial", Font.BOLD, 20));
-        lblLevel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        topPanel.add(Box.createVerticalStrut(10));
-        topPanel.add(lblTitle);
-        topPanel.add(Box.createVerticalStrut(10));
-        topPanel.add(lblLevel);
-        topPanel.add(Box.createVerticalStrut(10));
-
-        add(topPanel, BorderLayout.NORTH);
-
-        // ===== CENTER: two player panels =====
-        JPanel centerPanel = new JPanel(new GridLayout(1, 2, 40, 0));
-        centerPanel.setBackground(Color.BLACK);
-        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 40, 10, 40));
+        // =========================
+        // CENTER: two player panels
+        // =========================
+        centerPanel = new JPanel(new GridLayout(1, 2, 40, 0));
+        centerPanel.setOpaque(false);
+        bg.add(centerPanel, BorderLayout.CENTER);
 
         // ----- Player 1 side -----
-        JPanel leftSide = new JPanel();
-        leftSide.setLayout(new BoxLayout(leftSide, BoxLayout.Y_AXIS));
-        leftSide.setBackground(Color.BLACK);
+        JPanel leftSide = new JPanel(new BorderLayout());
+        leftSide.setOpaque(false);
 
-        lblPlayer1Box = createPlayerBoxLabel(player1Name);
-        leftSide.add(lblPlayer1Box);
+// top area (name + mines)
+        JPanel leftTop = new JPanel();
+        leftTop.setLayout(new BoxLayout(leftTop, BoxLayout.Y_AXIS));
+        leftTop.setOpaque(false);
+        leftTop.setBorder(BorderFactory.createEmptyBorder(42, 0, 0, 0));
 
-        leftSide.add(Box.createVerticalStrut(5));
+        playerBox1 = new NeonInputField(new Color(255, 80, 80));
+        playerBox1.setText(player1Name);
+        playerBox1.setDisplayMode(true);
+        playerBox1.setAlignmentX(Component.CENTER_ALIGNMENT);
+        playerBox1.setFieldWidth(210); // half of 420
+        leftTop.add(playerBox1);
+        leftTop.add(Box.createVerticalStrut(20));
 
-        lblMinesLeft1 = new JLabel("MINES LEFT: " + controller.getTotalMines(1),
-                SwingConstants.CENTER);
+        lblMinesLeft1 = new JLabel("MINES LEFT: " + controller.getTotalMines(1), SwingConstants.CENTER);
         lblMinesLeft1.setForeground(Color.WHITE);
         lblMinesLeft1.setFont(new Font("Arial", Font.BOLD, 14));
         lblMinesLeft1.setAlignmentX(Component.CENTER_ALIGNMENT);
-        leftSide.add(lblMinesLeft1);
 
-        leftSide.add(Box.createVerticalStrut(5));
+        leftTop.add(lblMinesLeft1);
 
-        // Player 1 starts → not waiting
+        JPanel leftTopWrapper = new JPanel(new BorderLayout());
+        leftTopWrapper.setOpaque(false);
+
+        leftTopWrapper.setBorder(
+                BorderFactory.createEmptyBorder(90, 0, 0, 0)
+        );
+
+        leftTopWrapper.add(leftTop, BorderLayout.CENTER);
+        leftSide.add(leftTopWrapper, BorderLayout.NORTH);
+
+// board area (expands!)
         boardPanel1 = new BoardPanel(controller, 1, false, this::handleMoveMade);
-        leftSide.add(boardPanel1);
+        boardPanel1.setOpaque(false);
+
+        NeonFramePanel leftGlow = new NeonFramePanel(new Color(255, 80, 80), 14, 24);
+        leftGlow.add(boardPanel1, new GridBagConstraints());
+
+        wrap1 = new JPanel(new GridBagLayout());
+        wrap1.setOpaque(false);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.NONE;     // ✅ DO NOT stretch
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+
+        wrap1.add(leftGlow, gbc);
+        leftSide.add(wrap1, BorderLayout.CENTER);
+
 
         // ----- Player 2 side -----
-        JPanel rightSide = new JPanel();
-        rightSide.setLayout(new BoxLayout(rightSide, BoxLayout.Y_AXIS));
-        rightSide.setBackground(Color.BLACK);
+        JPanel rightSide = new JPanel(new BorderLayout());
+        rightSide.setOpaque(false);
 
-        lblPlayer2Box = createPlayerBoxLabel(player2Name);
-        rightSide.add(lblPlayer2Box);
+// top area (name + mines)
+        JPanel rightTop = new JPanel();
+        rightTop.setLayout(new BoxLayout(rightTop, BoxLayout.Y_AXIS));
+        rightTop.setOpaque(false);
+        rightTop.setBorder(BorderFactory.createEmptyBorder(42, 0, 0, 0));
 
-        rightSide.add(Box.createVerticalStrut(5));
+        playerBox2 = new NeonInputField(new Color(80, 180, 255));
+        playerBox2.setText(player2Name);
+        playerBox2.setDisplayMode(true);
+        playerBox2.setAlignmentX(Component.CENTER_ALIGNMENT);
+        playerBox2.setFieldWidth(210); // half of 420
+        rightTop.add(playerBox2);
+        rightTop.add(Box.createVerticalStrut(20));
 
-        lblMinesLeft2 = new JLabel("MINES LEFT: " + controller.getTotalMines(2),
-                SwingConstants.CENTER);
+        lblMinesLeft2 = new JLabel("MINES LEFT: " + controller.getTotalMines(2), SwingConstants.CENTER);
         lblMinesLeft2.setForeground(Color.WHITE);
         lblMinesLeft2.setFont(new Font("Arial", Font.BOLD, 14));
         lblMinesLeft2.setAlignmentX(Component.CENTER_ALIGNMENT);
-        rightSide.add(lblMinesLeft2);
 
-        rightSide.add(Box.createVerticalStrut(5));
+        rightTop.add(lblMinesLeft2);
 
-        // Player 2 waits at start
+        JPanel rightTopWrapper = new JPanel(new BorderLayout());
+        rightTopWrapper.setOpaque(false);
+
+        rightTopWrapper.setBorder(
+                BorderFactory.createEmptyBorder(90, 0, 0, 0)
+        );
+
+        rightTopWrapper.add(rightTop, BorderLayout.CENTER);
+        rightSide.add(rightTopWrapper, BorderLayout.NORTH);
+
+// board area (expands!)
         boardPanel2 = new BoardPanel(controller, 2, true, this::handleMoveMade);
-        rightSide.add(boardPanel2);
+        boardPanel2.setOpaque(false);
 
+        NeonFramePanel rightGlow = new NeonFramePanel(new Color(80, 180, 255), 14, 24);
+        rightGlow.add(boardPanel2, new GridBagConstraints());
+
+        wrap2 = new JPanel(new GridBagLayout());
+        wrap2.setOpaque(false);
+
+        GridBagConstraints gbc2 = new GridBagConstraints();
+        gbc2.gridx = 0;
+        gbc2.gridy = 0;
+        gbc2.anchor = GridBagConstraints.CENTER;
+        gbc2.fill = GridBagConstraints.NONE;    // ✅ DO NOT stretch
+        gbc2.weightx = 0;
+        gbc2.weighty = 0;
+
+        wrap2.add(rightGlow, gbc2);
+        rightSide.add(wrap2, BorderLayout.CENTER);
+
+
+        centerPanel.removeAll();
         centerPanel.add(leftSide);
         centerPanel.add(rightSide);
+        centerPanel.revalidate();
+        centerPanel.repaint();
 
-        add(centerPanel, BorderLayout.CENTER);
+// =========================
+// BOTTOM FOOTER
+// =========================
+        JPanel footer = new JPanel(new BorderLayout());
+        footer.setOpaque(false);
 
-        // ===== BOTTOM: score + lives + hearts + controls =====
-        JPanel bottomOuter = new JPanel();
-        bottomOuter.setLayout(new BoxLayout(bottomOuter, BoxLayout.Y_AXIS));
-        bottomOuter.setBackground(Color.BLACK);
+// a bit taller so we have space to push the group down
+        footer.setPreferredSize(new Dimension(1, 145)); // 120 -> 130 (tweak)
 
-        // Score & lives line
-        JPanel scoreLivesPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 5));
-        scoreLivesPanel.setBackground(Color.BLACK);
+// ---- SCORE + LIVES ----
+        JPanel scoreLivesPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 0));
+        scoreLivesPanel.setOpaque(false);
 
         lblScore = new JLabel("SCORE: 0");
         lblScore.setForeground(Color.WHITE);
         lblScore.setFont(new Font("Arial", Font.BOLD, 18));
 
-        lblLives = new JLabel("LIVES: " + controller.getSharedLives() + "/" +
-                controller.getMaxLives());
+        lblLives = new JLabel("LIVES: " + controller.getSharedLives() + "/" + controller.getMaxLives());
         lblLives.setForeground(Color.WHITE);
         lblLives.setFont(new Font("Arial", Font.BOLD, 18));
 
         scoreLivesPanel.add(lblScore);
         scoreLivesPanel.add(lblLives);
 
-        bottomOuter.add(scoreLivesPanel);
-
-        // Hearts row
-        heartsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
-        heartsPanel.setBackground(Color.BLACK);
+// ---- HEARTS ----
+        heartsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
+        heartsPanel.setOpaque(false);
         buildHearts();
 
-        bottomOuter.add(heartsPanel);
+// ---- STATUS GROUP (Score/Lives ABOVE Hearts) ----
+        JPanel statusGroup = new JPanel();
+        statusGroup.setOpaque(false);
+        statusGroup.setLayout(new BoxLayout(statusGroup, BoxLayout.Y_AXIS));
 
-        // Control buttons ( restart, exit)
-        JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 25, 5));
-        controlsPanel.setBackground(Color.BLACK);
+// push the whole group down a bit
+        statusGroup.add(Box.createVerticalGlue());
+        statusGroup.add(Box.createVerticalStrut(14)); // keep this (overall position)
 
-        btnRestart = new JButton("Restart");
-        btnExit = new JButton("Exit");
+        statusGroup.add(Box.createVerticalStrut(6));  //  moves ONLY score/lives down
+        statusGroup.add(scoreLivesPanel);
 
-        styleControlButton(btnRestart);
-        styleControlButton(btnExit);
+        statusGroup.add(Box.createVerticalStrut(10));
+        statusGroup.add(heartsPanel);
 
-        btnExit.addActionListener(e -> {
-            // stop or reset game state if needed
-            controller.endGame();
 
-            // go back to menu
-            Window window = SwingUtilities.getWindowAncestor(this);
-            if (window instanceof MainFrame frame) {
-                frame.showMainMenu();
-            }
-        });
+// ---- CONTROLS BAR (buttons at very bottom) ----
+        JPanel controlsBar = new JPanel(new BorderLayout());
+        controlsBar.setOpaque(false);
+        controlsBar.setBorder(BorderFactory.createEmptyBorder(0, 30, 18, 30));
 
-        btnRestart.addActionListener(e -> {
+        btnRestart = new IconButton("/ui/icons/restart.png", true);
+        btnExit    = new IconButton("/ui/icons/back.png", true);
+
+        btnRestart.setPreferredSize(new Dimension(40, 30));
+        btnExit.setPreferredSize(new Dimension(40, 30));
+
+        controlsBar.add(btnRestart, BorderLayout.EAST);
+        controlsBar.add(btnExit, BorderLayout.WEST);
+        btnRestart.setOnClick(() -> {
             controller.restartGame();
-            buildHearts();
+
+            // refresh view
             updateStatus();
             updateTurnUI();
             boardPanel1.refresh();
             boardPanel2.refresh();
+
+            // re-fit board sizes (after restart board might reset)
+            requestResizeBoards();
         });
 
-        controlsPanel.add(btnRestart);
-        controlsPanel.add(btnExit);
+        btnExit.setOnClick(() -> {
+            controller.endGame(); // clears currentGame
+            if (onBackToMenu != null) onBackToMenu.run(); // go to menu
+        });
 
-        bottomOuter.add(Box.createVerticalStrut(5));
-        bottomOuter.add(controlsPanel);
-        bottomOuter.add(Box.createVerticalStrut(10));
 
-        add(bottomOuter, BorderLayout.SOUTH);
+// attach to footer
+        footer.add(statusGroup, BorderLayout.CENTER);
+        footer.add(controlsBar, BorderLayout.SOUTH);
+
+        bg.add(footer, BorderLayout.SOUTH);
+
+
+
+
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                requestResizeBoards();
+            }
+        });
+
+
+
+        SwingUtilities.invokeLater(() -> {
+            requestResizeBoards();
+            requestResizeBoards(); // second pass after layout settles
+        });
+
+
     }
-    /**
-     * Creates a styled label for a player's name header box.
-     */
-    private JLabel createPlayerBoxLabel(String text) {
-        JLabel lbl = new JLabel(text, SwingConstants.CENTER);
-        lbl.setForeground(Color.WHITE);
-        lbl.setFont(new Font("Arial", Font.BOLD, 20));
-        lbl.setOpaque(true);
-        lbl.setBackground(new Color(60, 60, 80));
-        lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lbl.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
-        return lbl;
-    }
-    /**
-     * Applies consistent styling to control buttons.
-     */
-    private void styleControlButton(JButton btn) {
-        btn.setFont(new Font("Arial", Font.BOLD, 18));
-        btn.setFocusPainted(false);
-        btn.setMargin(new Insets(3, 12, 3, 12));
-    }
+
+
+
     /**
      * Builds the row of heart icons according to the starting number of lives.
      */
@@ -247,16 +327,21 @@ public class GamePanel extends JPanel {
         int maxLives = controller.getMaxLives();
 
         heartsPanel.removeAll();
+
+        Color heartFill = new Color(255, 70, 70);      // softer red
+        Color glow      = new Color(255, 40, 40);      // subtle halo
+
+
         for (int i = 0; i < maxLives; i++) {
-            JLabel heart = new JLabel("❤");
-            heart.setFont(new Font("Dialog", Font.PLAIN, 22));
-            heart.setForeground(Color.RED);
+            NeonHeart heart = new NeonHeart(heartFill, glow);
             heartLabels.add(heart);
             heartsPanel.add(heart);
         }
+
         heartsPanel.revalidate();
         heartsPanel.repaint();
     }
+
 
     /**
      * Called after each move from a BoardPanel.
@@ -299,7 +384,6 @@ public class GamePanel extends JPanel {
     }
 
 
-
     /**
      * Displays a dialog at the end of the game (victory or game over) with final score.
      */
@@ -340,7 +424,9 @@ public class GamePanel extends JPanel {
         repaint();
     }
 
-    /** Displays the result of the Surprise tile. */
+    /**
+     * Displays the result of the Surprise tile.
+     */
     private void displayOutcomePopup(String message) {
         JOptionPane.showMessageDialog(this,
                 message,
@@ -348,23 +434,18 @@ public class GamePanel extends JPanel {
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
-    /** Show "WAIT FOR YOUR TURN" on the board that is not active. */
+    /**
+     * Show "WAIT FOR YOUR TURN" on the board that is not active.
+     */
     private void updateTurnUI() {
         int current = controller.getCurrentPlayerTurn();
         boardPanel1.setWaiting(current != 1);
         boardPanel2.setWaiting(current != 2);
 
-        if (current == 1) {
-            lblPlayer1Box.setBackground(new Color(90, 90, 110));
-            lblPlayer2Box.setBackground(new Color(60, 60, 80));
-        } else if (current == 2) {
-            lblPlayer1Box.setBackground(new Color(60, 60, 80));
-            lblPlayer2Box.setBackground(new Color(90, 90, 110));
-        } else {
-            lblPlayer1Box.setBackground(new Color(60, 60, 80));
-            lblPlayer2Box.setBackground(new Color(60, 60, 80));
-        }
+        playerBox1.setActive(current == 1);
+        playerBox2.setActive(current == 2);
     }
+
     /**
      * Colors heart icons according to current lives.
      */
@@ -373,16 +454,14 @@ public class GamePanel extends JPanel {
         int max = controller.getMaxLives();
 
         for (int i = 0; i < max && i < heartLabels.size(); i++) {
-            JLabel heart = heartLabels.get(i);
-            if (i < lives) {
-                heart.setForeground(Color.RED);
-            } else {
-                heart.setForeground(Color.DARK_GRAY);
-            }
+            heartLabels.get(i).setActive(i < lives);
         }
     }
 
-    /** Handles the visual changes and dialog when the game ends. */
+
+    /**
+     * Handles the visual changes and dialog when the game ends.
+     */
     private void handleGameOverUI() {
         boardPanel1.setWaiting(true);
         boardPanel2.setWaiting(true);
@@ -395,23 +474,119 @@ public class GamePanel extends JPanel {
 
         if (isWin) {
             message = String.format(
-                "VICTORY!\n\nFinal Score: %d\n\nPlease use the buttons below to Restart or Exit.",
-                controller.getSharedScore()
+                    "VICTORY!\n\nFinal Score: %d\n\nPlease use the buttons below to Restart or Exit.",
+                    controller.getSharedScore()
             );
         } else {
             message = String.format(
-                "GAME OVER!\n\nFinal Score: %d\n\nPlease use the buttons below to Restart or Exit.",
-                controller.getSharedScore()
+                    "GAME OVER!\n\nFinal Score: %d\n\nPlease use the buttons below to Restart or Exit.",
+                    controller.getSharedScore()
             );
         }
 
         JOptionPane.showMessageDialog(
-            this,
-            message,
-            title,
-            isWin ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE
+                this,
+                message,
+                title,
+                isWin ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE
         );
 
         long durationSeconds = (System.currentTimeMillis() - startTimeMillis) / 1000L;
         controller.recordFinishedGame(player1Name, player2Name, durationSeconds);
-}}
+    }
+
+    private void resizeBoardsToFit() {
+        if (wrap1 == null || wrap2 == null || boardPanel1 == null || boardPanel2 == null) return;
+
+        // available space where the board is placed (both sides)
+        int availW = Math.min(wrap1.getWidth(), wrap2.getWidth());
+        int availH = Math.min(wrap1.getHeight(), wrap2.getHeight());
+        if (availW <= 0 || availH <= 0) return;
+
+        String diff = controller.getDifficultyName();
+
+        // grid size by difficulty (adjust if yours are different!)
+        int rows, cols;
+        switch (diff) {
+            case "EASY" -> { rows = 10; cols = 10; }
+            case "MEDIUM" -> { rows = 14; cols = 14; }
+            case "HARD" -> { rows = 16; cols = 16; }
+            default -> { rows = 10; cols = 10; }
+        }
+
+        // leave a little margin inside the wrapper so it doesn't touch
+        int margin = 20;
+        int usableW = Math.max(1, availW - margin);
+        int usableH = Math.max(1, availH - margin);
+
+        // compute max cell size that fits both width and height
+        int cellByW = usableW / cols;
+        int cellByH = usableH / rows;
+        int cell = Math.min(cellByW, cellByH);
+
+        // clamp to keep it pretty (optional)
+        int minCell = 18;
+        int maxCell = diff.equals("EASY") ? 48 : (diff.equals("MEDIUM") ? 35 : 28);
+        cell = Math.max(minCell, Math.min(maxCell, cell));
+
+        boardPanel1.setCellSize(cell);
+        boardPanel2.setCellSize(cell);
+    }
+
+
+
+
+
+
+
+
+
+    private void updateCenterPadding() {
+        // Minimal padding to maximize board space
+        int top = 15;
+        int side = 15;
+        int bottom = 0;
+
+        // In large screens - almost no padding
+        if (getHeight() > 800) {
+            top = 5;
+            side = 10;
+            bottom = 0;
+        }
+
+        centerPanel.setBorder(
+                BorderFactory.createEmptyBorder(top, side, bottom, side)
+        );
+    }
+
+
+    private void requestResizeBoards() {
+        if (resizeStabilizer != null && resizeStabilizer.isRunning()) {
+            resizeStabilizer.restart();
+            return;
+        }
+
+        resizeStabilizer = new Timer(40, e -> {
+            if (wrap1 == null || wrap2 == null || boardPanel1 == null || boardPanel2 == null) return;
+
+            // מחכים שה-layout באמת יתייצב
+            if (wrap1.getWidth() <= 0 || wrap1.getHeight() <= 0 ||
+                    wrap2.getWidth() <= 0 || wrap2.getHeight() <= 0) {
+                return;
+            }
+
+            resizeBoardsToFit();
+            boardPanel1.repaint();
+            boardPanel2.repaint();
+
+
+            ((Timer) e.getSource()).stop();
+        });
+
+        resizeStabilizer.setRepeats(true);
+        resizeStabilizer.start();
+    }}
+
+
+
+

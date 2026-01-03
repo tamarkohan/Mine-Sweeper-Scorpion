@@ -41,8 +41,21 @@ public class GlowTextField extends JTextField {
         if (!text.isEmpty()) {
             Insets in = getInsets();
             FontMetrics fm = g2.getFontMetrics(getFont());
-            int x = in.left;
+
+            int textW = fm.stringWidth(text);
+            int x;
+
+            int align = getHorizontalAlignment();
+            if (align == SwingConstants.CENTER) {
+                x = (getWidth() - textW) / 2;
+            } else if (align == SwingConstants.RIGHT) {
+                x = getWidth() - in.right - textW;
+            } else {
+                x = in.left; // LEFT
+            }
+
             int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+
 
             // Softer glow (less intense than before)
             for (int i = 5; i >= 1; i--) {
