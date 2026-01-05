@@ -1,9 +1,15 @@
 package Model;
 
 import java.util.Random;
-import Model.specialcell.QuestionActivator;
+
+// REMOVE these direct-creation imports (we won't create activators directly anymore)
+// import Model.specialcell.QuestionActivator;
+// import Model.specialcell.SurpriseActivator;
+
 import Model.specialcell.SpecialCellActivator;
-import Model.specialcell.SurpriseActivator;
+import Model.specialcell.factory.ActivatorFactoryRegistry;
+import Model.specialcell.factory.QuestionActivatorFactory;
+import Model.specialcell.factory.SurpriseActivatorFactory;
 
 /**
  * Represents a cooperative Minesweeper game with two boards.
@@ -27,16 +33,25 @@ public class Game {
     private int totalQuestionsAnswered;
     private int totalCorrectAnswers;
 
+    // ✅ Factory Method registry (DP1)
+    private final ActivatorFactoryRegistry activatorRegistry =
+            new ActivatorFactoryRegistry(
+                    new QuestionActivatorFactory(),
+                    new SurpriseActivatorFactory()
+            );
+
     /**
      * Question difficulty levels used for scoring and life rewards/penalties.
      */
     public enum QuestionLevel { EASY, MEDIUM, HARD, EXPERT }
+
     /**
      * Creates a new game with the given difficulty.
      */
     public Game(Difficulty difficulty) {
         startNewGame(difficulty);
     }
+
     /**
      * Initializes or resets all game data for the given difficulty.
      * Creates two boards, sets initial lives, score and game state.
@@ -54,6 +69,7 @@ public class Game {
         this.board1 = new Board(difficulty, this);
         this.board2 = new Board(difficulty, this);
     }
+
     /**
      * Restarts the game using the last selected difficulty (if available).
      */
@@ -86,7 +102,6 @@ public class Game {
         }
     }
 
-
     /**
      * Performs all necessary steps when the game ends (Win or Loss).
      * This includes auto-revealing all cells and converting remaining lives to points.
@@ -109,6 +124,7 @@ public class Game {
             printGameStatus();
         }
     }
+
     /**
      * Prints game state to the console (for debugging).
      */
@@ -185,25 +201,16 @@ public class Game {
     /**
      * Activates the behavior of a QUESTION or SURPRISE cell after it was revealed and chosen.
      * Deducts activation cost from score, then routes to surprise logic or question handling.
+     *
+     * DP1: Factory Method - Game no longer decides which activator to instantiate.
      */
     public boolean activateSpecialCell(Board board, Cell.CellContent cellContent) {
-        SpecialCellActivator activator;
-
-        if (cellContent == Cell.CellContent.SURPRISE) {
-            activator = new SurpriseActivator(this, board);
-        } else if (cellContent == Cell.CellContent.QUESTION) {
-            activator = new QuestionActivator(this, board);
-        } else {
+        SpecialCellActivator activator = activatorRegistry.create(cellContent, this, board);
+        if (activator == null) {
             return false;
         }
-
         return activator.activate(); // template method (final) runs the flow
     }
-
-
-
-
-
 
     /**
      * Processes the result of a question answer and applies points/lives
@@ -235,9 +242,6 @@ public class Game {
         return r;
     }
 
-
-
-
     /**
      * Hook for UI to present a question and return true/false for correctness.
      */
@@ -267,6 +271,7 @@ public class Game {
         }
         System.out.println("Correct! +" + points + " pts, +" + lives + " lives.");
     }
+
     /**
      * Applies penalties after an incorrect answer: removes points and lives.
      */
@@ -301,10 +306,6 @@ public class Game {
         this.lastActionMessage = msg;
     }
 
-
-
-
-
     // --- Getters ---
 
     public GameState getGameState() { return gameState; }
@@ -321,6 +322,7 @@ public class Game {
     public int getTotalCorrectAnswers() {
         return totalCorrectAnswers;
     }
+
     public boolean hasQuestionPresenter() {
         return questionPresenter != null;
     }
@@ -328,5 +330,4 @@ public class Game {
     public boolean presentQuestion(Question q) {
         return questionPresenter.presentQuestion(q);
     }
-
 }
