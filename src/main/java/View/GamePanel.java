@@ -1,11 +1,11 @@
 package View;
 
 import Controller.GameController;
+import Model.GameState;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.List;
 
 
 
@@ -47,7 +47,7 @@ public class GamePanel extends JPanel {
 
 
     public GamePanel(GameController controller,
-                     String player1Name, String player2Name,Runnable onBackToMenu) {
+                     String player1Name, String player2Name, Runnable onBackToMenu) {
         this.controller = controller;
         this.player1Name = player1Name;
         this.player2Name = player2Name;
@@ -98,7 +98,7 @@ public class GamePanel extends JPanel {
         JPanel leftSide = new JPanel(new BorderLayout());
         leftSide.setOpaque(false);
 
-// top area (name + mines)
+        // top area (name + mines)
         JPanel leftTop = new JPanel();
         leftTop.setLayout(new BoxLayout(leftTop, BoxLayout.Y_AXIS));
         leftTop.setOpaque(false);
@@ -129,7 +129,7 @@ public class GamePanel extends JPanel {
         leftTopWrapper.add(leftTop, BorderLayout.CENTER);
         leftSide.add(leftTopWrapper, BorderLayout.NORTH);
 
-// board area (expands!)
+        // board area (expands!)
         boardPanel1 = new BoardPanel(controller, 1, false, this::handleMoveMade);
         boardPanel1.setOpaque(false);
 
@@ -155,7 +155,7 @@ public class GamePanel extends JPanel {
         JPanel rightSide = new JPanel(new BorderLayout());
         rightSide.setOpaque(false);
 
-// top area (name + mines)
+        // top area (name + mines)
         JPanel rightTop = new JPanel();
         rightTop.setLayout(new BoxLayout(rightTop, BoxLayout.Y_AXIS));
         rightTop.setOpaque(false);
@@ -186,7 +186,7 @@ public class GamePanel extends JPanel {
         rightTopWrapper.add(rightTop, BorderLayout.CENTER);
         rightSide.add(rightTopWrapper, BorderLayout.NORTH);
 
-// board area (expands!)
+        // board area (expands!)
         boardPanel2 = new BoardPanel(controller, 2, true, this::handleMoveMade);
         boardPanel2.setOpaque(false);
 
@@ -214,16 +214,16 @@ public class GamePanel extends JPanel {
         centerPanel.revalidate();
         centerPanel.repaint();
 
-// =========================
-// BOTTOM FOOTER
-// =========================
+        // =========================
+        // BOTTOM FOOTER
+        // =========================
         JPanel footer = new JPanel(new BorderLayout());
         footer.setOpaque(false);
 
-// a bit taller so we have space to push the group down
+        // a bit taller so we have space to push the group down
         footer.setPreferredSize(new Dimension(1, 145)); // 120 -> 130 (tweak)
 
-// ---- SCORE + LIVES ----
+        // ---- SCORE + LIVES ----
         JPanel scoreLivesPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 0));
         scoreLivesPanel.setOpaque(false);
 
@@ -238,17 +238,17 @@ public class GamePanel extends JPanel {
         scoreLivesPanel.add(lblScore);
         scoreLivesPanel.add(lblLives);
 
-// ---- HEARTS ----
+        // ---- HEARTS ----
         heartsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
         heartsPanel.setOpaque(false);
         buildHearts();
 
-// ---- STATUS GROUP (Score/Lives ABOVE Hearts) ----
+        // ---- STATUS GROUP (Score/Lives ABOVE Hearts) ----
         JPanel statusGroup = new JPanel();
         statusGroup.setOpaque(false);
         statusGroup.setLayout(new BoxLayout(statusGroup, BoxLayout.Y_AXIS));
 
-// push the whole group down a bit
+        // push the whole group down a bit
         statusGroup.add(Box.createVerticalGlue());
         statusGroup.add(Box.createVerticalStrut(14)); // keep this (overall position)
 
@@ -259,7 +259,7 @@ public class GamePanel extends JPanel {
         statusGroup.add(heartsPanel);
 
 
-// ---- CONTROLS BAR (buttons at very bottom) ----
+        // ---- CONTROLS BAR (buttons at very bottom) ----
         JPanel controlsBar = new JPanel(new BorderLayout());
         controlsBar.setOpaque(false);
         controlsBar.setBorder(BorderFactory.createEmptyBorder(0, 30, 18, 30));
@@ -291,13 +291,11 @@ public class GamePanel extends JPanel {
         });
 
 
-// attach to footer
+        // attach to footer
         footer.add(statusGroup, BorderLayout.CENTER);
         footer.add(controlsBar, BorderLayout.SOUTH);
 
         bg.add(footer, BorderLayout.SOUTH);
-
-
 
 
         addComponentListener(new java.awt.event.ComponentAdapter() {
@@ -308,13 +306,10 @@ public class GamePanel extends JPanel {
         });
 
 
-
         SwingUtilities.invokeLater(() -> {
             requestResizeBoards();
             requestResizeBoards(); // second pass after layout settles
         });
-
-
     }
 
 
@@ -348,7 +343,7 @@ public class GamePanel extends JPanel {
      * Updates status, handles game over, and switches turns when appropriate.
      */
     // endedTurn = true → revealed a cell, switch player (after small delay)
-// endedTurn = false → only flag, same player continues
+    // endedTurn = false → only flag, same player continues
     private void handleMoveMade(boolean endedTurn) {
         updateStatus();
 
@@ -468,31 +463,27 @@ public class GamePanel extends JPanel {
         boardPanel1.refresh();
         boardPanel2.refresh();
 
-        boolean isWin = controller.getCurrentGame().getGameState() == Model.GameState.WON;
-        String title = isWin ? "Congratulations, You Won!" : "Game Over";
-        String message;
-
-        if (isWin) {
-            message = String.format(
-                    "VICTORY!\n\nFinal Score: %d\n\nPlease use the buttons below to Restart or Exit.",
-                    controller.getSharedScore()
-            );
-        } else {
-            message = String.format(
-                    "GAME OVER!\n\nFinal Score: %d\n\nPlease use the buttons below to Restart or Exit.",
-                    controller.getSharedScore()
-            );
-        }
-
-        JOptionPane.showMessageDialog(
-                this,
-                message,
-                title,
-                isWin ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE
-        );
-
         long durationSeconds = (System.currentTimeMillis() - startTimeMillis) / 1000L;
         controller.recordFinishedGame(player1Name, player2Name, durationSeconds);
+
+        GameResultDialog.ResultAction action =
+                GameResultDialog.showResultDialog(SwingUtilities.getWindowAncestor(this), controller.getCurrentGame());
+
+        if (action == GameResultDialog.ResultAction.RESTART) {
+            controller.restartGame();
+
+            updateStatus();
+            updateTurnUI();
+            boardPanel1.refresh();
+            boardPanel2.refresh();
+            requestResizeBoards();
+            return;
+        }
+
+        if (action == GameResultDialog.ResultAction.EXIT) {
+            controller.endGame();
+            if (onBackToMenu != null) onBackToMenu.run();
+        }
     }
 
     private void resizeBoardsToFit() {
@@ -535,12 +526,6 @@ public class GamePanel extends JPanel {
 
 
 
-
-
-
-
-
-
     private void updateCenterPadding() {
         // Minimal padding to maximize board space
         int top = 15;
@@ -569,7 +554,6 @@ public class GamePanel extends JPanel {
         resizeStabilizer = new Timer(40, e -> {
             if (wrap1 == null || wrap2 == null || boardPanel1 == null || boardPanel2 == null) return;
 
-            // מחכים שה-layout באמת יתייצב
             if (wrap1.getWidth() <= 0 || wrap1.getHeight() <= 0 ||
                     wrap2.getWidth() <= 0 || wrap2.getHeight() <= 0) {
                 return;
@@ -579,14 +563,10 @@ public class GamePanel extends JPanel {
             boardPanel1.repaint();
             boardPanel2.repaint();
 
-
             ((Timer) e.getSource()).stop();
         });
 
         resizeStabilizer.setRepeats(true);
         resizeStabilizer.start();
-    }}
-
-
-
-
+    }
+}
