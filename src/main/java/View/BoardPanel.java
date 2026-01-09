@@ -124,7 +124,7 @@ public class BoardPanel extends JPanel {
                 final int rr = r;
                 final int cc = c;
 
-                JButton btn = new JButton();
+                JButton btn = new CellButton();
                 btn.setMargin(new Insets(0, 0, 0, 0));
 
                 //  style AFTER creating button
@@ -262,6 +262,8 @@ public class BoardPanel extends JPanel {
 
             // special? always show popup
             if (controller.isQuestionOrSurprise(boardNumber, r, c)) {
+                GameController.CellViewData d = controller.getCellViewData(boardNumber, r, c);
+                if (!d.enabled) return; // already used -> do nothing
 
                 String cellType = controller.isQuestionCell(boardNumber, r, c) ? "Question" : "Surprise";
 
@@ -339,9 +341,9 @@ public class BoardPanel extends JPanel {
                             GameController.CellViewData d = controller.getCellViewData(boardNumber, rr, cc);
                             if ("M".equals(d.text)) newlyRevealed.add(new Point(rr, cc));
                         } else {
-                            // 3x3: animate all newly revealed cells (numbers/empty/mines if you want)
                             newlyRevealed.add(new Point(rr, cc));
                         }
+
                     }
                 }
             }
@@ -378,14 +380,18 @@ public class BoardPanel extends JPanel {
                 }
 // --- QUESTION ---
                 else if ("Q".equals(t)) {
-                    btn.setIcon(IconCache.icon("/ui/cells/question.png", (int)(cellSize * 0.82)));
-                    btn.setDisabledIcon(btn.getIcon());
+                    Icon icon = IconCache.icon("/ui/cells/question.png", (int)(cellSize * 0.82));
+                    btn.setIcon(icon);
+                    btn.setDisabledIcon(icon);
                 }
+
 // --- SURPRISE ---
                 else if ("S".equals(t)) {
-                    btn.setIcon(IconCache.icon("/ui/cells/surprise.png", (int)(cellSize * 0.82)));
-                    btn.setDisabledIcon(btn.getIcon());
+                    Icon icon = IconCache.icon("/ui/cells/surprise.png", (int)(cellSize * 0.82));
+                    btn.setIcon(icon);
+                    btn.setDisabledIcon(icon);
                 }
+
 // --- NUMBERS / EMPTY ---
                 else {
                     // numbers or empty
@@ -416,6 +422,14 @@ public class BoardPanel extends JPanel {
                         btn.setBackground(new Color(235, 235, 235));
                         btn.setBorder(BorderFactory.createLineBorder(new Color(120, 120, 120, 120), 1));
                     }
+                }
+                //  Apply USED overlay + dashed border LAST so it won't be overwritten
+                boolean usedSpecial = (revealed && ("Q".equals(t) || "S".equals(t)) && !data.enabled);
+
+                if (usedSpecial) {
+                    markUsedSpecial(btn, "Q".equals(t));
+                } else {
+                    clearUsedSpecial(btn);
                 }
 
                 Point key = new Point(r, c);
@@ -487,6 +501,62 @@ public class BoardPanel extends JPanel {
         }
 
     }
+
+    private void markUsedSpecial(JButton btn, boolean isQuestion) {
+        // make it look "blocked/used"
+        btn.setCursor(Cursor.getDefaultCursor());
+
+        // dim the cell background a bit
+        Color base = btn.getBackground();
+        btn.setBackground(new Color(
+                Math.max(0, base.getRed() - 25),
+                Math.max(0, base.getGreen() - 25),
+                Math.max(0, base.getBlue() - 25)
+        ));
+
+        // dashed / grey border
+        btn.setBorder(BorderFactory.createDashedBorder(
+                new Color(180, 180, 180, 170), 3f, 5f
+        ));
+
+        // add a clear "USED" hint using client property (for paint overlay)
+        btn.putClientProperty("USED_SPECIAL", Boolean.TRUE);
+        btn.putClientProperty("USED_TYPE", isQuestion ? "Q" : "S");
+    }
+
+    private void clearUsedSpecial(JButton btn) {
+        btn.putClientProperty("USED_SPECIAL", null);
+        btn.putClientProperty("USED_TYPE", null);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    }
+    private class CellButton extends JButton {
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+
+            Object used = getClientProperty("USED_SPECIAL");
+            if (Boolean.TRUE.equals(used)) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // dark glass overlay
+                g2.setColor(new Color(0, 0, 0, 80));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                // big X
+                g2.setStroke(new BasicStroke(3f));
+                g2.setColor(new Color(255, 255, 255, 180));
+                int pad = 10;
+                g2.drawLine(pad, pad, getWidth() - pad, getHeight() - pad);
+                g2.drawLine(getWidth() - pad, pad, pad, getHeight() - pad);
+
+
+                g2.dispose();
+            }
+        }
+    }
+
+
 
 }
 
