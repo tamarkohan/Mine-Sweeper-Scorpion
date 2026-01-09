@@ -4,12 +4,14 @@ import Model.Question;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
+import Model.QuestionResult;
 
 public class QuestionDialog extends JDialog {
-
-    private boolean correct = false;
+    private QuestionResult result = QuestionResult.SKIPPED;
 
     private static final Color BG_TOP = new Color(6, 10, 28);
     private static final Color BG_BOTTOM = new Color(10, 18, 55);
@@ -24,6 +26,14 @@ public class QuestionDialog extends JDialog {
     private QuestionDialog(Window owner, Question question) {
         super(owner, "Question", ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        // If user clicks X, treat as SKIPPED (do not mark wrong)
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                result = QuestionResult.SKIPPED;
+            }
+        });
 
         BackgroundPanel root = new BackgroundPanel();
         root.setLayout(new GridBagLayout());
@@ -63,9 +73,10 @@ public class QuestionDialog extends JDialog {
         styleActionButton(submit, true);
 
         cancel.addActionListener(e -> {
-            correct = false;
+            result = QuestionResult.SKIPPED;
             dispose();
         });
+
 
         submit.addActionListener(e -> {
             String selected = (group.getSelection() == null) ? null : group.getSelection().getActionCommand();
@@ -75,7 +86,8 @@ public class QuestionDialog extends JDialog {
             }
             char selectedChar = normalize(selected.charAt(0));
             char correctChar = normalize(question.getCorrectOption());
-            correct = (selectedChar == correctChar);
+
+            result = (selectedChar == correctChar) ? QuestionResult.CORRECT : QuestionResult.WRONG;
             dispose();
         });
 
@@ -90,23 +102,20 @@ public class QuestionDialog extends JDialog {
         setContentPane(root);
 
         applyRtlIfHebrew(question.getText(), buttons);
-        // Make it bigger
-        root.setPreferredSize(new Dimension(900, 560));  // pick what you like (e.g. 900x560)
-        setContentPane(root);
 
-        pack();                  // pack to preferred sizes
-        setResizable(false);
-        setLocationRelativeTo(owner);
-
+        // Bigger dialog
+        root.setPreferredSize(new Dimension(900, 560));
+        pack();
         setResizable(false);
         setLocationRelativeTo(owner);
     }
 
-    public static boolean showQuestionDialog(Window owner, Question question) {
+    public static QuestionResult showQuestionDialog(Window owner, Question question) {
         QuestionDialog dlg = new QuestionDialog(owner, question);
         dlg.setVisible(true);
-        return dlg.correct;
+        return dlg.result;
     }
+
 
     private static void styleActionButton(JButton b, boolean primary) {
         b.setFocusPainted(false);
@@ -118,6 +127,7 @@ public class QuestionDialog extends JDialog {
                 BorderFactory.createEmptyBorder(8, 14, 8, 14)
         ));
         b.setBackground(primary ? new Color(15, 40, 80) : new Color(20, 30, 60));
+        b.setOpaque(true);
     }
 
     private static void applyRtlIfHebrew(String text, OptionButton[] buttons) {
@@ -179,7 +189,6 @@ public class QuestionDialog extends JDialog {
             setOpaque(false);
             setBorder(BorderFactory.createEmptyBorder(12, 18, 12, 18));
             setPreferredSize(new Dimension(520, 95));
-
         }
 
         @Override
@@ -238,7 +247,7 @@ public class QuestionDialog extends JDialog {
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             setActionCommand(String.valueOf(letter));
 
-            setPreferredSize(new Dimension(320, 110));   // wider + taller
+            setPreferredSize(new Dimension(320, 110));
             setFont(new Font("Arial", Font.BOLD, 14));
             setForeground(TEXT_MUTED);
 
