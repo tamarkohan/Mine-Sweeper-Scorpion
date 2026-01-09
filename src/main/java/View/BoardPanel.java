@@ -29,6 +29,16 @@ public class BoardPanel extends JPanel {
     private JButton[][] buttons;
 
     private boolean waiting;
+    public enum EffectType { REVEAL_3X3, REVEAL_1_MINE }
+
+    public EffectType pendingEffect = null;
+
+    // snapshot so we can detect "newly revealed because of effect"
+    private boolean[][] prevRevealed;
+
+    // per-cell animation state
+    private final java.util.Map<Point, Long> animStart = new java.util.HashMap<>();
+    private javax.swing.Timer animTimer;
 
     public BoardPanel(GameController controller,
                       int boardNumber,
@@ -139,11 +149,49 @@ public class BoardPanel extends JPanel {
                 add(btn);
             }
         }
+        prevRevealed = new boolean[rows][cols];
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                prevRevealed[r][c] = controller.isCellRevealed(boardNumber, r, c);
+            }
+        }
 
         refresh();
 
     }
 
+    public void queueEffect(EffectType type) {
+        this.pendingEffect = type;
+    }
+    private void startPulseAnimation(java.util.Set<Point> cells) {
+        long now = System.currentTimeMillis();
+        for (Point p : cells) animStart.put(p, now);
+
+        if (animTimer == null) {
+            animTimer = new javax.swing.Timer(30, e -> {
+                // repaint only the buttons affected
+                for (Point p : animStart.keySet()) {
+                    JButton b = buttons[p.x][p.y];
+                    b.repaint();
+                }
+
+                // stop when all finished
+                long t = System.currentTimeMillis();
+                animStart.entrySet().removeIf(en -> (t - en.getValue()) > 900); // ~0.9s pulse
+
+                if (animStart.isEmpty()) {
+                    ((javax.swing.Timer) e.getSource()).stop();
+                }
+            });
+        }
+
+        if (!animTimer.isRunning()) animTimer.start();
+    }
+
+    private float animPhase(long startMs) {
+        float dt = (System.currentTimeMillis() - startMs) / 900f; // 0..1
+        return Math.max(0f, Math.min(1f, dt));
+    }
 
 
     @Override
@@ -276,6 +324,28 @@ public class BoardPanel extends JPanel {
         int cols = controller.getBoardCols(boardNumber);
 
         boolean gameIsRunning = controller.isGameRunning();
+        java.util.Set<Point> newlyRevealed = null;
+        EffectType effect = pendingEffect;
+
+        if (effect != null && prevRevealed != null) {
+            newlyRevealed = new java.util.HashSet<>();
+
+            for (int rr = 0; rr < rows; rr++) {
+                for (int cc = 0; cc < cols; cc++) {
+                    boolean nowRev = controller.isCellRevealed(boardNumber, rr, cc);
+                    if (nowRev && !prevRevealed[rr][cc]) {
+                        // filter if effect is "reveal 1 mine"
+                        if (effect == EffectType.REVEAL_1_MINE) {
+                            GameController.CellViewData d = controller.getCellViewData(boardNumber, rr, cc);
+                            if ("M".equals(d.text)) newlyRevealed.add(new Point(rr, cc));
+                        } else {
+                            // 3x3: animate all newly revealed cells (numbers/empty/mines if you want)
+                            newlyRevealed.add(new Point(rr, cc));
+                        }
+                    }
+                }
+            }
+        }
 
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
@@ -324,6 +394,7 @@ public class BoardPanel extends JPanel {
 
                 boolean revealed = controller.isCellRevealed(boardNumber, r, c);
 
+
                 if (boardNumber == 1) {
                     if (!revealed) {
                         btn.setBackground(new Color(255, 165, 165));
@@ -347,12 +418,49 @@ public class BoardPanel extends JPanel {
                     }
                 }
 
+                Point key = new Point(r, c);
+                if (animStart.containsKey(key)) {
+                    long start = animStart.get(key);
+                    float tt = animPhase(start);
+                    float pulse = (tt < 0.5f) ? (tt / 0.5f) : ((1f - tt) / 0.5f);
 
+                    Color neon = (boardNumber == 1) ? new Color(255, 60, 60) : new Color(80, 180, 255);
+
+                    int thickness = 2 + Math.round(4 * pulse);
+                    btn.setBorder(BorderFactory.createLineBorder(
+                            new Color(neon.getRed(), neon.getGreen(), neon.getBlue(), 130 + Math.round(120 * pulse)),
+                            thickness
+                    ));
+
+                    Color base = btn.getBackground();
+                    int add = 55; // stronger flash
+                    int extra = Math.round(add * pulse);
+
+                    btn.setBackground(new Color(
+                            Math.min(255, base.getRed() + extra),
+                            Math.min(255, base.getGreen() + extra),
+                            Math.min(255, base.getBlue() + extra)
+                    ));
+            }
+
+        }
+        // update snapshot
+        for (int rr = 0; rr < rows; rr++) {
+            for (int cc = 0; cc < cols; cc++) {
+                prevRevealed[rr][cc] = controller.isCellRevealed(boardNumber, rr, cc);
             }
         }
+
+// launch effect animation if needed
+        if (pendingEffect != null && newlyRevealed != null && !newlyRevealed.isEmpty()) {
+            startPulseAnimation(newlyRevealed);
+        }
+
+        pendingEffect = null;
+
         revalidate();
         repaint();
-    }
+    }}
 
     private void styleCellButton(JButton btn) {
         btn.setFocusable(false);
