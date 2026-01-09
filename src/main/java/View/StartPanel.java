@@ -209,5 +209,14 @@ public class StartPanel extends JPanel {
         lbl.setForeground(c);
         lbl.setFont(new Font("Arial", Font.BOLD, 18));
     }
+    public void resetFields() {
+        // clear text
+        p1Field.setText("");
+        p2Field.setText("");
+
+        // reset difficulty to default
+        tEasy.setSelected(true);
+    }
+
 
 }
