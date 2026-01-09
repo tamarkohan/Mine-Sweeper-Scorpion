@@ -28,7 +28,7 @@ public class GameHistoryFrame extends JFrame {
     // Filters / search
     private final JComboBox<String> difficultyFilter;
     private final JComboBox<String> resultFilter;
-    private final GlowTextField searchField;
+    private final NeonInputField searchField;
 
     private static final String DIFF_ALL = "All";
     private static final String RES_ALL  = "All";
@@ -94,7 +94,7 @@ public class GameHistoryFrame extends JFrame {
         });
 
 // Duration column index = 7 ("mm:ss")
-        sorter.setComparator(7, (a, b) -> {
+        sorter.setComparator(8, (a, b) -> {
             try {
                 String[] pa = a.toString().split(":");
                 String[] pb = b.toString().split(":");
@@ -123,6 +123,9 @@ public class GameHistoryFrame extends JFrame {
         filterPanel.setBackground(new Color(0, 0, 0, 200)); // Semi-transparent black
         filterPanel.setOpaque(false); // <--- CRITICAL FIX: Tells Swing to paint what's behind it first
         filterPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        filterPanel.setPreferredSize(new Dimension(1000, 70));
+        filterPanel.setMinimumSize(new Dimension(1000, 70));
+
         // --- FIX ENDS HERE ---
 
         // Left: difficulty + result combos
@@ -149,9 +152,25 @@ public class GameHistoryFrame extends JFrame {
         JPanel searchPanel = new JPanel(new BorderLayout(10, 0));
         searchPanel.setOpaque(false);
 
-        searchField = new GlowTextField(15);
-        JButton styledSearchButton = createStyledButton("Search");
+        JLabel searchLbl = new JLabel("Search:");
+        searchLbl.setForeground(TEXT_COLOR);
+        searchLbl.setFont(new Font("Arial", Font.BOLD, 14));
 
+        searchField = new NeonInputField(ACCENT_COLOR);
+        searchField.setFieldWidth(260);
+        searchField.setDisplayMode(false);
+
+// style the INNER text field (this is the real JTextField)
+        searchField.textField.setText("");
+        searchField.textField.setHorizontalAlignment(SwingConstants.LEFT);
+        searchField.textField.setFont(new Font("Arial", Font.BOLD, 16));
+        searchField.textField.setGlowColor(ACCENT_COLOR);
+        searchField.textField.setCaretColor(ACCENT_COLOR);
+
+        JButton styledSearchButton = createStyledButton("Search");
+        styledSearchButton.setPreferredSize(new Dimension(110, 34));
+
+        searchPanel.add(searchLbl, BorderLayout.WEST);
         searchPanel.add(searchField, BorderLayout.CENTER);
         searchPanel.add(styledSearchButton, BorderLayout.EAST);
 
@@ -162,7 +181,7 @@ public class GameHistoryFrame extends JFrame {
         difficultyFilter.addActionListener(e -> reloadTables());
         resultFilter.addActionListener(e -> reloadTables());
         styledSearchButton.addActionListener(e -> reloadTables());
-        searchField.addActionListener(e -> reloadTables());
+        searchField.textField.addActionListener(e -> reloadTables());
 
         // ====== CENTER CONTENT (Background + Tables) ======
         BackgroundPanel content = new BackgroundPanel("/ui/menu/backgroundGameHistory.png");

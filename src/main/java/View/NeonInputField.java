@@ -11,14 +11,12 @@ public class NeonInputField extends JComponent {
     private boolean active = false;
     private int customWidth = 420; // default width
 
-    // ✅ OLD SIGNATURE (keeps StartPanel working)
     public NeonInputField(String title, Color neonColor) {
         this(neonColor);
         // title currently not drawn (your StartPanel uses NeonTextLabel already)
         // but we keep it so old code compiles.
     }
 
-    // ✅ NEW SIGNATURE (for GamePanel boxes)
     public NeonInputField(Color neonColor) {
         this.neonColor = neonColor;
 
