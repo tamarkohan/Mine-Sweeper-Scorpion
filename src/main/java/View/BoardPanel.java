@@ -216,7 +216,7 @@ public class BoardPanel extends JPanel {
 
 
         String text = "WAIT FOR YOUR TURN";
-        g2.setFont(new Font("Arial", Font.BOLD, 24));
+        g2.setFont(new Font("Arial", Font.BOLD, 18));
         FontMetrics fm = g2.getFontMetrics();
         int textWidth = fm.stringWidth(text);
         int textX = (getWidth() - textWidth) / 2;
@@ -265,20 +265,18 @@ public class BoardPanel extends JPanel {
 
                 String cellType = controller.isQuestionCell(boardNumber, r, c) ? "Question" : "Surprise";
 
-                int choice = JOptionPane.showConfirmDialog(
-                        this,
-                        "This is a " + cellType + " cell.\nDo you want to activate it?\n",
-                        cellType + " Cell",
-                        JOptionPane.YES_NO_OPTION
+                boolean yes = ActivationConfirmDialog.show(
+                        SwingUtilities.getWindowAncestor(this),
+                        cellType // "Question" / "Surprise"
                 );
 
-                if (choice == JOptionPane.YES_OPTION) {
+                if (yes) {
                     boolean activated = controller.activateSpecialCellUI(boardNumber, r, c);
-                    endedTurn = activated; // activation success ends turn
+                    endedTurn = activated;
                 } else {
-                    //  NO ends turn ONLY if the cell was revealed NOW (this click)
-                    endedTurn = revealedNow;
+                    endedTurn = revealedNow; // Cancel/No only ends turn if revealed now
                 }
+
 
             } else {
                 // not special -> if we revealed now, turn ends

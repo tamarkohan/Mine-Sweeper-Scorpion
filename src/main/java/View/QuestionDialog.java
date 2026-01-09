@@ -10,12 +10,6 @@ import java.util.List;
 public class QuestionDialog extends JDialog {
 
     private boolean correct = false;
-    private String selectedAnswerText = null;
-    private String correctAnswerText = null;
-
-    private JPanel resultOverlay;   // glass overlay panel
-    private JLabel resultTitle;
-    private JLabel resultDetails;
 
     private static final Color BG_TOP = new Color(6, 10, 28);
     private static final Color BG_BOTTOM = new Color(10, 18, 55);
@@ -42,9 +36,9 @@ public class QuestionDialog extends JDialog {
         QuestionCard questionCard = new QuestionCard(question.getText());
         questionCard.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JPanel grid = new JPanel(new GridLayout(2, 2, 14, 12));
+        JPanel grid = new JPanel(new GridLayout(2, 2, 18, 14));
         grid.setOpaque(false);
-        grid.setBorder(BorderFactory.createEmptyBorder(18, 0, 0, 0));
+        grid.setBorder(BorderFactory.createEmptyBorder(16, 0, 0, 0));
 
         ButtonGroup group = new ButtonGroup();
         List<String> opts = question.getOptions();
@@ -74,27 +68,16 @@ public class QuestionDialog extends JDialog {
         });
 
         submit.addActionListener(e -> {
-            if (group.getSelection() == null) {
+            String selected = (group.getSelection() == null) ? null : group.getSelection().getActionCommand();
+            if (selected == null) {
                 JOptionPane.showMessageDialog(this, "Please select an answer.", "No selection", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-
-            char selectedChar = normalize(group.getSelection().getActionCommand().charAt(0));
+            char selectedChar = normalize(selected.charAt(0));
             char correctChar = normalize(question.getCorrectOption());
-
-            // store texts for result message
-            int selIndex = selectedChar - 'A';
-            int corIndex = correctChar - 'A';
-
-            selectedAnswerText = (selIndex >= 0 && selIndex < opts.size()) ? opts.get(selIndex) : String.valueOf(selectedChar);
-            correctAnswerText  = (corIndex >= 0 && corIndex < opts.size()) ? opts.get(corIndex) : String.valueOf(correctChar);
-
             correct = (selectedChar == correctChar);
-
-            // show result overlay centered
-            showResult(correct);
+            dispose();
         });
-
 
         actions.add(cancel);
         actions.add(submit);
@@ -105,16 +88,13 @@ public class QuestionDialog extends JDialog {
 
         root.add(content);
         setContentPane(root);
-        buildResultOverlay();
 
         applyRtlIfHebrew(question.getText(), buttons);
-        pack(); // let it compute preferred sizes FIRST
+        setSize(680, 420);
 
-        setMinimumSize(new Dimension(760, 480));   // prevent tiny dialog
-        setSize(new Dimension(820, 520));          // final size
-        setResizable(false);                       // keep fixed (or true if you want)
+        pack();
+        setResizable(false);
         setLocationRelativeTo(owner);
-
     }
 
     public static boolean showQuestionDialog(Window owner, Question question) {
@@ -193,7 +173,7 @@ public class QuestionDialog extends JDialog {
             this.text = text == null ? "" : text;
             setOpaque(false);
             setBorder(BorderFactory.createEmptyBorder(12, 18, 12, 18));
-            setPreferredSize(new Dimension(620, 120));
+            setPreferredSize(new Dimension(520, 95));
 
         }
 
@@ -253,7 +233,7 @@ public class QuestionDialog extends JDialog {
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             setActionCommand(String.valueOf(letter));
 
-            setPreferredSize(new Dimension(300, 92));
+            setPreferredSize(new Dimension(250, 70));
             setFont(new Font("Arial", Font.BOLD, 14));
             setForeground(TEXT_MUTED);
 
@@ -317,7 +297,7 @@ public class QuestionDialog extends JDialog {
             FontMetrics fm = g2.getFontMetrics();
             List<String> lines = QuestionDialog.wrap(text, fm, r.width);
 
-            int maxLines = 4;
+            int maxLines = 2;
             if (lines.size() > maxLines) {
                 lines = new ArrayList<>(lines.subList(0, maxLines));
                 String last = lines.get(maxLines - 1);
@@ -337,79 +317,4 @@ public class QuestionDialog extends JDialog {
             }
         }
     }
-    private void buildResultOverlay() {
-        resultOverlay = new JPanel(new GridBagLayout());
-        resultOverlay.setOpaque(true);
-        resultOverlay.setBackground(new Color(0, 0, 0, 150)); // dark transparent cover
-        resultOverlay.setVisible(false);
-
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setOpaque(true);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(255,255,255,70), 2, true),
-                BorderFactory.createEmptyBorder(18, 26, 18, 26)
-        ));
-        card.setBackground(new Color(8, 14, 40));
-
-        resultTitle = new JLabel("RESULT", SwingConstants.CENTER);
-        resultTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        resultTitle.setFont(new Font("Arial", Font.BOLD, 26));
-        resultTitle.setForeground(Color.WHITE);
-
-        resultDetails = new JLabel("", SwingConstants.CENTER);
-        resultDetails.setAlignmentX(Component.CENTER_ALIGNMENT);
-        resultDetails.setFont(new Font("Arial", Font.PLAIN, 15));
-        resultDetails.setForeground(new Color(230, 235, 255));
-
-        card.add(resultTitle);
-        card.add(Box.createVerticalStrut(10));
-        card.add(resultDetails);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.CENTER;
-        resultOverlay.add(card, gbc);
-
-        // IMPORTANT: put overlay on top of everything
-        getLayeredPane().add(resultOverlay, JLayeredPane.POPUP_LAYER);
-
-        addComponentListener(new java.awt.event.ComponentAdapter() {
-            @Override
-            public void componentResized(java.awt.event.ComponentEvent e) {
-                resultOverlay.setBounds(0, 0, getWidth(), getHeight());
-            }
-        });
-    }
-
-    private void showResult(boolean isCorrect) {
-        Color good = new Color(50, 220, 140);
-        Color bad  = new Color(255, 80, 80);
-
-        resultTitle.setText(isCorrect ? "✅ CORRECT!" : "❌ WRONG!");
-        resultTitle.setForeground(isCorrect ? good : bad);
-
-        String html =
-                "<html><div style='text-align:center; width:520px;'>"
-                        + "<b>Your answer:</b> " + (selectedAnswerText == null ? "-" : selectedAnswerText)
-                        + "<br><b>Correct answer:</b> " + (correctAnswerText == null ? "-" : correctAnswerText)
-                        + "</div></html>";
-
-        resultDetails.setText(html);
-
-        // show overlay in the middle
-        resultOverlay.setBounds(0, 0, getWidth(), getHeight());
-        resultOverlay.setVisible(true);
-
-        // close after short delay
-        Timer t = new Timer(1200, e -> {
-            ((Timer) e.getSource()).stop();
-            dispose();
-        });
-        t.setRepeats(false);
-        t.start();
-    }
-
-
 }

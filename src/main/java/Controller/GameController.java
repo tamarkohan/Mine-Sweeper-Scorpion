@@ -17,6 +17,8 @@ public class GameController {
 
     private Game currentGame;
     private QuestionManager questionManager;
+    private final GameSubject gameSubject = new GameSubject();
+    
     // Private constructor – prevents external instantiation
 
     private GameController() {
@@ -38,6 +40,7 @@ public class GameController {
         currentGame = new Game(difficulty);
         currentGame.setQuestionManager(questionManager);
         // Presenter is set by the View layer via registerQuestionPresenter
+        notifyStateChange();
     }
 
     /**
@@ -61,6 +64,7 @@ public class GameController {
     public void restartGame() {
         if (currentGame != null) {
             currentGame.restartGame();
+            notifyStateChange();
         }
     }
 
@@ -212,6 +216,7 @@ public class GameController {
         if (board == null) return false;
         if (row < 0 || row >= board.getRows() || col < 0 || col >= board.getCols()) return true;
         board.revealCell(row, col);
+        notifyStateChange();
         return true;
     }
 
@@ -225,6 +230,7 @@ public class GameController {
         if (board == null) return;
         if (row < 0 || row >= board.getRows() || col < 0 || col >= board.getCols()) return;
         board.toggleFlag(row, col);
+        notifyStateChange();
     }
 
 
@@ -318,7 +324,11 @@ public class GameController {
         if (currentGame == null || !isGameRunning()) return false;
         Board board = getBoard(boardNumber);
         if (board == null) return false;
-        return board.activateSpecialCell(row, col);
+        boolean result = board.activateSpecialCell(row, col);
+        if (result) {
+            notifyStateChange();
+        }
+        return result;
     }
     public boolean isQuestionOrSurprise(int boardNumber, int row, int col) {
         Board board = getBoard(boardNumber);
@@ -588,6 +598,39 @@ public class GameController {
      */
     public void endGame() {
         currentGame = null;
+    }
+
+    // ======================================================
+    //  OBSERVER PATTERN METHODS
+    // ======================================================
+
+    /**
+     * Registers an observer to receive game state change notifications.
+     * @param observer the observer to register
+     */
+    public void registerObserver(GameObserver observer) {
+        gameSubject.registerObserver(observer);
+    }
+
+    /**
+     * Removes an observer from the notification list.
+     * @param observer the observer to remove
+     */
+    public void removeObserver(GameObserver observer) {
+        gameSubject.removeObserver(observer);
+    }
+
+    /**
+     * Notifies all observers of a state change.
+     * This is called automatically when score or level changes.
+     */
+    private void notifyStateChange() {
+        if (currentGame != null) {
+            int score = currentGame.getSharedScore();
+            String level = getDifficultyName();
+            GameStateData state = new GameStateData(score, level);
+            gameSubject.notifyObservers(state);
+        }
     }
 
 
