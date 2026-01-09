@@ -59,12 +59,13 @@ public class GameHistoryFrame extends JFrame {
 
         // ====== TABLE MODELS ======
         gamesModel = new DefaultTableModel(new String[]{
-                "Players", "Date / Time", "Difficulty", "Final Score",
+                "Players", "Date / Time", "Difficulty", "Result", "Final Score",
                 "Remaining Lives", "Correct Answers", "Accuracy", "Duration"
         }, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
         };
+
 
         playersModel = new DefaultTableModel(new String[]{
                 "Player", "Total Games", "Best Score", "Average Accuracy", "Preferred Difficulty"
@@ -249,9 +250,10 @@ public class GameHistoryFrame extends JFrame {
 
         for (GameHistoryRow r : games) {
             gamesModel.addRow(new Object[]{
-                    r.players, r.dateTime, r.difficulty, r.finalScore,
+                    r.players, r.dateTime, r.difficulty, r.result, r.finalScore,
                     r.remainingLives, r.correctAnswers, r.accuracy, r.duration
             });
+
         }
 
         List<PlayerHistoryRow> players =
