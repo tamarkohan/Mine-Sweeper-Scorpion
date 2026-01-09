@@ -36,7 +36,7 @@ public class QuestionDialog extends JDialog {
         QuestionCard questionCard = new QuestionCard(question.getText());
         questionCard.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JPanel grid = new JPanel(new GridLayout(2, 2, 18, 14));
+        JPanel grid = new JPanel(new GridBagLayout());
         grid.setOpaque(false);
         grid.setBorder(BorderFactory.createEmptyBorder(16, 0, 0, 0));
 
@@ -45,13 +45,27 @@ public class QuestionDialog extends JDialog {
         char[] letters = new char[]{'A', 'B', 'C', 'D'};
 
         OptionButton[] buttons = new OptionButton[4];
+
+        // ====== UPDATED: 2x2 GridBagConstraints placement ======
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.fill = GridBagConstraints.HORIZONTAL;
+        gc.weightx = 1.0;
+
         for (int i = 0; i < 4; i++) {
             String txt = (i < opts.size()) ? opts.get(i) : "";
             OptionButton ob = new OptionButton(letters[i], txt);
             group.add(ob);
             buttons[i] = ob;
-            grid.add(ob);
+
+            gc.gridx = i % 2;   // 0,1
+            gc.gridy = i / 2;   // 0,0,1,1
+
+            // bottom gap only for first row; right gap only for left column
+            gc.insets = new Insets(0, 0, (gc.gridy == 0 ? 14 : 0), (gc.gridx == 0 ? 18 : 0));
+
+            grid.add(ob, gc);
         }
+        // =======================================================
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         actions.setOpaque(false);
@@ -89,10 +103,10 @@ public class QuestionDialog extends JDialog {
         root.add(content);
         setContentPane(root);
 
+        // RTL only for Hebrew content
         applyRtlIfHebrew(question.getText(), buttons);
-        setSize(680, 420);
 
-        pack();
+        pack();                 // let layout compute correct height
         setResizable(false);
         setLocationRelativeTo(owner);
     }
@@ -129,7 +143,7 @@ public class QuestionDialog extends JDialog {
         return ch;
     }
 
-    private static List<String> wrap(String text, FontMetrics fm, int maxWidth) {
+    static List<String> wrap(String text, FontMetrics fm, int maxWidth) {
         List<String> lines = new ArrayList<>();
         if (text == null) return lines;
 
@@ -174,7 +188,6 @@ public class QuestionDialog extends JDialog {
             setOpaque(false);
             setBorder(BorderFactory.createEmptyBorder(12, 18, 12, 18));
             setPreferredSize(new Dimension(520, 95));
-
         }
 
         @Override
@@ -222,6 +235,10 @@ public class QuestionDialog extends JDialog {
         private final String text;
         private boolean rtl = false;
 
+        // ===== UPDATED: dynamic height based on content =====
+        private static final int BTN_W = 250;
+        private static final int MIN_H = 70;
+
         OptionButton(char letter, String text) {
             this.letter = letter;
             this.text = text == null ? "" : text;
@@ -233,16 +250,44 @@ public class QuestionDialog extends JDialog {
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             setActionCommand(String.valueOf(letter));
 
-            setPreferredSize(new Dimension(250, 70));
             setFont(new Font("Arial", Font.BOLD, 14));
             setForeground(TEXT_MUTED);
+
+            // start size and then expand if needed
+            setPreferredSize(new Dimension(BTN_W, MIN_H));
+            setMinimumSize(new Dimension(BTN_W, MIN_H));
+            updatePreferredHeight();
 
             addChangeListener(e -> repaint());
         }
 
         void applyRightToLeft() {
             rtl = true;
+            repaint();
         }
+
+        private void updatePreferredHeight() {
+            FontMetrics fm = getFontMetrics(getFont());
+
+            int circleR = 40;
+            int padding = 22;
+            int gap = 14;
+
+            // text width (same logic as paint)
+            int textW = BTN_W - padding - gap - circleR - padding;
+
+            List<String> lines = QuestionDialog.wrap(text, fm, textW);
+
+            int lineHeight = fm.getHeight();
+            int textBlockH = lines.size() * lineHeight;
+
+            // +padding, keep at least circle height
+            int needed = Math.max(MIN_H, textBlockH + 28);
+
+            setPreferredSize(new Dimension(BTN_W, needed));
+            setMinimumSize(new Dimension(BTN_W, needed));
+        }
+        // ====================================================
 
         @Override
         protected void paintComponent(Graphics g) {
@@ -260,8 +305,12 @@ public class QuestionDialog extends JDialog {
             g2.setColor(isSelected() ? OPTION_BORDER_SELECTED : OPTION_BORDER);
             g2.drawRoundRect(2, 2, w - 4, h - 4, arc, arc);
 
+            // English (default): circle on RIGHT
+            // Hebrew (rtl): circle on LEFT
+            boolean english = !rtl;
+
             int circleR = 40;
-            int circleX = rtl ? 18 : (w - 18 - circleR);
+            int circleX = english ? (w - 18 - circleR) : 18;
             int circleY = (h - circleR) / 2;
 
             g2.setColor(new Color(255, 255, 255, 230));
@@ -277,8 +326,8 @@ public class QuestionDialog extends JDialog {
             int padding = 22;
             int gap = 14;
 
-            int textX = rtl ? (circleX + circleR + gap) : padding;
-            int textW = rtl ? (w - textX - padding) : (w - padding - gap - circleR - padding);
+            int textX = english ? padding : (circleX + circleR + gap);
+            int textW = english ? (w - padding - gap - circleR - padding) : (w - textX - padding);
 
             Rectangle textRect = new Rectangle(textX, 0, textW, h);
             drawWrappedLeft(g2, text, textRect);
@@ -297,20 +346,10 @@ public class QuestionDialog extends JDialog {
             FontMetrics fm = g2.getFontMetrics();
             List<String> lines = QuestionDialog.wrap(text, fm, r.width);
 
-            int maxLines = 2;
-            if (lines.size() > maxLines) {
-                lines = new ArrayList<>(lines.subList(0, maxLines));
-                String last = lines.get(maxLines - 1);
-                while (fm.stringWidth(last + "…") > r.width && last.length() > 0) {
-                    last = last.substring(0, last.length() - 1);
-                }
-                lines.set(maxLines - 1, last + "…");
-            }
-
             int lineHeight = fm.getHeight();
             int totalHeight = lines.size() * lineHeight;
-            int y = (r.height - totalHeight) / 2 + fm.getAscent();
 
+            int y = (r.height - totalHeight) / 2 + fm.getAscent();
             for (String line : lines) {
                 g2.drawString(line, r.x, y);
                 y += lineHeight;
