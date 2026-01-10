@@ -586,32 +586,40 @@ public class GamePanel extends JPanel {
         boardPanel1.refresh();
         boardPanel2.refresh();
 
-        boolean isWin = controller.getCurrentGame().getGameState() == Model.GameState.WON;
-        String title = isWin ? "Congratulations, You Won!" : "Game Over";
-        String message;
-
-        if (isWin) {
-            message = String.format(
-                    "VICTORY!\n\nFinal Score: %d\n\nPlease use the buttons below to Restart or Exit.",
-                    controller.getSharedScore()
-            );
-        } else {
-            message = String.format(
-                    "GAME OVER!\n\nFinal Score: %d\n\nPlease use the buttons below to Restart or Exit.",
-                    controller.getSharedScore()
-            );
-        }
-
-        JOptionPane.showMessageDialog(
-                this,
-                message,
-                title,
-                isWin ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE
-        );
-
+        // duration for stats + history
         long durationSeconds = (System.currentTimeMillis() - startTimeMillis) / 1000L;
+
+        //  record the finished game BEFORE restart/endGame changes currentGame
         controller.recordFinishedGame(player1Name, player2Name, durationSeconds);
+
+        // build summary DTO (MVC-safe)
+        GameController.GameSummaryDTO summary = controller.getGameSummaryDTO();
+
+        int surprisesOpened = 0;
+
+        // show the styled end screen
+        GameResultDialog.ResultAction action =
+                GameResultDialog.showResultDialog(
+                        SwingUtilities.getWindowAncestor(this),
+                        summary,
+                        durationSeconds,
+                        surprisesOpened
+                );
+
+        if (action == GameResultDialog.ResultAction.RESTART) {
+            controller.restartGame();
+            updateStatus();
+            updateTurnUI();
+            boardPanel1.refresh();
+            boardPanel2.refresh();
+            requestResizeBoards();
+        }
+        else if (action == GameResultDialog.ResultAction.EXIT) {
+            controller.endGame();
+            if (onBackToMenu != null) onBackToMenu.run();
+        }
     }
+
 
     private void resizeBoardsToFit() {
         if (wrap1 == null || wrap2 == null || boardPanel1 == null || boardPanel2 == null) return;
