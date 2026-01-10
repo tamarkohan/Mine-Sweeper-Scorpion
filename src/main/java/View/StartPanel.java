@@ -138,9 +138,9 @@ public class StartPanel extends JPanel {
         // --- Difficulty buttons: same size, same Y, one line ---
         // --- Difficulty buttons: same size, same Y, one line ---
         // ===== LEVEL BUTTONS (PIXEL CONTROL – LIKE MAIN MENU) =====
-        int btnW = (int)(W * 0.27);   // width
-        int btnH = (int)(H * 0.29);   // height
-        int gap  = 0;
+        int btnW = (int)(W * 0.23);   // width
+        int btnH = (int)(H * 0.23);   // height
+        int gap  = (int)(W * 0.015);  // small gap between buttons
 
         int total = btnW * 3 + gap * 2;
         int startX = (W - total) / 2;
