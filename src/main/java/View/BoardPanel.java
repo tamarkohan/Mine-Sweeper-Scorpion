@@ -220,7 +220,19 @@ public class BoardPanel extends JPanel {
         if (isFlagging) {
             // Only allow flagging if NOT revealed
             if (!controller.isCellRevealed(boardNumber, r, c)) {
-                controller.toggleFlagUI(boardNumber, r, c);
+
+                boolean ok = controller.toggleFlagUI(boardNumber, r, c);
+
+                if (!ok) {
+                    String msg = controller.getAndClearLastActionMessage();
+                    if (msg != null && !msg.isBlank()) {
+                        OutcomeDialog.show(
+                                SwingUtilities.getWindowAncestor(this),
+                                "FLAGS",
+                                msg
+                        );
+                    }
+                }
             }
         } else {
             boolean wasRevealedBeforeClick = controller.isCellRevealed(boardNumber, r, c);

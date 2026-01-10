@@ -44,6 +44,7 @@ public class GamePanel extends JPanel {
     private Timer resizeStabilizer;
     private final Runnable onBackToMenu;
 
+    private JLabel toastLabel;
 
 
     public GamePanel(GameController controller,
@@ -370,9 +371,47 @@ public class GamePanel extends JPanel {
                 target.queueEffect(/* BoardPanel.EffectType */ BoardPanel.EffectType.REVEAL_1_MINE);
                 showToast("MINE REVEALED!", neon);
             } else {
-                // keep a toast for normal outcomes too (optional)
-                showToast(outcomeMessage, neon);
+
+                // If it's a QUESTION outcome message -> show big OutcomeDialog (green/red)
+                boolean looksLikeQuestionOutcome =
+                        msgLower.contains("activation cost:") &&
+                                (msgLower.contains("correct") || msgLower.contains("wrong")
+                                        || msgLower.contains("didn't answer") || msgLower.contains("did not answer")
+                                        || msgLower.contains("skipped"));
+
+                if (looksLikeQuestionOutcome) {
+                    OutcomeDialog.showQuestionOutcomeFromMessage(
+                            SwingUtilities.getWindowAncestor(this),
+                            outcomeMessage
+                    );
+                } else {
+                    boolean looksLikeSurpriseOutcome =
+                            msgLower.contains("surprise activated") ||
+                                    msgLower.contains("🎲") ||
+                                    msgLower.contains("surprise result");
+
+                    if (looksLikeQuestionOutcome) {
+                        OutcomeDialog.showQuestionOutcomeFromMessage(
+                                SwingUtilities.getWindowAncestor(this),
+                                outcomeMessage
+                        );
+                    }
+                    else if (looksLikeSurpriseOutcome) {
+                        //  big dialog for surprise too (cyan border)
+                        OutcomeDialog.showSurpriseOutcomeFromMessage(
+                                SwingUtilities.getWindowAncestor(this),
+                                outcomeMessage
+                        );
+
+                    }
+                    else {
+                        // keep toast only for small/other messages
+                        showToast(outcomeMessage, neon);
+                    }
+                }
+
             }
+
         }
 
 
@@ -400,6 +439,46 @@ public class GamePanel extends JPanel {
             boardPanel1.refresh();
             boardPanel2.refresh();
         }
+    }
+
+    private void showToast(String message, Color accent) {
+        if (message == null || message.isBlank()) return;
+
+        // remove previous toast (if any)
+        JLayeredPane lp = getRootPane().getLayeredPane();
+        if (toastLabel != null && toastLabel.getParent() != null) {
+            lp.remove(toastLabel);
+        }
+
+        JLabel label = new JLabel("<html><div style='text-align:center;'>" +
+                message.replace("\n", "<br>") +
+                "</div></html>", SwingConstants.CENTER);
+
+        label.setOpaque(true);
+        label.setBackground(new Color(0, 0, 0, 190));
+        label.setForeground(Color.WHITE);
+        label.setFont(new Font("Arial", Font.BOLD, 14));
+        label.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(accent, 2, true),
+                BorderFactory.createEmptyBorder(10, 16, 10, 16)
+        ));
+
+        Dimension pref = label.getPreferredSize();
+        int x = (getWidth() - pref.width) / 2;
+        int y = getHeight() - pref.height - 30;
+        label.setBounds(x, y, pref.width, pref.height);
+
+        lp.add(label, JLayeredPane.POPUP_LAYER);
+        lp.repaint();
+
+        toastLabel = label;
+
+        Timer t = new Timer(1400, e -> {
+            lp.remove(label);
+            lp.repaint();
+        });
+        t.setRepeats(false);
+        t.start();
     }
 
 

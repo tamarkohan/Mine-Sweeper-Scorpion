@@ -5,6 +5,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class OutcomeDialog extends JDialog {
 
     private static final Color BG_TOP = new Color(6, 10, 28);
@@ -51,7 +52,7 @@ public class OutcomeDialog extends JDialog {
         root.add(content, BorderLayout.CENTER);
         setContentPane(root);
 
-        root.setPreferredSize(new Dimension(720, 360));
+        root.setPreferredSize(new Dimension(820, 360));
         pack();
         setResizable(false);
         setLocationRelativeTo(owner);
@@ -65,6 +66,24 @@ public class OutcomeDialog extends JDialog {
     public static void showCorrect(Window owner, String message) {
         new OutcomeDialog(owner, "Correct!", message, ACCENT_GREEN).setVisible(true);
     }
+
+    public static void showQuestionOutcome(Window owner,
+                                           boolean isCorrect,
+                                           String yourAnswer,
+                                           String correctAnswer,
+                                           String details) {
+        Color accent = isCorrect ? ACCENT_GREEN : ACCENT_RED;
+        String title = isCorrect ? " CORRECT!" : " WRONG!";
+
+        String msg =
+                "Your answer: " + (yourAnswer == null ? "-" : yourAnswer) + "\n" +
+                        "Correct answer: " + (correctAnswer == null ? "-" : correctAnswer) + "\n\n" +
+                        (details == null ? "" : details);
+
+        new OutcomeDialog(owner, title, msg, accent).setVisible(true);
+    }
+
+
 
     public static void show(Window owner, String title, String message) {
         // default: cyan-ish
@@ -124,7 +143,7 @@ public class OutcomeDialog extends JDialog {
             this.accent = accent;
             setOpaque(false);
             setBorder(BorderFactory.createEmptyBorder(12, 18, 12, 18));
-            setPreferredSize(new Dimension(520, 70));
+            setPreferredSize(new Dimension(520, 80));
         }
 
         @Override
@@ -136,9 +155,9 @@ public class OutcomeDialog extends JDialog {
             int w = getWidth();
             int h = getHeight();
 
-
-            g2.setColor(accent);
-            g2.setFont(new Font("Arial", Font.BOLD, 22));
+            // Only draw the title text (no card, no border)
+            g2.setColor(accent); //  title is red/green/cyan
+            g2.setFont(new Font("Arial", Font.BOLD, 44)); // adjust size if you want
 
             FontMetrics fm = g2.getFontMetrics();
             int x = (w - fm.stringWidth(text)) / 2;
@@ -147,6 +166,8 @@ public class OutcomeDialog extends JDialog {
 
             g2.dispose();
         }
+
+
     }
 
     private static class BodyCard extends JPanel {
@@ -169,25 +190,85 @@ public class OutcomeDialog extends JDialog {
 
             int w = getWidth();
             int h = getHeight();
-            int arc = 34;
+            int arc = 40;
 
+            // glass card
             g2.setColor(new Color(0, 0, 0, 115));
             g2.fillRoundRect(0, 0, w, h, arc, arc);
 
+            // neon border
             g2.setStroke(new BasicStroke(2.5f));
             g2.setColor(accent);
             g2.drawRoundRect(2, 2, w - 4, h - 4, arc, arc);
 
-            g2.setFont(new Font("Arial", Font.BOLD, 15));
-            g2.setColor(MUTED);
-
+            // message lines
             int y = 34;
             for (String line : lines) {
-                g2.drawString(line, 18, y);
+                boolean important =
+                        line.startsWith("Score:") ||
+                                line.startsWith("Lives:") ||
+                                line.startsWith("Activation cost:") ||
+                                line.toLowerCase().startsWith("special effect:");
+
+                g2.setFont(new Font("Arial", important ? Font.BOLD : Font.PLAIN, important ? 16 : 15));
+                g2.setColor(important ? TEXT : MUTED);
+
+                String printed = (important ? "• " : "  ") + line;
+                g2.drawString(printed, 18, y);
                 y += 24;
             }
 
             g2.dispose();
         }
     }
+        public static void showQuestionOutcomeFromMessage(Window owner, String outcomeMessage) {
+            if (outcomeMessage == null) return;
+
+            String lower = outcomeMessage.toLowerCase();
+
+            boolean isCorrect = lower.contains("correct");
+            boolean isWrong = lower.contains("wrong");
+            boolean isSkipped = lower.contains("didn't answer") || lower.contains("did not answer") || lower.contains("skipped");
+
+            Color accent;
+            String title;
+
+            if (isCorrect) {
+                accent = ACCENT_GREEN;
+                title = "CORRECT!";
+            } else if (isWrong) {
+                accent = ACCENT_RED;
+                title = "WRONG!";
+            } else if (isSkipped) {
+                // keep cyan for skipped / neutral
+                accent = new Color(65, 255, 240);
+                title = "SKIPPED";
+            } else {
+                // fallback if message doesn't match
+                accent = new Color(65, 255, 240);
+                title = "OUTCOME";
+            }
+
+            // optional: remove leading "Correct!/Wrong!" if your model puts it
+            String cleaned = outcomeMessage
+                    .replaceFirst("(?i)^\\s*correct!\\s*\\R", "")
+                    .replaceFirst("(?i)^\\s*wrong!\\s*\\R", "");
+
+            new OutcomeDialog(owner, title, cleaned, accent).setVisible(true);
+        }
+
+    public static void showSurpriseOutcomeFromMessage(Window owner, String outcomeMessage) {
+        if (outcomeMessage == null) return;
+
+        String lower = outcomeMessage.toLowerCase();
+        boolean good = lower.contains("good");
+        boolean bad  = lower.contains("bad");
+
+        Color accent = good ? ACCENT_GREEN : (bad ? ACCENT_RED : new Color(65, 255, 240));
+        String title = good ? "SURPRISE: GOOD!" : (bad ? "SURPRISE: BAD!" : "SURPRISE!");
+
+        new OutcomeDialog(owner, title, outcomeMessage, accent).setVisible(true);
+    }
+
+
 }

@@ -24,14 +24,14 @@ public class SurpriseActivator extends SpecialCellActivator {
             game.setSharedScore(game.getSharedScore() + value);
             game.addLife(value);
             return new ActivationResult(true, false,
-                    "🎲 Surprise result: GOOD\n" +
+                    " Surprise result: GOOD\n" +
                             "Reward: +" + value + " pts, +1 life.");
         } else {
             // penalty: -points -life
             game.setSharedScore(game.getSharedScore() - value);
             game.deductLife(1);
             return new ActivationResult(true, false,
-                    "🎲 Surprise result: BAD\n" +
+                    " Surprise result: BAD\n" +
                             "Penalty: -" + value + " pts, -1 life.");
         }
     }
@@ -41,7 +41,7 @@ public class SurpriseActivator extends SpecialCellActivator {
                                   int beforeScore, int beforeLives,
                                   int afterScore, int afterLives,
                                   String extra) {
-        return "🎲 Surprise activated!\n" +
+        return " Surprise activated!\n" +
                 "Activation cost: -" + cost + " pts\n" +
                 result.details + "\n" +
                 "Score: " + beforeScore + " → " + afterScore + "\n" +

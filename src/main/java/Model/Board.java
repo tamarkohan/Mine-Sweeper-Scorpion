@@ -229,8 +229,8 @@ public class Board {
      * SRS 3.1.1: Mine +1pt, Non-Mine -3pts.
      * This method must be VOID or return only if the action was successful for the Controller's logic to work.
      */
-    public void toggleFlag(int r, int c) {
-        if (!isValid(r, c) || cells[r][c].isRevealed() || game.getGameState() != GameState.RUNNING) return;
+    public boolean toggleFlag(int r, int c) {
+        if (!isValid(r, c) || cells[r][c].isRevealed() || game.getGameState() != GameState.RUNNING) return false;
 
         Cell cell = cells[r][c];
 
@@ -239,15 +239,15 @@ public class Board {
         // If trying to PLACE a new flag, enforce max flags = number of mines
         if (!wasFlagged && flagsPlaced >= totalMines) {
             game.setLastActionMessage(
-                    "🚫 No flags left!\n" +
+                    "No flags left!\n" +
                             "You already used all " + totalMines + " flags.\n" +
                             "Remove a flag to place a new one."
             );
-            return;
+            return false;
         }
 
         boolean stateChanged = cell.toggleFlag();
-        if (!stateChanged) return;
+        if (!stateChanged) return false;
 
         if (!wasFlagged) {
             // placed a flag
@@ -266,6 +266,7 @@ public class Board {
         }
 
         game.checkGameStatus();
+        return true;
     }
 
 
