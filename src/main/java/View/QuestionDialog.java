@@ -20,6 +20,9 @@ public class QuestionDialog extends JDialog {
     private static final Color OPTION_BORDER = new Color(210, 220, 255);
     private static final Color OPTION_BORDER_SELECTED = new Color(65, 255, 240);
 
+    private static final Color TURQUOISE = new Color(65, 255, 240); // add this
+    private static final Color FRAME_GREY = new Color(140, 150, 160); // soft neutral grey
+
     private static final Color TEXT = Color.WHITE;
     private static final Color TEXT_MUTED = new Color(225, 230, 255);
 
@@ -366,27 +369,75 @@ public class QuestionDialog extends JDialog {
 
             int w = getWidth();
             int h = getHeight();
-            int arc = 36;
+            int arc = 50;
 
+            boolean selected = isSelected();
+
+            // ---- background glass ----
             g2.setColor(new Color(0, 0, 0, 115));
             g2.fillRoundRect(0, 0, w, h, arc, arc);
 
-            g2.setStroke(new BasicStroke(2.5f));
-            g2.setColor(isSelected() ? OPTION_BORDER_SELECTED : OPTION_BORDER);
-            g2.drawRoundRect(2, 2, w - 4, h - 4, arc, arc);
+            // ---- border / frame ----
+            if (selected) {
+                // BIG turquoise glow
+                for (int i = 18; i >= 1; i--) {
+                    g2.setStroke(new BasicStroke(i));
+                    g2.setColor(new Color(
+                            TURQUOISE.getRed(),
+                            TURQUOISE.getGreen(),
+                            TURQUOISE.getBlue(),
+                            14
+                    ));
+                    g2.drawRoundRect(
+                            2 - i / 3,
+                            2 - i / 3,
+                            w - 4 + i / 2,
+                            h - 4 + i / 2,
+                            arc + i*5/2,
+                            arc + i*5/2
+                    );
+                }
 
+                // main turquoise border
+                g2.setStroke(new BasicStroke(2.5f));
+                g2.setColor(TURQUOISE);
+                g2.drawRoundRect(2, 2, w - 4, h - 4, arc, arc);
+
+            } else {
+                // grey border for unselected answers
+                g2.setStroke(new BasicStroke(2.2f));
+                g2.setColor(FRAME_GREY);
+                g2.drawRoundRect(2, 2, w - 4, h - 4, arc, arc);
+            }
+
+            // ---- circle ----
             int circleR = 40;
             int circleX = rtl ? 18 : (w - 18 - circleR);
             int circleY = (h - circleR) / 2;
 
-            g2.setColor(new Color(255, 255, 255, 230));
-            g2.fillOval(circleX, circleY, circleR, circleR);
+            if (selected) {
+                // turquoise filled circle with subtle glow
+                g2.setColor(new Color(TURQUOISE.getRed(), TURQUOISE.getGreen(), TURQUOISE.getBlue(), 35));
+                g2.fillOval(circleX - 6, circleY - 6, circleR + 12, circleR + 12);
 
+                g2.setColor(TURQUOISE);
+                g2.fillOval(circleX, circleY, circleR, circleR);
+
+                g2.setStroke(new BasicStroke(2f));
+                g2.setColor(new Color(0, 0, 0, 90));
+                g2.drawOval(circleX, circleY, circleR, circleR);
+            } else {
+                g2.setColor(new Color(255, 255, 255, 230));
+                g2.fillOval(circleX, circleY, circleR, circleR);
+            }
+
+            // ---- letter inside circle ----
             g2.setColor(new Color(10, 18, 55));
             g2.setFont(new Font("Arial", Font.BOLD, 18));
             drawCentered(g2, String.valueOf(letter), new Rectangle(circleX, circleY, circleR, circleR));
 
-            g2.setColor(isSelected() ? TEXT : TEXT_MUTED);
+            // ---- option text ----
+            g2.setColor(selected ? TEXT : TEXT_MUTED);
             g2.setFont(getFont());
 
             int padding = 22;
@@ -400,6 +451,7 @@ public class QuestionDialog extends JDialog {
 
             g2.dispose();
         }
+
 
         private static void drawCentered(Graphics2D g2, String s, Rectangle r) {
             FontMetrics fm = g2.getFontMetrics();
