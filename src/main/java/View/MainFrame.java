@@ -55,8 +55,6 @@ public class MainFrame extends JFrame
             System.err.println("Could not load icon: " + e.getMessage());
         }
 
-        // Admin/debug menu for question management & history
-        setJMenuBar(buildMenuBar());
 
         // ===== create screens (cards) =====
         mainMenuPanel = new MainMenuPanel(this);   // first screen with 4 buttons
