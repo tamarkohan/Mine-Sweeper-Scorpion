@@ -90,7 +90,7 @@ public class StartPanel extends JPanel {
         group.add(tHard);
         tEasy.setSelected(true);
 
-        btnStart = new IconButton("/ui/start/start_btn.png");
+        btnStart = new IconButton("/ui/start/start_btnnn.png");
         btnStart.setOnClick(this::handleStart);
         bg.add(btnStart);
 
@@ -157,7 +157,7 @@ public class StartPanel extends JPanel {
 
 
 
-        setBoundsRatio(btnStart, 0.30, 0.56, 0.40, 0.41, W, H);
+        setBoundsRatio(btnStart, 0.31, 0.63, 0.40, 0.41, W, H);
 
         setBoundsRatio(btnBack, 0.03, 0.92, 0.04, 0.06, W, H);
 
