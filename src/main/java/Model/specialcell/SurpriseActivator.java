@@ -2,7 +2,6 @@ package Model.specialcell;
 
 import Model.Board;
 import Model.Cell;
-import Model.Difficulty;
 import Model.Game;
 
 import java.util.Random;

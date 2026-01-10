@@ -644,9 +644,65 @@ public class GameController {
             gameSubject.notifyObservers(state);
         }
     }
+// ===== UI DTOs (View-safe, no Model exposure) =====
+
+    public static class GameSummaryDTO {
+        public final boolean isWin;
+        public final int sharedScore;
+        public final int sharedLives;
+        public final int totalQuestions;
+        public final int correctAnswers;
+
+        public GameSummaryDTO(boolean isWin, int sharedScore, int sharedLives,
+                              int totalQuestions, int correctAnswers) {
+            this.isWin = isWin;
+            this.sharedScore = sharedScore;
+            this.sharedLives = sharedLives;
+            this.totalQuestions = totalQuestions;
+            this.correctAnswers = correctAnswers;
+        }
+    }
+
+    public static class QuestionDTO {
+        public final String text;
+        public final List<String> options;  // should be size 4
+        public final char correctOption;
+
+        public QuestionDTO(String text, List<String> options, char correctOption) {
+            this.text = text;
+            this.options = options;
+            this.correctOption = correctOption;
+        }
+    }
+
+    public enum QuestionAnswerResult {
+        CORRECT, WRONG, SKIPPED
+    }
+
+    public GameSummaryDTO getGameSummaryDTO() {
+        if (currentGame == null) {
+            return new GameSummaryDTO(false, 0, 0, 0, 0);
+        }
+        boolean isWin = currentGame.getGameState() == GameState.WON;
+
+        return new GameSummaryDTO(
+                isWin,
+                currentGame.getSharedScore(),
+                currentGame.getSharedLives(),
+                currentGame.getTotalQuestionsAnswered(),
+                currentGame.getTotalCorrectAnswers()
+        );
+    }
 
 
+    public QuestionDTO buildQuestionDTO(Question q) {
+        if (q == null) return null;
 
+        List<String> opts = new ArrayList<>(q.getOptions());
+        while (opts.size() < 4) opts.add("");
+
+        return new QuestionDTO(q.getText(), opts, q.getCorrectOption());
+    }
 
 
 }

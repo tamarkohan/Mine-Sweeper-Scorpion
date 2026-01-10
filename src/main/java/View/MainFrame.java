@@ -55,8 +55,6 @@ public class MainFrame extends JFrame
             System.err.println("Could not load icon: " + e.getMessage());
         }
 
-        // Admin/debug menu for question management & history
-        setJMenuBar(buildMenuBar());
 
         // ===== create screens (cards) =====
         mainMenuPanel = new MainMenuPanel(this);   // first screen with 4 buttons
@@ -88,7 +86,18 @@ public class MainFrame extends JFrame
     @Override
     public void onStartGame(String player1Name, String player2Name, String difficultyKey) {
         controller.startNewGame(difficultyKey);
-        controller.registerQuestionPresenter(q -> QuestionDialog.showQuestionDialog(this, q));
+        controller.registerQuestionPresenter(q -> {
+            GameController.QuestionDTO dto = controller.buildQuestionDTO(q);
+
+            GameController.QuestionAnswerResult ans =
+                    QuestionDialog.showQuestionDialog(this, dto);
+
+            return switch (ans) {
+                case CORRECT -> Model.QuestionResult.CORRECT;
+                case WRONG   -> Model.QuestionResult.WRONG;
+                default      -> Model.QuestionResult.SKIPPED;
+            };
+        });
 
         if (gamePanel != null) {
             cardPanel.remove(gamePanel);

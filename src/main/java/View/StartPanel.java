@@ -90,7 +90,7 @@ public class StartPanel extends JPanel {
         group.add(tHard);
         tEasy.setSelected(true);
 
-        btnStart = new IconButton("/ui/start/start_btn.png");
+        btnStart = new IconButton("/ui/start/start_btnnn.png");
         btnStart.setOnClick(this::handleStart);
         bg.add(btnStart);
 
@@ -138,9 +138,9 @@ public class StartPanel extends JPanel {
         // --- Difficulty buttons: same size, same Y, one line ---
         // --- Difficulty buttons: same size, same Y, one line ---
         // ===== LEVEL BUTTONS (PIXEL CONTROL – LIKE MAIN MENU) =====
-        int btnW = (int)(W * 0.27);   // width
-        int btnH = (int)(H * 0.29);   // height
-        int gap  = 0;
+        int btnW = (int)(W * 0.23);   // width
+        int btnH = (int)(H * 0.23);   // height
+        int gap  = (int)(W * 0.015);  // small gap between buttons
 
         int total = btnW * 3 + gap * 2;
         int startX = (W - total) / 2;
@@ -157,7 +157,7 @@ public class StartPanel extends JPanel {
 
 
 
-        setBoundsRatio(btnStart, 0.30, 0.56, 0.40, 0.41, W, H);
+        setBoundsRatio(btnStart, 0.31, 0.63, 0.40, 0.41, W, H);
 
         setBoundsRatio(btnBack, 0.03, 0.92, 0.04, 0.06, W, H);
 

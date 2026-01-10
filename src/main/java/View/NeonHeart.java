@@ -3,7 +3,6 @@ package View;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.font.GlyphVector;
-import java.awt.geom.AffineTransform;
 import java.awt.Shape;
 
 public class NeonHeart extends JComponent {

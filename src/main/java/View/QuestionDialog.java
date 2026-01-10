@@ -1,7 +1,6 @@
 package View;
 
-import Model.Question;
-import Model.QuestionResult;
+import Controller.GameController;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,7 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class QuestionDialog extends JDialog {
-    private QuestionResult result = QuestionResult.SKIPPED;
+
+    private GameController.QuestionAnswerResult result = GameController.QuestionAnswerResult.SKIPPED;
 
     private static final Color BG_TOP = new Color(6, 10, 28);
     private static final Color BG_BOTTOM = new Color(10, 18, 55);
@@ -20,20 +20,20 @@ public class QuestionDialog extends JDialog {
     private static final Color OPTION_BORDER = new Color(210, 220, 255);
     private static final Color OPTION_BORDER_SELECTED = new Color(65, 255, 240);
 
-    private static final Color TURQUOISE = new Color(65, 255, 240); // add this
-    private static final Color FRAME_GREY = new Color(140, 150, 160); // soft neutral grey
+    private static final Color TURQUOISE = new Color(65, 255, 240);
+    private static final Color FRAME_GREY = new Color(140, 150, 160);
 
     private static final Color TEXT = Color.WHITE;
     private static final Color TEXT_MUTED = new Color(225, 230, 255);
 
-    // Fields for result overlay
+    // Fields for result overlay (kept exactly as your functionality)
     private JPanel resultOverlay;
     private JLabel resultTitle;
     private JLabel resultDetails;
     private String selectedAnswerText;
     private String correctAnswerText;
 
-    private QuestionDialog(Window owner, Question question) {
+    private QuestionDialog(Window owner, GameController.QuestionDTO question) {
         super(owner, "Question", ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
@@ -41,7 +41,7 @@ public class QuestionDialog extends JDialog {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                result = QuestionResult.SKIPPED;
+                result = GameController.QuestionAnswerResult.SKIPPED;
             }
         });
 
@@ -53,7 +53,7 @@ public class QuestionDialog extends JDialog {
         content.setOpaque(false);
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 
-        QuestionCard questionCard = new QuestionCard(question.getText());
+        QuestionCard questionCard = new QuestionCard(question.text);
         questionCard.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JPanel grid = new JPanel(new GridLayout(2, 2, 18, 14));
@@ -61,7 +61,7 @@ public class QuestionDialog extends JDialog {
         grid.setBorder(BorderFactory.createEmptyBorder(18, 0, 0, 0));
 
         ButtonGroup group = new ButtonGroup();
-        List<String> opts = question.getOptions();
+        List<String> opts = question.options;
         char[] letters = new char[]{'A', 'B', 'C', 'D'};
 
         OptionButton[] buttons = new OptionButton[4];
@@ -83,9 +83,10 @@ public class QuestionDialog extends JDialog {
         styleActionButton(submit, true);
 
         cancel.addActionListener(e -> {
-            result = QuestionResult.SKIPPED;
+            result = GameController.QuestionAnswerResult.SKIPPED;
             dispose();
         });
+
         submit.addActionListener(e -> {
 
             ButtonModel sel = group.getSelection();
@@ -108,21 +109,20 @@ public class QuestionDialog extends JDialog {
             }
 
             // Get correct answer text
-            int correctIndex = normalize(question.getCorrectOption()) - 'A';
+            int correctIndex = normalize(question.correctOption) - 'A';
             if (correctIndex >= 0 && correctIndex < opts.size()) {
                 correctAnswerText = opts.get(correctIndex);
             }
 
             char selectedChar = normalize(group.getSelection().getActionCommand().charAt(0));
-            char correctChar = normalize(question.getCorrectOption());
+            char correctChar = normalize(question.correctOption);
 
             boolean isCorrect = (selectedChar == correctChar);
-            result = isCorrect ? QuestionResult.CORRECT : QuestionResult.WRONG;
+            result = isCorrect ? GameController.QuestionAnswerResult.CORRECT
+                    : GameController.QuestionAnswerResult.WRONG;
+
             dispose();
-
         });
-
-
 
         actions.add(cancel);
         actions.add(submit);
@@ -134,34 +134,31 @@ public class QuestionDialog extends JDialog {
         root.add(content);
         setContentPane(root);
 
-        applyRtlIfHebrew(question.getText(), buttons);
-        pack(); // let it compute preferred sizes FIRST
+        applyRtlIfHebrew(question.text, buttons);
+        pack();
 
-        setMinimumSize(new Dimension(760, 480));   // prevent tiny dialog
-        setSize(new Dimension(820, 520));          // final size
-        setResizable(false);                       // keep fixed (or true if you want)
+        setMinimumSize(new Dimension(760, 480));
+        setSize(new Dimension(820, 520));
+        setResizable(false);
 
-        // Bigger dialog
         root.setPreferredSize(new Dimension(900, 560));
         pack();
         setResizable(false);
         setLocationRelativeTo(owner);
-
     }
+
+    // (kept exactly as your class - not called currently, but preserved)
     private void showResult(boolean isCorrect) {
-        // create overlay once
         if (resultOverlay == null) {
             resultOverlay = new JPanel(new GridBagLayout());
             resultOverlay.setOpaque(true);
-            resultOverlay.setBackground(new Color(0, 0, 0, 170)); // dark glass
+            resultOverlay.setBackground(new Color(0, 0, 0, 170));
 
-            // result card
             JPanel card = new JPanel();
             card.setOpaque(true);
             card.setBackground(new Color(10, 18, 55));
             card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
 
-            // border depends on correct/wrong
             Color accent = isCorrect ? new Color(80, 255, 120) : new Color(255, 90, 90);
             card.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(accent, 3, true),
@@ -193,7 +190,6 @@ public class QuestionDialog extends JDialog {
             setGlassPane(resultOverlay);
         }
 
-        // update text every time
         resultTitle.setText(isCorrect ? "CORRECT " : "WRONG ");
 
         String picked = (selectedAnswerText == null) ? "-" : selectedAnswerText;
@@ -212,12 +208,12 @@ public class QuestionDialog extends JDialog {
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 
-    public static QuestionResult showQuestionDialog(Window owner, Question question) {
+    public static GameController.QuestionAnswerResult showQuestionDialog(
+            Window owner, GameController.QuestionDTO question) {
         QuestionDialog dlg = new QuestionDialog(owner, question);
         dlg.setVisible(true);
         return dlg.result;
     }
-
 
     private static void styleActionButton(JButton b, boolean primary) {
         b.setFocusPainted(false);
@@ -290,8 +286,6 @@ public class QuestionDialog extends JDialog {
             this.text = text == null ? "" : text;
             setOpaque(false);
             setBorder(BorderFactory.createEmptyBorder(12, 18, 12, 18));
-            setPreferredSize(new Dimension(620, 120));
-
             setPreferredSize(new Dimension(520, 95));
         }
 
@@ -373,50 +367,41 @@ public class QuestionDialog extends JDialog {
 
             boolean selected = isSelected();
 
-            // ---- background glass ----
+            // background glass
             g2.setColor(new Color(0, 0, 0, 115));
             g2.fillRoundRect(0, 0, w, h, arc, arc);
 
-            // ---- border / frame ----
+            // border/frame
             if (selected) {
-                // BIG turquoise glow
                 for (int i = 18; i >= 1; i--) {
                     g2.setStroke(new BasicStroke(i));
-                    g2.setColor(new Color(
-                            TURQUOISE.getRed(),
-                            TURQUOISE.getGreen(),
-                            TURQUOISE.getBlue(),
-                            14
-                    ));
+                    g2.setColor(new Color(TURQUOISE.getRed(), TURQUOISE.getGreen(), TURQUOISE.getBlue(), 14));
                     g2.drawRoundRect(
                             2 - i / 3,
                             2 - i / 3,
                             w - 4 + i / 2,
                             h - 4 + i / 2,
-                            arc + i*5/2,
-                            arc + i*5/2
+                            arc + i * 5 / 2,
+                            arc + i * 5 / 2
                     );
                 }
 
-                // main turquoise border
                 g2.setStroke(new BasicStroke(2.5f));
                 g2.setColor(TURQUOISE);
                 g2.drawRoundRect(2, 2, w - 4, h - 4, arc, arc);
 
             } else {
-                // grey border for unselected answers
                 g2.setStroke(new BasicStroke(2.2f));
                 g2.setColor(FRAME_GREY);
                 g2.drawRoundRect(2, 2, w - 4, h - 4, arc, arc);
             }
 
-            // ---- circle ----
+            // circle
             int circleR = 40;
             int circleX = rtl ? 18 : (w - 18 - circleR);
             int circleY = (h - circleR) / 2;
 
             if (selected) {
-                // turquoise filled circle with subtle glow
                 g2.setColor(new Color(TURQUOISE.getRed(), TURQUOISE.getGreen(), TURQUOISE.getBlue(), 35));
                 g2.fillOval(circleX - 6, circleY - 6, circleR + 12, circleR + 12);
 
@@ -431,12 +416,12 @@ public class QuestionDialog extends JDialog {
                 g2.fillOval(circleX, circleY, circleR, circleR);
             }
 
-            // ---- letter inside circle ----
+            // letter inside circle
             g2.setColor(new Color(10, 18, 55));
             g2.setFont(new Font("Arial", Font.BOLD, 18));
             drawCentered(g2, String.valueOf(letter), new Rectangle(circleX, circleY, circleR, circleR));
 
-            // ---- option text ----
+            // option text
             g2.setColor(selected ? TEXT : TEXT_MUTED);
             g2.setFont(getFont());
 
@@ -451,7 +436,6 @@ public class QuestionDialog extends JDialog {
 
             g2.dispose();
         }
-
 
         private static void drawCentered(Graphics2D g2, String s, Rectangle r) {
             FontMetrics fm = g2.getFontMetrics();
@@ -484,5 +468,4 @@ public class QuestionDialog extends JDialog {
             }
         }
     }
-
 }

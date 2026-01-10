@@ -41,6 +41,7 @@ public class GameHistoryFrame extends JFrame {
     private static final Color TABLE_HEADER_BG = new Color(30, 30, 30, 240);
     private static final Color TABLE_ROW_BG = new Color(20, 20, 20, 220);
     private static final Color TABLE_SELECTION_BG = new Color(60, 60, 80, 200);
+    private static final Color HEADER_HOVER_BG = new Color(45, 45, 45, 255);
 
     public GameHistoryFrame(GameController controller) {
         super("Game & Players History");
@@ -58,14 +59,22 @@ public class GameHistoryFrame extends JFrame {
             // Ignore icon errors
         }
 
-        // ====== TABLE MODELS ======
         gamesModel = new DefaultTableModel(new String[]{
                 "Players", "Date / Time", "Difficulty", "Result", "Final Score",
                 "Remaining Lives", "Correct Answers", "Accuracy", "Duration"
         }, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
+
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return switch (columnIndex) {
+                    case 4, 5 -> Integer.class;   // Final Score, Remaining Lives
+                    default -> String.class;      // others are strings
+                };
+            }
         };
+
 
 
         playersModel = new DefaultTableModel(new String[]{
@@ -73,18 +82,40 @@ public class GameHistoryFrame extends JFrame {
         }, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
+
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return switch (columnIndex) {
+                    case 1, 2 -> Integer.class;  // Total Games, Best Score
+                    default -> String.class;     // Average Accuracy is "33%" or "-"
+                };
+            }
         };
+
 
         JTable gamesTable = createStyledTable(gamesModel);
         JTable playersTable = createStyledTable(playersModel);
+
+// 1) enable sorting FIRST (creates the sorter)
         gamesTable.setAutoCreateRowSorter(true);
+        playersTable.setAutoCreateRowSorter(true);
+
+// 2) now sorter exists, so listeners are safe
+        gamesTable.getRowSorter().addRowSorterListener(e -> gamesTable.getTableHeader().repaint());
+        playersTable.getRowSorter().addRowSorterListener(e -> playersTable.getTableHeader().repaint());
+
+// 3) now you can cast and set comparators safely
         TableRowSorter<DefaultTableModel> sorter =
                 (TableRowSorter<DefaultTableModel>) gamesTable.getRowSorter();
 
-// Date / Time column index = 1  ("dd/MM/yy HH:mm")
+        sorter.setComparator(6, (a, b) -> Integer.compare(parseCorrectAnswers(a), parseCorrectAnswers(b)));
+        sorter.setComparator(7, (a, b) -> Integer.compare(parsePercent(a), parsePercent(b)));
+
+// Date / Time column index = 1 ("dd/MM/yy HH:mm")
         sorter.setComparator(1, (a, b) -> {
             try {
-                java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm");
+                java.time.format.DateTimeFormatter fmt =
+                        java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm");
                 java.time.LocalDateTime da = java.time.LocalDateTime.parse(a.toString(), fmt);
                 java.time.LocalDateTime db = java.time.LocalDateTime.parse(b.toString(), fmt);
                 return da.compareTo(db);
@@ -93,7 +124,7 @@ public class GameHistoryFrame extends JFrame {
             }
         });
 
-// Duration column index = 7 ("mm:ss")
+// Duration column index = 8 ("mm:ss")
         sorter.setComparator(8, (a, b) -> {
             try {
                 String[] pa = a.toString().split(":");
@@ -106,7 +137,11 @@ public class GameHistoryFrame extends JFrame {
             }
         });
 
-        playersTable.setAutoCreateRowSorter(true);
+        TableRowSorter<DefaultTableModel> pSorter =
+                (TableRowSorter<DefaultTableModel>) playersTable.getRowSorter();
+
+        pSorter.setComparator(3, (a, b) -> Integer.compare(parsePercent(a), parsePercent(b)));
+
 
         // ====== FILTER / SEARCH BAR (Top) ======
 
@@ -228,10 +263,58 @@ public class GameHistoryFrame extends JFrame {
 
         // Header styling
         JTableHeader header = table.getTableHeader();
-        header.setBackground(TABLE_HEADER_BG);
-        header.setForeground(ACCENT_COLOR);
-        header.setFont(new Font("Arial", Font.BOLD, 14));
-        ((DefaultTableCellRenderer)header.getDefaultRenderer()).setHorizontalAlignment(JLabel.CENTER);
+        header.setReorderingAllowed(false);
+        header.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        header.setOpaque(true);
+
+        header.setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value,
+                    boolean isSelected, boolean hasFocus,
+                    int row, int column) {
+
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
+
+                lbl.setHorizontalAlignment(JLabel.CENTER);
+                lbl.setFont(new Font("Arial", Font.BOLD, 14));
+                lbl.setForeground(ACCENT_COLOR);
+                lbl.setOpaque(true);
+
+                // Base background
+                lbl.setBackground(TABLE_HEADER_BG);
+
+                // Always show "sortable" indicator
+                String text = value == null ? "" : value.toString();
+                text += "  ↕";   // <-- makes sorting obvious
+
+                // If this column is actively sorted → show direction
+                RowSorter<?> sorter = table.getRowSorter();
+                if (sorter != null && !sorter.getSortKeys().isEmpty()) {
+                    var key = sorter.getSortKeys().get(0);
+                    if (key.getColumn() == table.convertColumnIndexToModel(column)) {
+                        if (key.getSortOrder() == SortOrder.ASCENDING) {
+                            text = value + "  ▲";
+                        } else if (key.getSortOrder() == SortOrder.DESCENDING) {
+                            text = value + "  ▼";
+                        }
+
+                        // Glow underline for active column
+                        lbl.setBorder(BorderFactory.createMatteBorder(
+                                0, 0, 2, 0,
+                                new Color(0, 255, 255, 180)
+                        ));
+                    } else {
+                        lbl.setBorder(BorderFactory.createEmptyBorder(0, 0, 2, 0));
+                    }
+                }
+
+                lbl.setText(text);
+                return lbl;
+            }
+        });
+
 
         // Center cell content
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -347,5 +430,31 @@ public class GameHistoryFrame extends JFrame {
                 g.drawString("Background not found", 10, 20);
             }
         }
+
+
     }
+    // =======================
+//   SORT HELPERS
+// =======================
+    private static int parsePercent(Object o) {
+        if (o == null) return -1;
+        String s = o.toString().trim();
+        if (s.isEmpty() || s.equals("-")) return -1;
+        s = s.replace("%", "").trim();
+        try { return Integer.parseInt(s); }
+        catch (Exception e) { return -1; }
+    }
+
+    private static int parseCorrectAnswers(Object o) {
+        if (o == null) return -1;
+        String s = o.toString().trim();
+        if (s.isEmpty() || s.equals("-")) return -1;
+        try {
+            String[] parts = s.split("/");
+            return Integer.parseInt(parts[0].trim());
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
 }

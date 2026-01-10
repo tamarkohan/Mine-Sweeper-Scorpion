@@ -15,7 +15,8 @@ public class GameHistoryManager {
     private static final String RESOURCE_CSV = "/game_history.csv";
     private static final String HISTORY_FILE_NAME = "game_history.csv";
     private static final String DEFAULT_CSV =
-            System.getProperty("user.home") + File.separator + HISTORY_FILE_NAME;
+            new File(System.getProperty("user.dir"), "data" + File.separator + "game_history.csv")
+                    .getAbsolutePath();
 
     private final String csvPath;
     private final List<GameHistoryEntry> entries = new ArrayList<>();
@@ -24,18 +25,23 @@ public class GameHistoryManager {
         this(DEFAULT_CSV);
     }
 
-    public GameHistoryManager(String csvPath) {
+    private GameHistoryManager(String csvPath) {
         this.csvPath = csvPath;
 
         //if external file doesn't exist yet -> copy initial history from resources
         seedFromResourceIfMissing();
 
         loadFromFile();
+
     }
 
     private void seedFromResourceIfMissing() {
         File outFile = new File(csvPath);
         if (outFile.exists()) return;
+
+        if (outFile.getParentFile() != null) {
+            outFile.getParentFile().mkdirs(); // creates folders like /data if missing
+        }
 
         try (InputStream in = getClass().getResourceAsStream(RESOURCE_CSV)) {
             if (in == null) return;
@@ -46,6 +52,7 @@ public class GameHistoryManager {
             System.out.println("Failed to seed history from resources: " + e.getMessage());
         }
     }
+
 
 
 
@@ -62,9 +69,15 @@ public class GameHistoryManager {
 
     public void addEntry(GameHistoryEntry entry) {
         if (entry == null) return;
+        System.out.println("ADDING HISTORY ENTRY: " + entry);
+        System.out.println("CSV PATH USED: " + csvPath);
+        System.out.println("ABSOLUTE PATH: " + new java.io.File(csvPath).getAbsolutePath());
+        System.out.println("CAN WRITE: " + new java.io.File(csvPath).canWrite());
+
         entries.add(entry);
-        saveToFile();     // save every time
+        saveToFile();
     }
+
 
     // ========================
     // Persist to CSV

@@ -1,11 +1,5 @@
 package Model;
 
-import java.util.Random;
-
-// REMOVE these direct-creation imports (we won't create activators directly anymore)
-// import Model.specialcell.QuestionActivator;
-// import Model.specialcell.SurpriseActivator;
-
 import Model.specialcell.SpecialCellActivator;
 import Model.specialcell.factory.ActivatorFactoryRegistry;
 import Model.specialcell.factory.QuestionActivatorFactory;
