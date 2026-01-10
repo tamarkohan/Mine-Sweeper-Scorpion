@@ -14,7 +14,8 @@ public class IconToggleButton extends JToggleButton {
         try {
             BufferedImage raw = ImageIO.read(getClass().getResource(imagePath));
             if (raw == null) throw new RuntimeException("Image is null: " + imagePath);
-            this.img = cropTransparent(raw, 0); // remove uneven transparent padding
+            // Crop out empty transparent space (tolerance 20 removes faint shadows)
+            this.img = cropTransparent(raw, 20);
         } catch (Exception e) {
             throw new RuntimeException("Failed loading: " + imagePath, e);
         }
@@ -35,28 +36,43 @@ public class IconToggleButton extends JToggleButton {
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        int w = getWidth();
-        int h = getHeight();
+        int compW = getWidth();
+        int compH = getHeight();
+
+        // --- 1. Calculate Scale to Maintain Aspect Ratio ---
+        // This prevents the "Ruined" stretched look.
+        // We fit the image inside the component bounds while keeping its shape.
+        double imgAspect = (double) img.getWidth() / img.getHeight();
+        double compAspect = (double) compW / compH;
+
+        int drawW, drawH;
+        int margin = 4; // Space for the border
+
+        int availW = compW - (margin * 2);
+        int availH = compH - (margin * 2);
+
+        if (compAspect > imgAspect) {
+            // Component is wider than image -> constrain by height
+            drawH = availH;
+            drawW = (int) (availH * imgAspect);
+        } else {
+            // Component is taller than image -> constrain by width
+            drawW = availW;
+            drawH = (int) (availW / imgAspect);
+        }
+
+        // --- 2. Center the Image ---
+        int drawX = (compW - drawW) / 2;
+        int drawY = (compH - drawH) / 2;
 
         boolean hover = getModel().isRollover();
         boolean selected = isSelected();
+        float a = selected ? 0.6f : (hover ? 0.2f : 0.0f);
 
-        // glow strength (brightness only, not size)
-        float a = selected ? 0.28f : (hover ? 0.18f : 0.0f);
-
-        // constant glow thickness (prevents “selected looks bigger”)
-        int glowPx  = 9;
-        int glowPx2 = 5;
-
-        // consistent inner drawing area (makes all buttons look same size)
-        int inset = 2; // or 0
-        int drawX = inset;
-        int drawY = inset;
-        int drawW = w - inset * 2;
-        int drawH = h - inset * 2;
-
-        // --- glow (aligned to the same inset area) ---
+        // --- 3. Draw Glow (Behind) ---
         if (a > 0f) {
+            int glowPx = 9;
+            int glowPx2 = 5;
             BufferedImage glowImg = tinted(img, glow);
 
             g2.setComposite(AlphaComposite.SrcOver.derive(a));
@@ -74,13 +90,23 @@ public class IconToggleButton extends JToggleButton {
             g2.setComposite(AlphaComposite.SrcOver);
         }
 
-        // --- main image ---
+        // --- 4. Draw Main Image ---
         g2.drawImage(img, drawX, drawY, drawW, drawH, null);
+
+        // --- 5. Draw Selection Border ---
+        if (selected) {
+            g2.setColor(glow);
+            g2.setStroke(new BasicStroke(3f));
+
+            // Draw the rectangle exactly around the image calculated above
+            // +/- adjustments allow the border to sit just outside the pixels
+            g2.drawRoundRect(drawX - 2, drawY - 2, drawW + 4, drawH + 4, 15, 15);
+        }
 
         g2.dispose();
     }
 
-    // Tint the PNG (preserves alpha) so the glow matches the requested color
+    // Helper: Tint the PNG
     private static BufferedImage tinted(BufferedImage src, Color c) {
         BufferedImage out = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D gg = out.createGraphics();
@@ -95,15 +121,15 @@ public class IconToggleButton extends JToggleButton {
         return out;
     }
 
-    // Crop transparent padding around the visible pixels (normalizes different PNG margins)
-    private static BufferedImage cropTransparent(BufferedImage src, int pad) {
+    // Helper: Crop transparent padding
+    private static BufferedImage cropTransparent(BufferedImage src, int tolerance) {
         int w = src.getWidth(), h = src.getHeight();
         int minX = w, minY = h, maxX = -1, maxY = -1;
 
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
                 int a = (src.getRGB(x, y) >>> 24) & 0xFF;
-                if (a > 0) {
+                if (a > tolerance) {
                     if (x < minX) minX = x;
                     if (y < minY) minY = y;
                     if (x > maxX) maxX = x;
@@ -113,11 +139,6 @@ public class IconToggleButton extends JToggleButton {
         }
 
         if (maxX < minX || maxY < minY) return src;
-
-        minX = Math.max(0, minX - pad);
-        minY = Math.max(0, minY - pad);
-        maxX = Math.min(w - 1, maxX + pad);
-        maxY = Math.min(h - 1, maxY + pad);
 
         return src.getSubimage(minX, minY, maxX - minX + 1, maxY - minY + 1);
     }
