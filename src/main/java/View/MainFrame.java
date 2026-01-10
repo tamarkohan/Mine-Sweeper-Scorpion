@@ -100,10 +100,12 @@ public class MainFrame extends JFrame
                 player1Name,
                 player2Name,
                 () -> {
-                    // Action to perform when back/exit is clicked in GamePanel
+                    controller.endGame();     // clear model
+                    startPanel.resetFields(); // clear names + reset difficulty
                     cardLayout.show(cardPanel, "MENU");
                 }
         );
+
 
         cardPanel.add(gamePanel, "GAME");
         cardLayout.show(cardPanel, "GAME");
@@ -116,6 +118,7 @@ public class MainFrame extends JFrame
      */
     @Override
     public void onBackToMenu() {
+        startPanel.resetFields();
         cardLayout.show(cardPanel, "MENU");
     }
 

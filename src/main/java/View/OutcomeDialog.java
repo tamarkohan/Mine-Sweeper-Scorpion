@@ -10,12 +10,14 @@ public class OutcomeDialog extends JDialog {
     private static final Color BG_TOP = new Color(6, 10, 28);
     private static final Color BG_BOTTOM = new Color(10, 18, 55);
 
-    private static final Color BORDER = new Color(65, 255, 240);
     private static final Color TEXT = Color.WHITE;
     private static final Color MUTED = new Color(225, 230, 255);
 
-    private OutcomeDialog(Window owner, String message) {
-        super(owner, "Message", ModalityType.APPLICATION_MODAL);
+    private static final Color ACCENT_GREEN = new Color(80, 255, 120);
+    private static final Color ACCENT_RED   = new Color(255, 90, 90);
+
+    private OutcomeDialog(Window owner, String title, String message, Color accent) {
+        super(owner, title, ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         BackgroundPanel root = new BackgroundPanel();
@@ -26,50 +28,61 @@ public class OutcomeDialog extends JDialog {
         content.setOpaque(false);
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 
-        TitleCard card = new TitleCard("Message");
-        card.setAlignmentX(Component.CENTER_ALIGNMENT);
+        TitleCard header = new TitleCard(title, accent);
+        header.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JPanel bodyCard = new BodyCard(message);
-        bodyCard.setAlignmentX(Component.CENTER_ALIGNMENT);
-        bodyCard.setBorder(BorderFactory.createEmptyBorder(16, 0, 0, 0));
+        BodyCard body = new BodyCard(message, accent);
+        body.setAlignmentX(Component.CENTER_ALIGNMENT);
+        body.setBorder(BorderFactory.createEmptyBorder(16, 0, 0, 0));
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         actions.setOpaque(false);
         actions.setBorder(BorderFactory.createEmptyBorder(16, 0, 0, 0));
 
         JButton ok = new JButton("OK");
-        styleButton(ok, true);
+        styleButton(ok, accent);
         ok.addActionListener(e -> dispose());
-
         actions.add(ok);
 
-        content.add(card);
-        content.add(bodyCard);
+        content.add(header);
+        content.add(body);
         content.add(actions);
 
         root.add(content, BorderLayout.CENTER);
         setContentPane(root);
 
+        root.setPreferredSize(new Dimension(720, 360));
         pack();
         setResizable(false);
         setLocationRelativeTo(owner);
     }
 
-    public static void show(Window owner, String message) {
-        OutcomeDialog dlg = new OutcomeDialog(owner, message);
-        dlg.setVisible(true);
+    // ---------- Public API ----------
+    public static void showWrong(Window owner, String message) {
+        new OutcomeDialog(owner, "Wrong!", message, ACCENT_RED).setVisible(true);
     }
 
-    private static void styleButton(JButton b, boolean primary) {
+    public static void showCorrect(Window owner, String message) {
+        new OutcomeDialog(owner, "Correct!", message, ACCENT_GREEN).setVisible(true);
+    }
+
+    public static void show(Window owner, String title, String message) {
+        // default: cyan-ish
+        new OutcomeDialog(owner, title, message, new Color(65, 255, 240)).setVisible(true);
+    }
+
+    // ---------- Styling ----------
+    private static void styleButton(JButton b, Color accent) {
         b.setFocusPainted(false);
         b.setForeground(TEXT);
         b.setFont(new Font("Arial", Font.BOLD, 13));
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         b.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(primary ? BORDER : new Color(210, 220, 255), 2, true),
+                BorderFactory.createLineBorder(accent, 2, true),
                 BorderFactory.createEmptyBorder(8, 16, 8, 16)
         ));
-        b.setBackground(primary ? new Color(15, 40, 80) : new Color(20, 30, 60));
+        b.setBackground(new Color(15, 40, 80));
+        b.setOpaque(true);
     }
 
     private static List<String> lines(String msg) {
@@ -84,6 +97,7 @@ public class OutcomeDialog extends JDialog {
         return out;
     }
 
+    // ---------- Inner classes ----------
     private static class BackgroundPanel extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
@@ -103,9 +117,11 @@ public class OutcomeDialog extends JDialog {
 
     private static class TitleCard extends JPanel {
         private final String text;
+        private final Color accent;
 
-        TitleCard(String text) {
+        TitleCard(String text, Color accent) {
             this.text = text == null ? "" : text;
+            this.accent = accent;
             setOpaque(false);
             setBorder(BorderFactory.createEmptyBorder(12, 18, 12, 18));
             setPreferredSize(new Dimension(520, 70));
@@ -119,17 +135,10 @@ public class OutcomeDialog extends JDialog {
 
             int w = getWidth();
             int h = getHeight();
-            int arc = 38;
 
-            g2.setColor(new Color(0, 0, 0, 120));
-            g2.fillRoundRect(0, 0, w, h, arc, arc);
 
-            g2.setStroke(new BasicStroke(3f));
-            g2.setColor(BORDER);
-            g2.drawRoundRect(2, 2, w - 4, h - 4, arc, arc);
-
-            g2.setColor(TEXT);
-            g2.setFont(new Font("Arial", Font.BOLD, 20));
+            g2.setColor(accent);
+            g2.setFont(new Font("Arial", Font.BOLD, 22));
 
             FontMetrics fm = g2.getFontMetrics();
             int x = (w - fm.stringWidth(text)) / 2;
@@ -142,9 +151,11 @@ public class OutcomeDialog extends JDialog {
 
     private static class BodyCard extends JPanel {
         private final List<String> lines;
+        private final Color accent;
 
-        BodyCard(String msg) {
+        BodyCard(String msg, Color accent) {
             this.lines = lines(msg);
+            this.accent = accent;
             setOpaque(false);
             setPreferredSize(new Dimension(520, Math.max(120, 38 + this.lines.size() * 24)));
             setBorder(BorderFactory.createEmptyBorder(14, 18, 14, 18));
@@ -164,7 +175,7 @@ public class OutcomeDialog extends JDialog {
             g2.fillRoundRect(0, 0, w, h, arc, arc);
 
             g2.setStroke(new BasicStroke(2.5f));
-            g2.setColor(new Color(255, 90, 90));
+            g2.setColor(accent);
             g2.drawRoundRect(2, 2, w - 4, h - 4, arc, arc);
 
             g2.setFont(new Font("Arial", Font.BOLD, 15));

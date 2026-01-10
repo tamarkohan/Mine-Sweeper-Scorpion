@@ -8,6 +8,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.net.URL;
 import java.util.List;
@@ -27,7 +28,7 @@ public class GameHistoryFrame extends JFrame {
     // Filters / search
     private final JComboBox<String> difficultyFilter;
     private final JComboBox<String> resultFilter;
-    private final GlowTextField searchField;
+    private final NeonInputField searchField;
 
     private static final String DIFF_ALL = "All";
     private static final String RES_ALL  = "All";
@@ -59,12 +60,13 @@ public class GameHistoryFrame extends JFrame {
 
         // ====== TABLE MODELS ======
         gamesModel = new DefaultTableModel(new String[]{
-                "Players", "Date / Time", "Difficulty", "Final Score",
+                "Players", "Date / Time", "Difficulty", "Result", "Final Score",
                 "Remaining Lives", "Correct Answers", "Accuracy", "Duration"
         }, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
         };
+
 
         playersModel = new DefaultTableModel(new String[]{
                 "Player", "Total Games", "Best Score", "Average Accuracy", "Preferred Difficulty"
@@ -75,6 +77,36 @@ public class GameHistoryFrame extends JFrame {
 
         JTable gamesTable = createStyledTable(gamesModel);
         JTable playersTable = createStyledTable(playersModel);
+        gamesTable.setAutoCreateRowSorter(true);
+        TableRowSorter<DefaultTableModel> sorter =
+                (TableRowSorter<DefaultTableModel>) gamesTable.getRowSorter();
+
+// Date / Time column index = 1  ("dd/MM/yy HH:mm")
+        sorter.setComparator(1, (a, b) -> {
+            try {
+                java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm");
+                java.time.LocalDateTime da = java.time.LocalDateTime.parse(a.toString(), fmt);
+                java.time.LocalDateTime db = java.time.LocalDateTime.parse(b.toString(), fmt);
+                return da.compareTo(db);
+            } catch (Exception e) {
+                return a.toString().compareTo(b.toString());
+            }
+        });
+
+// Duration column index = 7 ("mm:ss")
+        sorter.setComparator(8, (a, b) -> {
+            try {
+                String[] pa = a.toString().split(":");
+                String[] pb = b.toString().split(":");
+                int sa = Integer.parseInt(pa[0]) * 60 + Integer.parseInt(pa[1]);
+                int sb = Integer.parseInt(pb[0]) * 60 + Integer.parseInt(pb[1]);
+                return Integer.compare(sa, sb);
+            } catch (Exception e) {
+                return a.toString().compareTo(b.toString());
+            }
+        });
+
+        playersTable.setAutoCreateRowSorter(true);
 
         // ====== FILTER / SEARCH BAR (Top) ======
 
@@ -91,6 +123,9 @@ public class GameHistoryFrame extends JFrame {
         filterPanel.setBackground(new Color(0, 0, 0, 200)); // Semi-transparent black
         filterPanel.setOpaque(false); // <--- CRITICAL FIX: Tells Swing to paint what's behind it first
         filterPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        filterPanel.setPreferredSize(new Dimension(1000, 70));
+        filterPanel.setMinimumSize(new Dimension(1000, 70));
+
         // --- FIX ENDS HERE ---
 
         // Left: difficulty + result combos
@@ -117,9 +152,25 @@ public class GameHistoryFrame extends JFrame {
         JPanel searchPanel = new JPanel(new BorderLayout(10, 0));
         searchPanel.setOpaque(false);
 
-        searchField = new GlowTextField(15);
-        JButton styledSearchButton = createStyledButton("Search");
+        JLabel searchLbl = new JLabel("Search:");
+        searchLbl.setForeground(TEXT_COLOR);
+        searchLbl.setFont(new Font("Arial", Font.BOLD, 14));
 
+        searchField = new NeonInputField(ACCENT_COLOR);
+        searchField.setFieldWidth(260);
+        searchField.setDisplayMode(false);
+
+// style the INNER text field (this is the real JTextField)
+        searchField.textField.setText("");
+        searchField.textField.setHorizontalAlignment(SwingConstants.LEFT);
+        searchField.textField.setFont(new Font("Arial", Font.BOLD, 16));
+        searchField.textField.setGlowColor(ACCENT_COLOR);
+        searchField.textField.setCaretColor(ACCENT_COLOR);
+
+        JButton styledSearchButton = createStyledButton("Search");
+        styledSearchButton.setPreferredSize(new Dimension(110, 34));
+
+        searchPanel.add(searchLbl, BorderLayout.WEST);
         searchPanel.add(searchField, BorderLayout.CENTER);
         searchPanel.add(styledSearchButton, BorderLayout.EAST);
 
@@ -130,7 +181,7 @@ public class GameHistoryFrame extends JFrame {
         difficultyFilter.addActionListener(e -> reloadTables());
         resultFilter.addActionListener(e -> reloadTables());
         styledSearchButton.addActionListener(e -> reloadTables());
-        searchField.addActionListener(e -> reloadTables());
+        searchField.textField.addActionListener(e -> reloadTables());
 
         // ====== CENTER CONTENT (Background + Tables) ======
         BackgroundPanel content = new BackgroundPanel("/ui/menu/backgroundGameHistory.png");
@@ -249,9 +300,10 @@ public class GameHistoryFrame extends JFrame {
 
         for (GameHistoryRow r : games) {
             gamesModel.addRow(new Object[]{
-                    r.players, r.dateTime, r.difficulty, r.finalScore,
+                    r.players, r.dateTime, r.difficulty, r.result, r.finalScore,
                     r.remainingLives, r.correctAnswers, r.accuracy, r.duration
             });
+
         }
 
         List<PlayerHistoryRow> players =

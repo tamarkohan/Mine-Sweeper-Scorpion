@@ -29,6 +29,16 @@ public class BoardPanel extends JPanel {
     private JButton[][] buttons;
 
     private boolean waiting;
+    public enum EffectType { REVEAL_3X3, REVEAL_1_MINE }
+
+    public EffectType pendingEffect = null;
+
+    // snapshot so we can detect "newly revealed because of effect"
+    private boolean[][] prevRevealed;
+
+    // per-cell animation state
+    private final java.util.Map<Point, Long> animStart = new java.util.HashMap<>();
+    private javax.swing.Timer animTimer;
 
     public BoardPanel(GameController controller,
                       int boardNumber,
@@ -114,7 +124,7 @@ public class BoardPanel extends JPanel {
                 final int rr = r;
                 final int cc = c;
 
-                JButton btn = new JButton();
+                JButton btn = new CellButton();
                 btn.setMargin(new Insets(0, 0, 0, 0));
 
                 //  style AFTER creating button
@@ -139,11 +149,49 @@ public class BoardPanel extends JPanel {
                 add(btn);
             }
         }
+        prevRevealed = new boolean[rows][cols];
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                prevRevealed[r][c] = controller.isCellRevealed(boardNumber, r, c);
+            }
+        }
 
         refresh();
 
     }
 
+    public void queueEffect(EffectType type) {
+        this.pendingEffect = type;
+    }
+    private void startPulseAnimation(java.util.Set<Point> cells) {
+        long now = System.currentTimeMillis();
+        for (Point p : cells) animStart.put(p, now);
+
+        if (animTimer == null) {
+            animTimer = new javax.swing.Timer(30, e -> {
+                // repaint only the buttons affected
+                for (Point p : animStart.keySet()) {
+                    JButton b = buttons[p.x][p.y];
+                    b.repaint();
+                }
+
+                // stop when all finished
+                long t = System.currentTimeMillis();
+                animStart.entrySet().removeIf(en -> (t - en.getValue()) > 900); // ~0.9s pulse
+
+                if (animStart.isEmpty()) {
+                    ((javax.swing.Timer) e.getSource()).stop();
+                }
+            });
+        }
+
+        if (!animTimer.isRunning()) animTimer.start();
+    }
+
+    private float animPhase(long startMs) {
+        float dt = (System.currentTimeMillis() - startMs) / 900f; // 0..1
+        return Math.max(0f, Math.min(1f, dt));
+    }
 
 
     @Override
@@ -214,6 +262,8 @@ public class BoardPanel extends JPanel {
 
             // special? always show popup
             if (controller.isQuestionOrSurprise(boardNumber, r, c)) {
+                GameController.CellViewData d = controller.getCellViewData(boardNumber, r, c);
+                if (!d.enabled) return; // already used -> do nothing
 
                 String cellType = controller.isQuestionCell(boardNumber, r, c) ? "Question" : "Surprise";
 
@@ -276,6 +326,28 @@ public class BoardPanel extends JPanel {
         int cols = controller.getBoardCols(boardNumber);
 
         boolean gameIsRunning = controller.isGameRunning();
+        java.util.Set<Point> newlyRevealed = null;
+        EffectType effect = pendingEffect;
+
+        if (effect != null && prevRevealed != null) {
+            newlyRevealed = new java.util.HashSet<>();
+
+            for (int rr = 0; rr < rows; rr++) {
+                for (int cc = 0; cc < cols; cc++) {
+                    boolean nowRev = controller.isCellRevealed(boardNumber, rr, cc);
+                    if (nowRev && !prevRevealed[rr][cc]) {
+                        // filter if effect is "reveal 1 mine"
+                        if (effect == EffectType.REVEAL_1_MINE) {
+                            GameController.CellViewData d = controller.getCellViewData(boardNumber, rr, cc);
+                            if ("M".equals(d.text)) newlyRevealed.add(new Point(rr, cc));
+                        } else {
+                            newlyRevealed.add(new Point(rr, cc));
+                        }
+
+                    }
+                }
+            }
+        }
 
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
@@ -308,14 +380,18 @@ public class BoardPanel extends JPanel {
                 }
 // --- QUESTION ---
                 else if ("Q".equals(t)) {
-                    btn.setIcon(IconCache.icon("/ui/cells/question.png", (int)(cellSize * 0.82)));
-                    btn.setDisabledIcon(btn.getIcon());
+                    Icon icon = IconCache.icon("/ui/cells/question.png", (int)(cellSize * 0.82));
+                    btn.setIcon(icon);
+                    btn.setDisabledIcon(icon);
                 }
+
 // --- SURPRISE ---
                 else if ("S".equals(t)) {
-                    btn.setIcon(IconCache.icon("/ui/cells/surprise.png", (int)(cellSize * 0.82)));
-                    btn.setDisabledIcon(btn.getIcon());
+                    Icon icon = IconCache.icon("/ui/cells/surprise.png", (int)(cellSize * 0.82));
+                    btn.setIcon(icon);
+                    btn.setDisabledIcon(icon);
                 }
+
 // --- NUMBERS / EMPTY ---
                 else {
                     // numbers or empty
@@ -323,6 +399,7 @@ public class BoardPanel extends JPanel {
                 }
 
                 boolean revealed = controller.isCellRevealed(boardNumber, r, c);
+
 
                 if (boardNumber == 1) {
                     if (!revealed) {
@@ -346,13 +423,58 @@ public class BoardPanel extends JPanel {
                         btn.setBorder(BorderFactory.createLineBorder(new Color(120, 120, 120, 120), 1));
                     }
                 }
+                //  Apply USED overlay + dashed border LAST so it won't be overwritten
+                boolean usedSpecial = (revealed && ("Q".equals(t) || "S".equals(t)) && !data.enabled);
 
+                if (usedSpecial) {
+                    markUsedSpecial(btn, "Q".equals(t));
+                } else {
+                    clearUsedSpecial(btn);
+                }
 
+                Point key = new Point(r, c);
+                if (animStart.containsKey(key)) {
+                    long start = animStart.get(key);
+                    float tt = animPhase(start);
+                    float pulse = (tt < 0.5f) ? (tt / 0.5f) : ((1f - tt) / 0.5f);
+
+                    Color neon = (boardNumber == 1) ? new Color(255, 60, 60) : new Color(80, 180, 255);
+
+                    int thickness = 2 + Math.round(4 * pulse);
+                    btn.setBorder(BorderFactory.createLineBorder(
+                            new Color(neon.getRed(), neon.getGreen(), neon.getBlue(), 130 + Math.round(120 * pulse)),
+                            thickness
+                    ));
+
+                    Color base = btn.getBackground();
+                    int add = 55; // stronger flash
+                    int extra = Math.round(add * pulse);
+
+                    btn.setBackground(new Color(
+                            Math.min(255, base.getRed() + extra),
+                            Math.min(255, base.getGreen() + extra),
+                            Math.min(255, base.getBlue() + extra)
+                    ));
+            }
+
+        }
+        // update snapshot
+        for (int rr = 0; rr < rows; rr++) {
+            for (int cc = 0; cc < cols; cc++) {
+                prevRevealed[rr][cc] = controller.isCellRevealed(boardNumber, rr, cc);
             }
         }
+
+// launch effect animation if needed
+        if (pendingEffect != null && newlyRevealed != null && !newlyRevealed.isEmpty()) {
+            startPulseAnimation(newlyRevealed);
+        }
+
+        pendingEffect = null;
+
         revalidate();
         repaint();
-    }
+    }}
 
     private void styleCellButton(JButton btn) {
         btn.setFocusable(false);
@@ -379,6 +501,62 @@ public class BoardPanel extends JPanel {
         }
 
     }
+
+    private void markUsedSpecial(JButton btn, boolean isQuestion) {
+        // make it look "blocked/used"
+        btn.setCursor(Cursor.getDefaultCursor());
+
+        // dim the cell background a bit
+        Color base = btn.getBackground();
+        btn.setBackground(new Color(
+                Math.max(0, base.getRed() - 25),
+                Math.max(0, base.getGreen() - 25),
+                Math.max(0, base.getBlue() - 25)
+        ));
+
+        // dashed / grey border
+        btn.setBorder(BorderFactory.createDashedBorder(
+                new Color(180, 180, 180, 170), 3f, 5f
+        ));
+
+        // add a clear "USED" hint using client property (for paint overlay)
+        btn.putClientProperty("USED_SPECIAL", Boolean.TRUE);
+        btn.putClientProperty("USED_TYPE", isQuestion ? "Q" : "S");
+    }
+
+    private void clearUsedSpecial(JButton btn) {
+        btn.putClientProperty("USED_SPECIAL", null);
+        btn.putClientProperty("USED_TYPE", null);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    }
+    private class CellButton extends JButton {
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+
+            Object used = getClientProperty("USED_SPECIAL");
+            if (Boolean.TRUE.equals(used)) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // dark glass overlay
+                g2.setColor(new Color(0, 0, 0, 80));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                // big X
+                g2.setStroke(new BasicStroke(3f));
+                g2.setColor(new Color(255, 255, 255, 180));
+                int pad = 10;
+                g2.drawLine(pad, pad, getWidth() - pad, getHeight() - pad);
+                g2.drawLine(getWidth() - pad, pad, pad, getHeight() - pad);
+
+
+                g2.dispose();
+            }
+        }
+    }
+
+
 
 }
 

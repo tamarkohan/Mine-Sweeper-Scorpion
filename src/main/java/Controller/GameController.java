@@ -378,19 +378,22 @@ public class GameController {
         public final String correctAnswers;
         public final String accuracy;
         public final String duration;
+        public final String result;
 
         public GameHistoryRow(String players, String dateTime, String difficulty,
-                              int finalScore, int remainingLives,
+                              String result, int finalScore, int remainingLives,
                               String correctAnswers, String accuracy, String duration) {
             this.players = players;
             this.dateTime = dateTime;
             this.difficulty = difficulty;
+            this.result = result;
             this.finalScore = finalScore;
             this.remainingLives = remainingLives;
             this.correctAnswers = correctAnswers;
             this.accuracy = accuracy;
             this.duration = duration;
         }
+
     }
 
     public static class PlayerHistoryRow {
@@ -476,12 +479,14 @@ public class GameController {
                     playersCombined,
                     e.getTimestamp().format(fmt),
                     e.getDifficulty(),
+                    e.getResult(),
                     e.getFinalScore(),
                     e.getLivesLeft(),
                     e.getCorrectAnswers() + "/" + e.getTotalQuestions(),
                     e.getFormattedAccuracy(),
                     e.getFormattedDuration()
             ));
+
         }
 
         return rows;

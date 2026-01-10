@@ -1,22 +1,19 @@
 package View;
 
 import Controller.GameController;
-import Model.GameObserver;
-import Model.GameStateData;
-import Model.GameState;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 
 
 
 /**
  * Main in-game panel: displays two boards, player info, score, lives and controls.
  * Communicates only with GameController (no direct access to the Model layer).
- * Implements GameObserver to automatically update UI when game state changes.
  */
-public class GamePanel extends JPanel implements GameObserver {
+public class GamePanel extends JPanel {
 
     private final GameController controller;
 
@@ -50,7 +47,7 @@ public class GamePanel extends JPanel implements GameObserver {
 
 
     public GamePanel(GameController controller,
-                     String player1Name, String player2Name, Runnable onBackToMenu) {
+                     String player1Name, String player2Name,Runnable onBackToMenu) {
         this.controller = controller;
         this.player1Name = player1Name;
         this.player2Name = player2Name;
@@ -61,9 +58,6 @@ public class GamePanel extends JPanel implements GameObserver {
         // Register the question presenter so QUESTION cells will show a popup.
         controller.registerQuestionPresenter(question ->
                 QuestionDialog.showQuestionDialog(SwingUtilities.getWindowAncestor(this), question));
-
-        // Register this panel as an observer to receive state change notifications
-        controller.registerObserver(this);
 
         initComponents();
         updateStatus();
@@ -96,7 +90,7 @@ public class GamePanel extends JPanel implements GameObserver {
         // =========================
         // CENTER: two player panels
         // =========================
-        centerPanel = new JPanel(new GridLayout(1, 2, 18, 0));
+        centerPanel = new JPanel(new GridLayout(1, 2, 40, 0));
         centerPanel.setOpaque(false);
         bg.add(centerPanel, BorderLayout.CENTER);
 
@@ -104,7 +98,7 @@ public class GamePanel extends JPanel implements GameObserver {
         JPanel leftSide = new JPanel(new BorderLayout());
         leftSide.setOpaque(false);
 
-        // top area (name + mines)
+// top area (name + mines)
         JPanel leftTop = new JPanel();
         leftTop.setLayout(new BoxLayout(leftTop, BoxLayout.Y_AXIS));
         leftTop.setOpaque(false);
@@ -135,7 +129,7 @@ public class GamePanel extends JPanel implements GameObserver {
         leftTopWrapper.add(leftTop, BorderLayout.CENTER);
         leftSide.add(leftTopWrapper, BorderLayout.NORTH);
 
-        // board area (expands!)
+// board area (expands!)
         boardPanel1 = new BoardPanel(controller, 1, false, this::handleMoveMade);
         boardPanel1.setOpaque(false);
 
@@ -161,7 +155,7 @@ public class GamePanel extends JPanel implements GameObserver {
         JPanel rightSide = new JPanel(new BorderLayout());
         rightSide.setOpaque(false);
 
-        // top area (name + mines)
+// top area (name + mines)
         JPanel rightTop = new JPanel();
         rightTop.setLayout(new BoxLayout(rightTop, BoxLayout.Y_AXIS));
         rightTop.setOpaque(false);
@@ -192,7 +186,7 @@ public class GamePanel extends JPanel implements GameObserver {
         rightTopWrapper.add(rightTop, BorderLayout.CENTER);
         rightSide.add(rightTopWrapper, BorderLayout.NORTH);
 
-        // board area (expands!)
+// board area (expands!)
         boardPanel2 = new BoardPanel(controller, 2, true, this::handleMoveMade);
         boardPanel2.setOpaque(false);
 
@@ -220,16 +214,16 @@ public class GamePanel extends JPanel implements GameObserver {
         centerPanel.revalidate();
         centerPanel.repaint();
 
-        // =========================
-        // BOTTOM FOOTER
-        // =========================
+// =========================
+// BOTTOM FOOTER
+// =========================
         JPanel footer = new JPanel(new BorderLayout());
         footer.setOpaque(false);
 
-        // a bit taller so we have space to push the group down
+// a bit taller so we have space to push the group down
         footer.setPreferredSize(new Dimension(1, 145)); // 120 -> 130 (tweak)
 
-        // ---- SCORE + LIVES ----
+// ---- SCORE + LIVES ----
         JPanel scoreLivesPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 0));
         scoreLivesPanel.setOpaque(false);
 
@@ -244,17 +238,17 @@ public class GamePanel extends JPanel implements GameObserver {
         scoreLivesPanel.add(lblScore);
         scoreLivesPanel.add(lblLives);
 
-        // ---- HEARTS ----
+// ---- HEARTS ----
         heartsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
         heartsPanel.setOpaque(false);
         buildHearts();
 
-        // ---- STATUS GROUP (Score/Lives ABOVE Hearts) ----
+// ---- STATUS GROUP (Score/Lives ABOVE Hearts) ----
         JPanel statusGroup = new JPanel();
         statusGroup.setOpaque(false);
         statusGroup.setLayout(new BoxLayout(statusGroup, BoxLayout.Y_AXIS));
 
-        // push the whole group down a bit
+// push the whole group down a bit
         statusGroup.add(Box.createVerticalGlue());
         statusGroup.add(Box.createVerticalStrut(14)); // keep this (overall position)
 
@@ -265,7 +259,7 @@ public class GamePanel extends JPanel implements GameObserver {
         statusGroup.add(heartsPanel);
 
 
-        // ---- CONTROLS BAR (buttons at very bottom) ----
+// ---- CONTROLS BAR (buttons at very bottom) ----
         JPanel controlsBar = new JPanel(new BorderLayout());
         controlsBar.setOpaque(false);
         controlsBar.setBorder(BorderFactory.createEmptyBorder(0, 30, 18, 30));
@@ -297,11 +291,13 @@ public class GamePanel extends JPanel implements GameObserver {
         });
 
 
-        // attach to footer
+// attach to footer
         footer.add(statusGroup, BorderLayout.CENTER);
         footer.add(controlsBar, BorderLayout.SOUTH);
 
         bg.add(footer, BorderLayout.SOUTH);
+
+
 
 
         addComponentListener(new java.awt.event.ComponentAdapter() {
@@ -312,10 +308,13 @@ public class GamePanel extends JPanel implements GameObserver {
         });
 
 
+
         SwingUtilities.invokeLater(() -> {
             requestResizeBoards();
             requestResizeBoards(); // second pass after layout settles
         });
+
+
     }
 
 
@@ -349,14 +348,33 @@ public class GamePanel extends JPanel implements GameObserver {
      * Updates status, handles game over, and switches turns when appropriate.
      */
     // endedTurn = true → revealed a cell, switch player (after small delay)
-    // endedTurn = false → only flag, same player continues
+// endedTurn = false → only flag, same player continues
     private void handleMoveMade(boolean endedTurn) {
         updateStatus();
 
         String outcomeMessage = controller.getAndClearLastActionMessage();
         if (outcomeMessage != null) {
-            displayOutcomePopup(outcomeMessage);
+
+            int currentBoard = controller.getCurrentPlayerTurn(); // the one who activated
+            BoardPanel target = (currentBoard == 1) ? boardPanel1 : boardPanel2;
+            Color neon = (currentBoard == 1) ? new Color(255, 60, 60) : new Color(80, 180, 255);
+
+            String msgLower = outcomeMessage.toLowerCase();
+
+            // IMPORTANT: match your exact wording from the Model messages
+            if (msgLower.contains("3x3")) {
+                // queue 3x3 effect
+                target.queueEffect(/* BoardPanel.EffectType */ BoardPanel.EffectType.REVEAL_3X3); // see note below
+                showToast("3×3 REVEAL!", neon);
+            } else if (msgLower.contains("reveal 1 mine") || msgLower.contains("reveal one mine")) {
+                target.queueEffect(/* BoardPanel.EffectType */ BoardPanel.EffectType.REVEAL_1_MINE);
+                showToast("MINE REVEALED!", neon);
+            } else {
+                // keep a toast for normal outcomes too (optional)
+                showToast(outcomeMessage, neon);
+            }
         }
+
 
         if (controller.isGameOver()) {
             handleGameOverUI();
@@ -412,13 +430,12 @@ public class GamePanel extends JPanel implements GameObserver {
 
 
     /**
-     * Updates lives, mines-left labels and heart colors.
-     * Note: Score is updated automatically via Observer pattern (update method).
+     * Updates score, lives, mines-left labels and heart colors.
      */
     public void updateStatus() {
         lblMinesLeft1.setText("MINES LEFT: " + controller.getMinesLeft(1));
         lblMinesLeft2.setText("MINES LEFT: " + controller.getMinesLeft(2));
-        // Score is updated automatically via Observer pattern - no manual update needed
+        lblScore.setText("SCORE: " + controller.getSharedScore());
         lblLives.setText("LIVES: " + controller.getSharedLives() + "/" +
                 controller.getMaxLives());
         updateHearts();
@@ -427,37 +444,19 @@ public class GamePanel extends JPanel implements GameObserver {
     }
 
     /**
-     * Observer pattern: called automatically when game state (score/level) changes.
-     * Updates the score label with the new score from the state.
-     * @param state the updated game state containing score and level
-     */
-    @Override
-    public void update(GameStateData state) {
-        // Update score label on the Event Dispatch Thread
-        SwingUtilities.invokeLater(() -> {
-            if (lblScore != null) {
-                lblScore.setText("SCORE: " + state.getScore());
-                revalidate();
-                repaint();
-            }
-        });
-    }
-
-    /**
      * Displays the result of the Surprise tile.
      */
     private void displayOutcomePopup(String message) {
-        Window owner = SwingUtilities.getWindowAncestor(this);
+        Window w = SwingUtilities.getWindowAncestor(this);
 
-        NeonMessageDialog.Type type = NeonMessageDialog.Type.INFO;
-        String lower = message == null ? "" : message.toLowerCase();
-        if (lower.contains("wrong")) type = NeonMessageDialog.Type.ERROR;
-        else if (lower.contains("correct")) type = NeonMessageDialog.Type.SUCCESS;
-
-        NeonMessageDialog.showFromText(owner, "Message", type, message);
+        if (message != null && message.toLowerCase().contains("correct")) {
+            OutcomeDialog.showCorrect(w, message);
+        } else if (message != null && message.toLowerCase().contains("wrong")) {
+            OutcomeDialog.showWrong(w, message);
+        } else {
+            OutcomeDialog.show(w, "Message", message);
+        }
     }
-
-
 
 
 
@@ -496,27 +495,31 @@ public class GamePanel extends JPanel implements GameObserver {
         boardPanel1.refresh();
         boardPanel2.refresh();
 
+        boolean isWin = controller.getCurrentGame().getGameState() == Model.GameState.WON;
+        String title = isWin ? "Congratulations, You Won!" : "Game Over";
+        String message;
+
+        if (isWin) {
+            message = String.format(
+                    "VICTORY!\n\nFinal Score: %d\n\nPlease use the buttons below to Restart or Exit.",
+                    controller.getSharedScore()
+            );
+        } else {
+            message = String.format(
+                    "GAME OVER!\n\nFinal Score: %d\n\nPlease use the buttons below to Restart or Exit.",
+                    controller.getSharedScore()
+            );
+        }
+
+        JOptionPane.showMessageDialog(
+                this,
+                message,
+                title,
+                isWin ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE
+        );
+
         long durationSeconds = (System.currentTimeMillis() - startTimeMillis) / 1000L;
         controller.recordFinishedGame(player1Name, player2Name, durationSeconds);
-
-        GameResultDialog.ResultAction action =
-                GameResultDialog.showResultDialog(SwingUtilities.getWindowAncestor(this), controller.getCurrentGame());
-
-        if (action == GameResultDialog.ResultAction.RESTART) {
-            controller.restartGame();
-
-            updateStatus();
-            updateTurnUI();
-            boardPanel1.refresh();
-            boardPanel2.refresh();
-            requestResizeBoards();
-            return;
-        }
-
-        if (action == GameResultDialog.ResultAction.EXIT) {
-            controller.endGame();
-            if (onBackToMenu != null) onBackToMenu.run();
-        }
     }
 
     private void resizeBoardsToFit() {
@@ -539,7 +542,7 @@ public class GamePanel extends JPanel implements GameObserver {
         }
 
         // leave a little margin inside the wrapper so it doesn't touch
-        int margin = 6;
+        int margin = 20;
         int usableW = Math.max(1, availW - margin);
         int usableH = Math.max(1, availH - margin);
 
@@ -550,12 +553,18 @@ public class GamePanel extends JPanel implements GameObserver {
 
         // clamp to keep it pretty (optional)
         int minCell = 18;
-        int maxCell = diff.equals("EASY") ? 60 : (diff.equals("MEDIUM") ? 44 : 34);
+        int maxCell = diff.equals("EASY") ? 48 : (diff.equals("MEDIUM") ? 35 : 28);
         cell = Math.max(minCell, Math.min(maxCell, cell));
 
         boardPanel1.setCellSize(cell);
         boardPanel2.setCellSize(cell);
     }
+
+
+
+
+
+
 
 
 
@@ -587,6 +596,7 @@ public class GamePanel extends JPanel implements GameObserver {
         resizeStabilizer = new Timer(40, e -> {
             if (wrap1 == null || wrap2 == null || boardPanel1 == null || boardPanel2 == null) return;
 
+            // מחכים שה-layout באמת יתייצב
             if (wrap1.getWidth() <= 0 || wrap1.getHeight() <= 0 ||
                     wrap2.getWidth() <= 0 || wrap2.getHeight() <= 0) {
                 return;
@@ -596,10 +606,14 @@ public class GamePanel extends JPanel implements GameObserver {
             boardPanel1.repaint();
             boardPanel2.repaint();
 
+
             ((Timer) e.getSource()).stop();
         });
 
         resizeStabilizer.setRepeats(true);
         resizeStabilizer.start();
-    }
-}
+    }}
+
+
+
+
