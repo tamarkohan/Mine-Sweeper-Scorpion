@@ -224,19 +224,26 @@ public class GameController {
      * Used by the UI (right-click) to toggle the flag state of a cell.
      * This delegates to Board.toggleFlag, which contains the game logic and scoring.
      */
-    public void toggleFlagUI(int boardNumber, int row, int col) {
-        if (currentGame == null || !isGameRunning()) return;
+    public boolean toggleFlagUI(int boardNumber, int row, int col) {
+        if (currentGame == null || !isGameRunning()) return false;
+
         Board board = getBoard(boardNumber);
-        if (board == null) return;
-        if (row < 0 || row >= board.getRows() || col < 0 || col >= board.getCols()) return;
-        board.toggleFlag(row, col);
+        if (board == null) return false;
+
+        if (row < 0 || row >= board.getRows() || col < 0 || col >= board.getCols()) return false;
+
+        boolean ok = board.toggleFlag(row, col);
         notifyStateChange();
+        return ok;
     }
 
 
+
+
+
     /**
-     * Provides UI-only cell data (text + enabled state) without exposing Model internals.
-     */
+         * Provides UI-only cell data (text + enabled state) without exposing Model internals.
+         */
     public CellViewData getCellViewData(int boardNumber, int row, int col) {
         Board board = getBoard(boardNumber);
         if (board == null) return new CellViewData(true, "");

@@ -245,7 +245,19 @@ public class BoardPanel extends JPanel {
 
         if (isFlagging) {
             if (!controller.isCellRevealed(boardNumber, r, c)) {
-                controller.toggleFlagUI(boardNumber, r, c);
+
+                boolean ok = controller.toggleFlagUI(boardNumber, r, c);
+
+                if (!ok) {
+                    String msg = controller.getAndClearLastActionMessage();
+                    if (msg != null && !msg.isBlank()) {
+                        OutcomeDialog.show(
+                                SwingUtilities.getWindowAncestor(this),
+                                "FLAGS",
+                                msg
+                        );
+                    }
+                }
             }
             // flagging does NOT end turn
         } else {
@@ -253,35 +265,31 @@ public class BoardPanel extends JPanel {
             boolean wasRevealedBeforeClick = controller.isCellRevealed(boardNumber, r, c);
             boolean revealedNow = false;
 
-            // reveal only if it wasn't revealed yet
             if (!wasRevealedBeforeClick) {
                 controller.revealCellUI(boardNumber, r, c);
-                revealedNow = true;   // <-- THIS is the key
+                revealedNow = true;
                 refresh();
             }
 
-            // special? always show popup
             if (controller.isQuestionOrSurprise(boardNumber, r, c)) {
                 GameController.CellViewData d = controller.getCellViewData(boardNumber, r, c);
-                if (!d.enabled) return; // already used -> do nothing
+                if (!d.enabled) return;
 
                 String cellType = controller.isQuestionCell(boardNumber, r, c) ? "Question" : "Surprise";
 
                 boolean yes = ActivationConfirmDialog.show(
                         SwingUtilities.getWindowAncestor(this),
-                        cellType // "Question" / "Surprise"
+                        cellType
                 );
 
                 if (yes) {
                     boolean activated = controller.activateSpecialCellUI(boardNumber, r, c);
                     endedTurn = activated;
                 } else {
-                    endedTurn = revealedNow; // Cancel/No only ends turn if revealed now
+                    endedTurn = revealedNow;
                 }
 
-
             } else {
-                // not special -> if we revealed now, turn ends
                 endedTurn = revealedNow;
             }
         }
