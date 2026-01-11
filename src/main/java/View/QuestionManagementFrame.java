@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.TableRowSorter;
 import javax.swing.RowFilter;
+import javax.swing.RowSorter;
 
 public class QuestionManagementFrame extends JFrame {
 
@@ -74,6 +75,19 @@ public class QuestionManagementFrame extends JFrame {
         table = createStyledTable(model);
         sorter = new TableRowSorter<>(model);
         table.setRowSorter(sorter);
+        // Disable sorting for text columns
+        sorter.setSortable(1, false); // Text
+        sorter.setSortable(2, false); // A
+        sorter.setSortable(3, false); // B
+        sorter.setSortable(4, false); // C
+        sorter.setSortable(5, false); // D
+
+        sorter.addRowSorterListener(e -> table.getTableHeader().repaint());
+        // ID column (0) numeric
+        sorter.setComparator(0, (a, b) -> Integer.compare(parseIntSafe(a), parseIntSafe(b)));
+
+// Correct column (6) numeric
+        sorter.setComparator(6, (a, b) -> Integer.compare(parseIntSafe(a), parseIntSafe(b)));
 
         // Create filter panel
         JPanel filterPanel = createFilterPanel();
@@ -84,7 +98,13 @@ public class QuestionManagementFrame extends JFrame {
         JButton btnEdit = createStyledButton("Edit");
         JButton btnDelete = createStyledButton("Delete");
         JButton btnSave = createStyledButton("Save");
-        JButton btnExit = createStyledButton("Back to Menu");
+        IconButton btnExit = new IconButton("/ui/icons/back.png");
+        btnExit.setPreferredSize(new Dimension(46, 46));  // adjust if needed
+        btnExit.setSafePadPx(2);                          // optional (prevents clipping)
+        btnExit.setOnClick(() -> {
+            dispose();
+            if (onExitToMenu != null) onExitToMenu.run();
+        });
 
         btnAdd.addActionListener(e -> addQuestion());
         btnEdit.addActionListener(e -> {
@@ -101,48 +121,59 @@ public class QuestionManagementFrame extends JFrame {
         });
         btnSave.addActionListener(e -> saveQuestions());
 
-        btnExit.addActionListener(e -> {
-            dispose();
-            if (onExitToMenu != null) onExitToMenu.run();
-        });
-
         JPanel btnPanel = new JPanel(new BorderLayout());
-        btnPanel.setBackground(BG_COLOR);
+        btnPanel.setOpaque(false); //  let background show through
         btnPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        left.setBackground(BG_COLOR);
+        left.setOpaque(false);     //  transparent
         left.add(btnExit);
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        right.setBackground(BG_COLOR);
+        right.setOpaque(false);    //  transparent
         right.add(btnAdd);
         right.add(btnEdit);
         right.add(btnDelete);
         right.add(btnSave);
+
 
         btnPanel.add(left, BorderLayout.WEST);
         btnPanel.add(right, BorderLayout.EAST);
 
         BackgroundPanel content = new BackgroundPanel("/ui/menu/question_management_bg.png");
         content.setLayout(new BorderLayout());
-        content.setBorder(BorderFactory.createEmptyBorder(100, 20, 10, 20));
+        content.setBorder(BorderFactory.createEmptyBorder(120, 20, 10, 20));
 
         // Add filter panel above the table + table in center
         JPanel centerWrapper = new JPanel(new BorderLayout());
         centerWrapper.setOpaque(false);
+
+// ⬇️ makes table thinner horizontally
+        centerWrapper.setBorder(BorderFactory.createEmptyBorder(
+                0,   // top
+                30,  // left  (≈ 0.8 cm)
+                0,   // bottom
+                30   // right (≈ 0.8 cm)
+        ));
+
         centerWrapper.add(filterPanel, BorderLayout.NORTH);
         centerWrapper.add(scroll, BorderLayout.CENTER);
+
 
         content.add(centerWrapper, BorderLayout.CENTER);
         content.add(btnPanel, BorderLayout.SOUTH);
 
         setContentPane(content);
-
+        manager.loadQuestions();   // refresh from file each time frame opens
         loadTable();
 
-        setSize(900, 600);
+
+
+        setUndecorated(true);               // removes the top window strip
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
+
+
     }
 
     private JTable createStyledTable(DefaultTableModel model) {
@@ -157,10 +188,48 @@ public class QuestionManagementFrame extends JFrame {
         table.getTableHeader().setReorderingAllowed(false);
 
         JTableHeader header = table.getTableHeader();
-        header.setBackground(TABLE_HEADER_BG);
-        header.setForeground(ACCENT_COLOR);
-        header.setFont(new Font("Arial", Font.BOLD, 14));
-        ((DefaultTableCellRenderer) header.getDefaultRenderer()).setHorizontalAlignment(JLabel.CENTER);
+        header.setReorderingAllowed(false);
+        header.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        header.setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, col);
+
+                lbl.setHorizontalAlignment(JLabel.CENTER);
+                lbl.setFont(new Font("Arial", Font.BOLD, 14));
+                lbl.setForeground(ACCENT_COLOR);
+                lbl.setOpaque(true);
+                lbl.setBackground(TABLE_HEADER_BG);
+
+                String base = (value == null) ? "" : value.toString();
+                int modelCol = table.convertColumnIndexToModel(col);
+
+// Default: no arrows
+                String text = base;
+
+// Only add arrows for sortable columns
+                if (isSortableColumn(modelCol)) {
+                    text = base + "  ↕";
+
+                    RowSorter<?> rs = table.getRowSorter();
+                    if (rs != null && !rs.getSortKeys().isEmpty()) {
+                        RowSorter.SortKey key = rs.getSortKeys().get(0);
+                        if (key.getColumn() == modelCol) {
+                            if (key.getSortOrder() == SortOrder.ASCENDING) text = base + "  ▲";
+                            else if (key.getSortOrder() == SortOrder.DESCENDING) text = base + "  ▼";
+                        }
+                    }
+                }
+
+                lbl.setText(text);
+
+                return lbl;
+            }
+        });
 
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
@@ -174,8 +243,10 @@ public class QuestionManagementFrame extends JFrame {
 
     private JScrollPane createStyledScrollPane(JComponent view) {
         JScrollPane scroll = new JScrollPane(view);
-        scroll.getViewport().setBackground(BG_COLOR);
-        scroll.setBorder(BorderFactory.createLineBorder(new Color(60, 60, 60)));
+        scroll.setOpaque(false);
+        scroll.getViewport().setOpaque(false);
+        scroll.getViewport().setBackground(new Color(0,0,0,0)); // fully transparent
+        scroll.setBorder(BorderFactory.createEmptyBorder());
         return scroll;
     }
 
@@ -248,9 +319,12 @@ public class QuestionManagementFrame extends JFrame {
         Question q = promptForQuestion(null);
         if (q != null) {
             manager.addOrReplaceQuestion(q);
+            manager.saveQuestions();   // AUTO SAVE
+            manager.loadQuestions();   // reload to ensure table matches file
             loadTable();
         }
     }
+
 
     private void editQuestion(int row) {
         if (row < 0) return;
@@ -258,17 +332,23 @@ public class QuestionManagementFrame extends JFrame {
         Question updated = promptForQuestion(existing);
         if (updated != null) {
             manager.addOrReplaceQuestion(updated);
+            manager.saveQuestions();   // AUTO SAVE
+            manager.loadQuestions();
             loadTable();
         }
     }
+
 
     private void deleteQuestion(int row) {
         if (row < 0) return;
         int id = (int) model.getValueAt(row, 0);
         manager.deleteQuestion(id);
+        manager.saveQuestions();       // AUTO SAVE
+        manager.loadQuestions();
         loadTable();
-        applyFilters(); // Reapply filters after deletion
+        applyFilters();
     }
+
 
     private void saveQuestions() {
         manager.saveQuestions();
@@ -615,4 +695,16 @@ public class QuestionManagementFrame extends JFrame {
             sorter.setRowFilter(RowFilter.andFilter(filters));
         }
     }
+
+    private static int parseIntSafe(Object o) {
+        if (o == null) return Integer.MIN_VALUE;
+        String s = o.toString().trim();
+        if (s.isEmpty() || s.equals("-")) return Integer.MIN_VALUE;
+        try { return Integer.parseInt(s); }
+        catch (Exception e) { return Integer.MIN_VALUE; }
+    }
+    private boolean isSortableColumn(int modelCol) {
+        return modelCol == 0 || modelCol == 6 || modelCol == 7;
+    }
+
 }

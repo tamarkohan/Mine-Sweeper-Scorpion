@@ -55,8 +55,7 @@ public class MainFrame extends JFrame
             System.err.println("Could not load icon: " + e.getMessage());
         }
 
-        // Admin/debug menu for question management & history
-        setJMenuBar(buildMenuBar());
+
 
         // ===== create screens (cards) =====
         mainMenuPanel = new MainMenuPanel(this);   // first screen with 4 buttons
@@ -68,12 +67,16 @@ public class MainFrame extends JFrame
         setContentPane(cardPanel);
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(900, 700);
-        setLocationRelativeTo(null);
 
-        // show first screen
+// open maximized
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+// (optional) allow resizing
+        setResizable(true);
+
         cardLayout.show(cardPanel, "MENU");
         setVisible(true);
+
     }
 
     // =================================================================
