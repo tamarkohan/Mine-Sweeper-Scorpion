@@ -17,10 +17,10 @@ import java.util.List;
 public class GameHistoryFrame extends JFrame {
 
     private final GameController controller;
-    private final Runnable onExitToMenu;
 
     private final DefaultTableModel gamesModel;
     private final DefaultTableModel playersModel;
+    private final Runnable onExitToMenu;
 
     private JComboBox<String> difficultyFilter;
     private JComboBox<String> resultFilter;
@@ -113,9 +113,22 @@ public class GameHistoryFrame extends JFrame {
         topBar.setLayout(new BoxLayout(topBar, BoxLayout.X_AXIS));
         topBar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JButton backBtn = createBackButton();
+        IconButton backBtn = new IconButton("/ui/icons/back.png");
+
+        Dimension backSize = new Dimension(46, 46);
+        backBtn.setPreferredSize(backSize);
+        backBtn.setMinimumSize(backSize);
+        backBtn.setMaximumSize(backSize);
+
+        backBtn.setSafePadPx(2);
+        backBtn.setOnClick(() -> {
+            dispose();
+            if (onExitToMenu != null) onExitToMenu.run();
+        });
+
         topBar.add(backBtn);
-        topBar.add(Box.createHorizontalStrut(20));
+        topBar.add(Box.createHorizontalStrut(20)); // spacing after the icon
+
 
         difficultyFilter = createCombo(new String[]{DIFF_ALL, "EASY", "MEDIUM", "HARD"});
         resultFilter = createCombo(new String[]{RES_ALL, "WON", "LOST"});
@@ -188,42 +201,6 @@ public class GameHistoryFrame extends JFrame {
 
     // ================= HELPERS =================
 
-    private JButton createBackButton() {
-        URL url = getClass().getResource("/ui/icons/back.png");
-        if (url == null) {
-            JButton fallback = new JButton("Back");
-            fallback.addActionListener(e -> {
-                dispose();
-                if (onExitToMenu != null) onExitToMenu.run();
-            });
-            return fallback;
-        }
-
-        Image img = new ImageIcon(url).getImage();
-        Image scaled = img.getScaledInstance(29, 29, Image.SCALE_SMOOTH);
-        ImageIcon icon = new ImageIcon(scaled);
-
-        JButton btn = new JButton(icon);
-        btn.setPreferredSize(new Dimension(50, 50));
-        btn.setMinimumSize(new Dimension(50, 50));
-        btn.setMaximumSize(new Dimension(50, 50));
-
-        btn.setBorder(null);
-        btn.setBorderPainted(false);
-        btn.setContentAreaFilled(false);
-        btn.setOpaque(false);
-        btn.setFocusPainted(false);
-        btn.setMargin(new Insets(0, 0, 0, 0));
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setToolTipText("Back");
-
-        btn.addActionListener(e -> {
-            dispose();
-            if (onExitToMenu != null) onExitToMenu.run();
-        });
-
-        return btn;
-    }
 
     private JLabel label(String t) {
         JLabel l = new JLabel(t);
