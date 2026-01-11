@@ -224,7 +224,21 @@ public class QuestionManagementFrame extends JFrame {
         JTextField bField = new JTextField(existing == null ? "" : existing.getOptions().get(1));
         JTextField cField = new JTextField(existing == null ? "" : existing.getOptions().get(2));
         JTextField dField = new JTextField(existing == null ? "" : existing.getOptions().get(3));
-        JTextField correctField = new JTextField(existing == null ? "A" : String.valueOf(existing.getCorrectOption()));
+        
+        // Create dropdown with values 1-4
+        Integer[] options = {1, 2, 3, 4};
+        JComboBox<Integer> correctComboBox = new JComboBox<>(options);
+        
+        // If editing existing question, convert char to number and preselect
+        if (existing != null) {
+            char correctChar = existing.getCorrectOption();
+            int selectedValue = charToNumber(correctChar);
+            correctComboBox.setSelectedItem(selectedValue);
+        } else {
+            // Default to 1 (A) for new questions
+            correctComboBox.setSelectedItem(1);
+        }
+        
         JTextField diffField = new JTextField(existing == null ? "EASY" : existing.getDifficultyLevel());
 
         JPanel panel = new JPanel(new GridLayout(0, 2, 6, 6));
@@ -234,7 +248,7 @@ public class QuestionManagementFrame extends JFrame {
         panel.add(new JLabel("Option B:")); panel.add(bField);
         panel.add(new JLabel("Option C:")); panel.add(cField);
         panel.add(new JLabel("Option D:")); panel.add(dField);
-        panel.add(new JLabel("Correct (A-D):")); panel.add(correctField);
+        panel.add(new JLabel("Correct Answer (1–4):")); panel.add(correctComboBox);
         panel.add(new JLabel("Difficulty (EASY/MEDIUM/HARD/EXPERT):")); panel.add(diffField);
 
         int res = JOptionPane.showConfirmDialog(this, panel,
@@ -250,13 +264,41 @@ public class QuestionManagementFrame extends JFrame {
             opts.add(bField.getText().trim());
             opts.add(cField.getText().trim());
             opts.add(dField.getText().trim());
-            char correct = correctField.getText().trim().toUpperCase().charAt(0);
+            // Convert selected number (1-4) to char ('A'-'D')
+            int selectedNumber = (Integer) correctComboBox.getSelectedItem();
+            char correct = numberToChar(selectedNumber);
             String diff = diffField.getText().trim();
             return new Question(id, text, opts, correct, diff);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Invalid input: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
             return null;
+        }
+    }
+    
+    /**
+     * Converts a number (1-4) to the corresponding char ('A'-'D').
+     */
+    private char numberToChar(int number) {
+        switch (number) {
+            case 1: return 'A';
+            case 2: return 'B';
+            case 3: return 'C';
+            case 4: return 'D';
+            default: return 'A'; // fallback
+        }
+    }
+    
+    /**
+     * Converts a char ('A'-'D') to the corresponding number (1-4).
+     */
+    private int charToNumber(char ch) {
+        switch (Character.toUpperCase(ch)) {
+            case 'A': return 1;
+            case 'B': return 2;
+            case 'C': return 3;
+            case 'D': return 4;
+            default: return 1; // fallback
         }
     }
 }
