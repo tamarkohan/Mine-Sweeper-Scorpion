@@ -5,7 +5,6 @@ import Controller.GameController;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.List;
 
 
 
@@ -595,7 +594,7 @@ public class GamePanel extends JPanel {
         // build summary DTO (MVC-safe)
         GameController.GameSummaryDTO summary = controller.getGameSummaryDTO();
 
-        int surprisesOpened = 0;
+        int surprisesOpened = controller.getTotalSurprisesOpened();
 
         // show the styled end screen
         GameResultDialog.ResultAction action =

@@ -21,6 +21,7 @@ public class Game {
     private int currentPlayerTurn;
     private QuestionManager questionManager;
     private QuestionPresenter questionPresenter;
+    private int totalSurprisesOpened;
 
     //  Field to store the message for the View
     private String lastActionMessage;
@@ -62,6 +63,8 @@ public class Game {
 
         this.board1 = new Board(difficulty, this);
         this.board2 = new Board(difficulty, this);
+        this.totalSurprisesOpened = 0;
+
     }
 
     /**
@@ -348,4 +351,12 @@ public class Game {
     public QuestionResult presentQuestion(Question q) {
         return questionPresenter.presentQuestion(q);
     }
+    public int getTotalSurprisesOpened() {
+        return totalSurprisesOpened;
+    }
+
+    public void incrementSurprisesOpened() {
+        totalSurprisesOpened++;
+    }
+
 }

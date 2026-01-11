@@ -12,11 +12,14 @@ public class GameHistoryManager {
     private static GameHistoryManager instance;
 
     //  writeable location (works in JAR + IDE)
-    private static final String RESOURCE_CSV = "/game_history.csv";
+    private static final String RESOURCE_CSV = "/data/game_history.csv"; // <-- match your folder
     private static final String HISTORY_FILE_NAME = "game_history.csv";
-    private static final String DEFAULT_CSV =
-            new File(System.getProperty("user.dir"), "data" + File.separator + "game_history.csv")
-                    .getAbsolutePath();
+
+    private static final String DEFAULT_CSV = new File(
+            System.getProperty("user.home"),
+            ".scorpion-minesweeper" + File.separator + "data" + File.separator + HISTORY_FILE_NAME
+    ).getAbsolutePath();
+
 
     private final String csvPath;
     private final List<GameHistoryEntry> entries = new ArrayList<>();

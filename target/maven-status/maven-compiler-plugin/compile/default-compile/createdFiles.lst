@@ -12,6 +12,7 @@ Model\GameState.class
 View\GameResultDialog$ResultAction.class
 Model\Game$QuestionPresenter.class
 View\MainFrame$1.class
+View\QuestionManagementFrame$4.class
 View\GameResultDialog$NeonCard.class
 View\QuestionManagementFrame$1.class
 Model\Question.class
@@ -111,5 +112,6 @@ View\MainMenuPanel.class
 View\MainMenuPanel$1.class
 View\HowToPlayPanel.class
 View\SpecialCellConfirmDialog$Choice.class
+View\QuestionManagementFrame$3.class
 View\GameResultDialog$NeonButton.class
 Model\specialcell\factory\QuestionActivatorFactory.class

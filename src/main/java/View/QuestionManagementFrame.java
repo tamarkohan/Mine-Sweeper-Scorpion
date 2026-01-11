@@ -7,6 +7,8 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableRowSorter;
+import javax.swing.RowFilter;
 import java.awt.*;
 import java.net.URL;
 import java.util.ArrayList;
@@ -20,6 +22,13 @@ public class QuestionManagementFrame extends JFrame {
 
     private final QuestionManager manager;
     private final DefaultTableModel model;
+    private JTable table;
+    private TableRowSorter<DefaultTableModel> sorter;
+
+    // Filter controls
+    private JComboBox<String> difficultyFilter;
+    private JComboBox<String> correctAnswerFilter;
+    private JTextField idFilter;
 
     // Colors (Same as GameHistoryFrame)
     private static final Color BG_COLOR = Color.BLACK;
@@ -52,7 +61,13 @@ public class QuestionManagementFrame extends JFrame {
             }
         };
 
-        JTable table = createStyledTable(model);
+        table = createStyledTable(model);
+        sorter = new TableRowSorter<>(model);
+        table.setRowSorter(sorter);
+
+        // Create filter panel
+        JPanel filterPanel = createFilterPanel();
+
         JScrollPane scroll = createStyledScrollPane(table);
 
         JButton btnAdd = createStyledButton("Add");
@@ -61,8 +76,18 @@ public class QuestionManagementFrame extends JFrame {
         JButton btnSave = createStyledButton("Save");
 
         btnAdd.addActionListener(e -> addQuestion());
-        btnEdit.addActionListener(e -> editQuestion(table.getSelectedRow()));
-        btnDelete.addActionListener(e -> deleteQuestion(table.getSelectedRow()));
+        btnEdit.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow >= 0) {
+                editQuestion(table.convertRowIndexToModel(selectedRow));
+            }
+        });
+        btnDelete.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow >= 0) {
+                deleteQuestion(table.convertRowIndexToModel(selectedRow));
+            }
+        });
         btnSave.addActionListener(e -> saveQuestions());
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -80,8 +105,14 @@ public class QuestionManagementFrame extends JFrame {
         // Increased top padding to 100 to push table down
         content.setBorder(BorderFactory.createEmptyBorder(100, 20, 10, 20));
 
+        // Add filter panel above the table
+        JPanel centerWrapper = new JPanel(new BorderLayout());
+        centerWrapper.setOpaque(false);
+        centerWrapper.add(filterPanel, BorderLayout.NORTH);
+        centerWrapper.add(scroll, BorderLayout.CENTER);
+
         // Removed the NeonTextLabel title so the background title is visible
-        content.add(scroll, BorderLayout.CENTER);
+        content.add(centerWrapper, BorderLayout.CENTER);
         content.add(btnPanel, BorderLayout.SOUTH);
 
         setContentPane(content);
@@ -164,10 +195,11 @@ public class QuestionManagementFrame extends JFrame {
             model.addRow(new Object[]{
                     q.getId(), q.getText(),
                     opts.get(0), opts.get(1), opts.get(2), opts.get(3),
-                    String.valueOf(q.getCorrectOption()),
+                    String.valueOf(convertCorrectOptionToInt(q.getCorrectOption())),
                     q.getDifficultyLevel()
             });
         }
+        applyFilters(); // Apply filters after loading
     }
 
     private void addQuestion() {
@@ -193,6 +225,7 @@ public class QuestionManagementFrame extends JFrame {
         int id = (int) model.getValueAt(row, 0);
         manager.deleteQuestion(id);
         loadTable();
+        applyFilters(); // Reapply filters after deletion
     }
 
     private void saveQuestions() {
@@ -207,7 +240,8 @@ public class QuestionManagementFrame extends JFrame {
         String b = model.getValueAt(row, 3).toString();
         String c = model.getValueAt(row, 4).toString();
         String d = model.getValueAt(row, 5).toString();
-        char correct = model.getValueAt(row, 6).toString().charAt(0);
+        String correctStr = model.getValueAt(row, 6).toString();
+        char correct = convertIntToCorrectOption(Integer.parseInt(correctStr));
         String diff = model.getValueAt(row, 7).toString();
         List<String> opts = new ArrayList<>();
         opts.add(a); opts.add(b); opts.add(c); opts.add(d);

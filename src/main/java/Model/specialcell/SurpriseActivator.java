@@ -14,6 +14,7 @@ public class SurpriseActivator extends SpecialCellActivator {
 
     @Override
     protected ActivationResult doActivation() {
+        game.incrementSurprisesOpened();
         Random rand = new Random();
         boolean good = rand.nextBoolean();
         int value = game.getDifficulty().getSurpriseValue();

@@ -703,6 +703,10 @@ public class GameController {
 
         return new QuestionDTO(q.getText(), opts, q.getCorrectOption());
     }
+    public int getTotalSurprisesOpened() {
+        return (currentGame != null) ? currentGame.getTotalSurprisesOpened() : 0;
+    }
+
 
 
 }

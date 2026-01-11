@@ -1,10 +1,4 @@
-import Model.Board;
-import Model.Cell;
-import Model.Difficulty;
-import Model.Game;
-import Model.GameState;
-import Model.Question;
-import Model.QuestionManager;
+import Model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -182,17 +176,17 @@ public class QuestionCellUsedAfterAnswerTest {
      * Stub implementation of QuestionPresenter for testing without UI.
      */
     private static class StubQuestionPresenter implements Game.QuestionPresenter {
-        private boolean nextAnswer = true;
+        private QuestionResult nextAnswer = QuestionResult.CORRECT;
 
         public void setNextAnswer(boolean correct) {
-            this.nextAnswer = correct;
+            this.nextAnswer = correct ? QuestionResult.CORRECT : QuestionResult.WRONG;
         }
 
         @Override
-        public boolean presentQuestion(Question question) {
-            // Simulate presenting question and returning user's answer
+        public QuestionResult presentQuestion(Question question) {
             return nextAnswer;
         }
     }
+
 }
 
