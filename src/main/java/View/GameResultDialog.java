@@ -1,7 +1,6 @@
 package View;
 
-import Model.Game;
-import Model.GameState;
+import Controller.GameController;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,8 +9,9 @@ import java.awt.event.MouseEvent;
 
 public class GameResultDialog extends JDialog {
 
-    public enum ResultAction { RESTART, EXIT, CLOSE }
-    private ResultAction action = ResultAction.CLOSE;
+    public enum ResultAction { RESTART, EXIT }
+    private ResultAction action = ResultAction.EXIT; // default if user closes window
+
 
     private static final Color BG_TOP = new Color(6, 10, 28);
     private static final Color BG_BOTTOM = new Color(10, 18, 55);
@@ -22,50 +22,62 @@ public class GameResultDialog extends JDialog {
     private static final Color TEXT = Color.WHITE;
     private static final Color TEXT_MUTED = new Color(225, 230, 255);
 
-    private GameResultDialog(Window owner, Game game) {
+    private GameResultDialog(Window owner,
+                             GameController.GameSummaryDTO summary,
+                             long durationSeconds,
+                             int surprisesOpened) {
         super(owner, "Game Result", ModalityType.APPLICATION_MODAL);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                action = ResultAction.EXIT;
+                dispose();
+            }
+        });
 
-        boolean isWin = game.getGameState() == GameState.WON;
+        boolean isWin = summary.isWin;
         Color accent = isWin ? WIN_ACCENT : LOSE_ACCENT;
 
         BackgroundPanel root = new BackgroundPanel();
         root.setLayout(new BorderLayout(14, 12));
         root.setBorder(BorderFactory.createEmptyBorder(16, 18, 16, 18));
 
-        // ===== Title =====
+        // ===== Title ===== (NO neon rectangle, just clean title)
         TitleCard title = new TitleCard(isWin, accent);
         root.add(title, BorderLayout.NORTH);
 
         // ===== Stats =====
-        JPanel statsGrid = new JPanel(new GridLayout(4, 2, 10, 10));
+        JPanel statsGrid = new JPanel(new GridBagLayout());
         statsGrid.setOpaque(false);
 
-        addStat(statsGrid, "Shared Score", String.valueOf(game.getSharedScore()));
-        addStat(statsGrid, "Shared Lives", String.valueOf(game.getSharedLives()));
-        addStat(statsGrid, "Questions Answered", String.valueOf(game.getTotalQuestionsAnswered()));
-        addStat(statsGrid, "Correct Answers", String.valueOf(game.getTotalCorrectAnswers()));
+        int row = 0;
+        row = addStatRow(statsGrid, row, "Shared Score:", String.valueOf(summary.sharedScore));
+        row = addStatRow(statsGrid, row, "Shared Lives:", String.valueOf(summary.sharedLives));
+        row = addStatRow(statsGrid, row, "Questions Answered:", String.valueOf(summary.totalQuestions));
+        row = addStatRow(statsGrid, row, "Correct Answers:", String.valueOf(summary.correctAnswers));
+        row = addStatRow(statsGrid, row, "Surprises Opened:", String.valueOf(surprisesOpened));
+        row = addStatRow(statsGrid, row, "Time:", formatDuration(durationSeconds));
+        row = addStatRow(statsGrid, row, "Accuracy:", formatAccuracy(summary.correctAnswers, summary.totalQuestions));
+
 
         NeonCard statsCard = new NeonCard(accent);
         statsCard.setLayout(new BorderLayout());
-        statsCard.setBorder(BorderFactory.createEmptyBorder(14, 16, 14, 16));
+        statsCard.setBorder(BorderFactory.createEmptyBorder(16, 22, 16, 22));
         statsCard.add(statsGrid, BorderLayout.CENTER);
 
         root.add(statsCard, BorderLayout.CENTER);
 
         // ===== Buttons =====
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 24, 0));
         btnPanel.setOpaque(false);
 
-        NeonButton btnClose = new NeonButton("Close", false, accent);
         NeonButton btnRestart = new NeonButton("Restart", true, accent);
         NeonButton btnExit = new NeonButton("Exit", false, accent);
 
         btnRestart.addActionListener(e -> { action = ResultAction.RESTART; dispose(); });
         btnExit.addActionListener(e -> { action = ResultAction.EXIT; dispose(); });
-        btnClose.addActionListener(e -> { action = ResultAction.CLOSE; dispose(); });
 
-        btnPanel.add(btnClose);
         btnPanel.add(btnRestart);
         btnPanel.add(btnExit);
 
@@ -74,28 +86,65 @@ public class GameResultDialog extends JDialog {
         setContentPane(root);
         pack();
         setResizable(false);
-        setSize(520, 340);
+        setSize(640, 360);
         setLocationRelativeTo(owner);
     }
 
-    private static void addStat(JPanel grid, String key, String value) {
-        JLabel k = new JLabel(key + ":");
+    private static int addStatRow(JPanel panel, int row, String key, String value) {
+        // Left label (title)
+        JLabel k = new JLabel(key);
         k.setForeground(TEXT_MUTED);
         k.setFont(new Font("Arial", Font.BOLD, 14));
+        k.setBorder(BorderFactory.createEmptyBorder(3, 0, 3, 0)); // fixes top/bottom clipping
 
+        // Right label (value) — keep it close, not at the far edge
         JLabel v = new JLabel(value);
         v.setForeground(TEXT);
         v.setFont(new Font("Arial", Font.BOLD, 14));
         v.setHorizontalAlignment(SwingConstants.RIGHT);
+        v.setBorder(BorderFactory.createEmptyBorder(3, 0, 3, 0)); // fixes top/bottom clipping
 
-        grid.add(k);
-        grid.add(v);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridy = row;
+        gbc.insets = new Insets(2, 0, 2, 0);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Column 0: title gets most width
+        gbc.gridx = 0;
+        gbc.weightx = 0.75;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel.add(k, gbc);
+
+        // Column 1: value gets less width, stays near titles
+        gbc.gridx = 1;
+        gbc.weightx = 0.25;
+        gbc.anchor = GridBagConstraints.EAST;
+        panel.add(v, gbc);
+
+        return row + 1;
+    }
+
+    private static String formatDuration(long seconds) {
+        if (seconds <= 0) return "00:00";
+        long m = seconds / 60;
+        long s = seconds % 60;
+        return String.format("%02d:%02d", m, s);
+    }
+
+    private static String formatAccuracy(int correct, int total) {
+        if (total <= 0) return "0%";
+        double p = (correct * 100.0) / total;
+        return String.format("%.0f%%", p);
     }
 
     public ResultAction getAction() { return action; }
 
-    public static ResultAction showResultDialog(Window owner, Game game) {
-        GameResultDialog dlg = new GameResultDialog(owner, game);
+    // NEW signature (adds duration + surprisesOpened)
+    public static ResultAction showResultDialog(Window owner,
+                                                GameController.GameSummaryDTO summary,
+                                                long durationSeconds,
+                                                int surprisesOpened) {
+        GameResultDialog dlg = new GameResultDialog(owner, summary, durationSeconds, surprisesOpened);
         dlg.setVisible(true);
         return dlg.getAction();
     }
@@ -122,7 +171,7 @@ public class GameResultDialog extends JDialog {
     }
 
     // =========================
-    // Title Card (Glow + icon)
+    // Title Card (NO neon rectangle)
     // =========================
     private static class TitleCard extends JPanel {
         private final boolean isWin;
@@ -132,7 +181,7 @@ public class GameResultDialog extends JDialog {
             this.isWin = isWin;
             this.accent = accent;
             setOpaque(false);
-            setPreferredSize(new Dimension(480, 90));
+            setPreferredSize(new Dimension(640, 72));
         }
 
         @Override
@@ -143,43 +192,35 @@ public class GameResultDialog extends JDialog {
 
             int w = getWidth();
             int h = getHeight();
-            int arc = 36;
+            int arc = 26;
 
-            // glow
-            paintGlow(g2, 8, 8, w - 16, h - 16, arc, accent, 0.35f);
+            // subtle dark card (no glow, no neon border)
+            g2.setColor(new Color(0, 0, 0, 110));
+            g2.fillRoundRect(0, 0, w, h, arc, arc);
 
-            // card
-            g2.setColor(new Color(0, 0, 0, 120));
-            g2.fillRoundRect(6, 6, w - 12, h - 12, arc, arc);
-
-            // border
-            g2.setStroke(new BasicStroke(2.8f));
-            g2.setColor(accent);
-            g2.drawRoundRect(6, 6, w - 12, h - 12, arc, arc);
+            // simple thin border (neutral)
+            g2.setStroke(new BasicStroke(1.6f));
+            g2.setColor(new Color(210, 220, 255, 120));
+            g2.drawRoundRect(1, 1, w - 2, h - 2, arc, arc);
 
             String title = isWin ? "YOU WON" : "GAME OVER";
-            String icon = isWin ? "\uD83C\uDFC6" : "\uD83D\uDCA5"; // 🏆 / 💥
 
-            g2.setFont(new Font("Arial", Font.BOLD, 24));
+            // title text in accent (red when lose, turquoise when win)
+            g2.setFont(new Font("Arial", Font.BOLD, 30));
             FontMetrics fm = g2.getFontMetrics();
 
-            int y = (h - fm.getHeight()) / 2 + fm.getAscent();
-            int iconW = fm.stringWidth(icon);
-            int titleW = fm.stringWidth(title);
+            int tx = (w - fm.stringWidth(title)) / 2;
+            int ty = (h - fm.getHeight()) / 2 + fm.getAscent();
 
-            int totalW = iconW + 10 + titleW;
-            int x = (w - totalW) / 2;
-
-            g2.setColor(TEXT);
-            g2.drawString(icon, x, y);
-            g2.drawString(title, x + iconW + 10, y);
+            g2.setColor(accent);
+            g2.drawString(title, tx, ty);
 
             g2.dispose();
         }
     }
 
     // =========================
-    // Neon Card
+    // Neon Card (stats only)
     // =========================
     private static class NeonCard extends JPanel {
         private final Color accent;
@@ -199,12 +240,12 @@ public class GameResultDialog extends JDialog {
             int h = getHeight();
             int arc = 28;
 
-            paintGlow(g2, 6, 6, w - 12, h - 12, arc, accent, 0.25f);
+            paintGlow(g2, 6, 6, w - 12, h - 12, arc, accent, 0.18f);
 
             g2.setColor(new Color(0, 0, 0, 105));
             g2.fillRoundRect(4, 4, w - 8, h - 8, arc, arc);
 
-            g2.setStroke(new BasicStroke(2.4f));
+            g2.setStroke(new BasicStroke(2.2f));
             g2.setColor(accent);
             g2.drawRoundRect(4, 4, w - 8, h - 8, arc, arc);
 
@@ -213,7 +254,7 @@ public class GameResultDialog extends JDialog {
     }
 
     // =========================
-    // Neon Button with hover
+    // Buttons
     // =========================
     private static class NeonButton extends JButton {
         private final boolean primary;
@@ -232,7 +273,7 @@ public class GameResultDialog extends JDialog {
             setForeground(TEXT);
             setFont(new Font("Arial", Font.BOLD, 13));
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            setPreferredSize(new Dimension(110, 40));
+            setPreferredSize(new Dimension(120, 42));
 
             addMouseListener(new MouseAdapter() {
                 @Override public void mouseEntered(MouseEvent e) { hover = true; repaint(); }
@@ -253,12 +294,12 @@ public class GameResultDialog extends JDialog {
             Color fill = primary ? new Color(15, 40, 80) : new Color(20, 30, 60);
             if (hover) fill = new Color(fill.getRed(), fill.getGreen(), fill.getBlue(), 220);
 
-            paintGlow(g2, 6, 6, w - 12, h - 12, arc, border, primary ? 0.22f : 0.12f);
+            paintGlow(g2, 6, 6, w - 12, h - 12, arc, border, primary ? 0.18f : 0.10f);
 
             g2.setColor(fill);
             g2.fillRoundRect(4, 4, w - 8, h - 8, arc, arc);
 
-            g2.setStroke(new BasicStroke(primary ? 2.6f : 2.0f));
+            g2.setStroke(new BasicStroke(primary ? 2.4f : 2.0f));
             g2.setColor(border);
             g2.drawRoundRect(4, 4, w - 8, h - 8, arc, arc);
 
@@ -273,7 +314,7 @@ public class GameResultDialog extends JDialog {
     }
 
     // =========================
-    // Glow Painter Helper
+    // Glow helper
     // =========================
     private static void paintGlow(Graphics2D g2, int x, int y, int w, int h, int arc, Color c, float alpha) {
         Composite old = g2.getComposite();

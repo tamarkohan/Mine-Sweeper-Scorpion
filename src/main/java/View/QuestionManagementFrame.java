@@ -7,6 +7,8 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableRowSorter;
+import javax.swing.RowFilter;
 import java.awt.*;
 import java.net.URL;
 import java.util.ArrayList;
@@ -20,6 +22,13 @@ public class QuestionManagementFrame extends JFrame {
 
     private final QuestionManager manager;
     private final DefaultTableModel model;
+    private JTable table;
+    private TableRowSorter<DefaultTableModel> sorter;
+
+    // Filter controls
+    private JComboBox<String> difficultyFilter;
+    private JComboBox<String> correctAnswerFilter;
+    private JTextField idFilter;
 
 
     private final Runnable onExitToMenu;
@@ -64,7 +73,13 @@ public class QuestionManagementFrame extends JFrame {
             }
         };
 
-        JTable table = createStyledTable(model);
+        table = createStyledTable(model);
+        sorter = new TableRowSorter<>(model);
+        table.setRowSorter(sorter);
+
+        // Create filter panel
+        JPanel filterPanel = createFilterPanel();
+
         JScrollPane scroll = createStyledScrollPane(table);
 
         JButton btnAdd = createStyledButton("Add");
@@ -76,8 +91,18 @@ public class QuestionManagementFrame extends JFrame {
         JButton btnExit = createStyledButton("Back to Menu");
 
         btnAdd.addActionListener(e -> addQuestion());
-        btnEdit.addActionListener(e -> editQuestion(table.getSelectedRow()));
-        btnDelete.addActionListener(e -> deleteQuestion(table.getSelectedRow()));
+        btnEdit.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow >= 0) {
+                editQuestion(table.convertRowIndexToModel(selectedRow));
+            }
+        });
+        btnDelete.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow >= 0) {
+                deleteQuestion(table.convertRowIndexToModel(selectedRow));
+            }
+        });
         btnSave.addActionListener(e -> saveQuestions());
 
 
@@ -115,6 +140,14 @@ public class QuestionManagementFrame extends JFrame {
         content.setBorder(BorderFactory.createEmptyBorder(100, 20, 10, 20));
 
         content.add(scroll, BorderLayout.CENTER);
+        // Add filter panel above the table
+        JPanel centerWrapper = new JPanel(new BorderLayout());
+        centerWrapper.setOpaque(false);
+        centerWrapper.add(filterPanel, BorderLayout.NORTH);
+        centerWrapper.add(scroll, BorderLayout.CENTER);
+
+        // Removed the NeonTextLabel title so the background title is visible
+        content.add(centerWrapper, BorderLayout.CENTER);
         content.add(btnPanel, BorderLayout.SOUTH);
 
         setContentPane(content);
@@ -199,10 +232,11 @@ public class QuestionManagementFrame extends JFrame {
             model.addRow(new Object[]{
                     q.getId(), q.getText(),
                     opts.get(0), opts.get(1), opts.get(2), opts.get(3),
-                    String.valueOf(q.getCorrectOption()),
+                    String.valueOf(charToNumber(q.getCorrectOption())),
                     q.getDifficultyLevel()
             });
         }
+        applyFilters(); // Apply filters after loading
     }
 
     private void addQuestion() {
@@ -228,6 +262,7 @@ public class QuestionManagementFrame extends JFrame {
         int id = (int) model.getValueAt(row, 0);
         manager.deleteQuestion(id);
         loadTable();
+        applyFilters(); // Reapply filters after deletion
     }
 
     private void saveQuestions() {
@@ -242,7 +277,8 @@ public class QuestionManagementFrame extends JFrame {
         String b = model.getValueAt(row, 3).toString();
         String c = model.getValueAt(row, 4).toString();
         String d = model.getValueAt(row, 5).toString();
-        char correct = model.getValueAt(row, 6).toString().charAt(0);
+        String correctStr = model.getValueAt(row, 6).toString();
+        char correct = numberToChar(Integer.parseInt(correctStr));
         String diff = model.getValueAt(row, 7).toString();
         List<String> opts = new ArrayList<>();
         opts.add(a);
@@ -288,6 +324,36 @@ public class QuestionManagementFrame extends JFrame {
         panel.add(correctField);
         panel.add(new JLabel("Difficulty (EASY/MEDIUM/HARD/EXPERT):"));
         panel.add(diffField);
+        JTextField aField = new JTextField(existing == null ? "" : existing.getOptions().get(0));
+        JTextField bField = new JTextField(existing == null ? "" : existing.getOptions().get(1));
+        JTextField cField = new JTextField(existing == null ? "" : existing.getOptions().get(2));
+        JTextField dField = new JTextField(existing == null ? "" : existing.getOptions().get(3));
+        
+        // Create dropdown with values 1-4
+        Integer[] options = {1, 2, 3, 4};
+        JComboBox<Integer> correctComboBox = new JComboBox<>(options);
+        
+        // If editing existing question, convert char to number and preselect
+        if (existing != null) {
+            char correctChar = existing.getCorrectOption();
+            int selectedValue = charToNumber(correctChar);
+            correctComboBox.setSelectedItem(selectedValue);
+        } else {
+            // Default to 1 (A) for new questions
+            correctComboBox.setSelectedItem(1);
+        }
+        
+        JTextField diffField = new JTextField(existing == null ? "EASY" : existing.getDifficultyLevel());
+
+        JPanel panel = new JPanel(new GridLayout(0, 2, 6, 6));
+        panel.add(new JLabel("ID:")); panel.add(idField);
+        panel.add(new JLabel("Text:")); panel.add(textField);
+        panel.add(new JLabel("Option A:")); panel.add(aField);
+        panel.add(new JLabel("Option B:")); panel.add(bField);
+        panel.add(new JLabel("Option C:")); panel.add(cField);
+        panel.add(new JLabel("Option D:")); panel.add(dField);
+        panel.add(new JLabel("Correct Answer (1–4):")); panel.add(correctComboBox);
+        panel.add(new JLabel("Difficulty (EASY/MEDIUM/HARD/EXPERT):")); panel.add(diffField);
 
         int res = JOptionPane.showConfirmDialog(this, panel,
                 existing == null ? "Add Question" : "Edit Question",
@@ -308,6 +374,9 @@ public class QuestionManagementFrame extends JFrame {
             char correct = corr.charAt(0);
             if (correct < 'A' || correct > 'D') throw new IllegalArgumentException("Correct must be A-D.");
 
+            // Convert selected number (1-4) to char ('A'-'D')
+            int selectedNumber = (Integer) correctComboBox.getSelectedItem();
+            char correct = numberToChar(selectedNumber);
             String diff = diffField.getText().trim();
             return new Question(id, text, opts, correct, diff);
         } catch (Exception ex) {
@@ -343,4 +412,125 @@ public class QuestionManagementFrame extends JFrame {
             }
         }
     }
+}
+    
+    /**
+     * Converts a number (1-4) to the corresponding char ('A'-'D').
+     */
+    private char numberToChar(int number) {
+        switch (number) {
+            case 1: return 'A';
+            case 2: return 'B';
+            case 3: return 'C';
+            case 4: return 'D';
+            default: return 'A'; // fallback
+        }
+    }
+    
+    /**
+     * Converts a char ('A'-'D') to the corresponding number (1-4).
+     */
+    private int charToNumber(char ch) {
+        switch (Character.toUpperCase(ch)) {
+            case 'A': return 1;
+            case 'B': return 2;
+            case 'C': return 3;
+            case 'D': return 4;
+            default: return 1; // fallback
+        }
+    }
+
+    // =======================
+//   FILTER UI + LOGIC
+// =======================
+
+    private JPanel createFilterPanel() {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 6));
+        p.setOpaque(false);
+
+        JLabel diffLbl = new JLabel("Difficulty:");
+        diffLbl.setForeground(TEXT_COLOR);
+
+        difficultyFilter = new JComboBox<>(new String[]{"All", "EASY", "MEDIUM", "HARD", "EXPERT"});
+        styleCombo(difficultyFilter);
+
+        JLabel corrLbl = new JLabel("Correct:");
+        corrLbl.setForeground(TEXT_COLOR);
+
+        correctAnswerFilter = new JComboBox<>(new String[]{"All", "1", "2", "3", "4"});
+        styleCombo(correctAnswerFilter);
+
+        JLabel idLbl = new JLabel("ID:");
+        idLbl.setForeground(TEXT_COLOR);
+
+        idFilter = new JTextField(8);
+        idFilter.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        JButton applyBtn = createStyledButton("Apply");
+        JButton clearBtn = createStyledButton("Clear");
+
+        applyBtn.addActionListener(e -> applyFilters());
+        clearBtn.addActionListener(e -> {
+            difficultyFilter.setSelectedIndex(0);
+            correctAnswerFilter.setSelectedIndex(0);
+            idFilter.setText("");
+            applyFilters();
+        });
+
+        // Apply on Enter in the ID field
+        idFilter.addActionListener(e -> applyFilters());
+
+        // Apply instantly on combo change
+        difficultyFilter.addActionListener(e -> applyFilters());
+        correctAnswerFilter.addActionListener(e -> applyFilters());
+
+        p.add(diffLbl);
+        p.add(difficultyFilter);
+        p.add(corrLbl);
+        p.add(correctAnswerFilter);
+        p.add(idLbl);
+        p.add(idFilter);
+        p.add(applyBtn);
+        p.add(clearBtn);
+
+        return p;
+    }
+
+    private void styleCombo(JComboBox<String> box) {
+        box.setBackground(Color.WHITE);
+        box.setForeground(Color.BLACK);
+        box.setFont(new Font("Arial", Font.PLAIN, 14));
+        box.setFocusable(false);
+    }
+
+    private void applyFilters() {
+        if (sorter == null) return;
+
+        String diff = (String) difficultyFilter.getSelectedItem();
+        String corr = (String) correctAnswerFilter.getSelectedItem();
+        String idText = (idFilter.getText() == null) ? "" : idFilter.getText().trim();
+
+        List<RowFilter<Object, Object>> filters = new ArrayList<>();
+
+        // Column indexes: 0 ID, 6 Correct, 7 Difficulty
+        if (diff != null && !"All".equalsIgnoreCase(diff)) {
+            filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(diff) + "$", 7));
+        }
+
+        if (corr != null && !"All".equalsIgnoreCase(corr)) {
+            filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(corr) + "$", 6));
+        }
+
+        if (!idText.isEmpty()) {
+            // allow partial id match
+            filters.add(RowFilter.regexFilter(java.util.regex.Pattern.quote(idText), 0));
+        }
+
+        if (filters.isEmpty()) {
+            sorter.setRowFilter(null);
+        } else {
+            sorter.setRowFilter(RowFilter.andFilter(filters));
+        }
+    }
+
 }
