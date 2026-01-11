@@ -134,7 +134,7 @@ public class MainFrame extends JFrame
 
     @Override
     public void onHistoryClicked() {
-        // ✅ pass a callback so GameHistoryFrame can return to menu without coupling
+        //  pass a callback so GameHistoryFrame can return to menu without coupling
         GameHistoryFrame historyFrame = new GameHistoryFrame(controller, this::showMainMenu);
         historyFrame.setVisible(true);
     }
@@ -235,8 +235,9 @@ public class MainFrame extends JFrame
             if ("ADMIN".equals(input)) {
                 dialog.dispose();
                 QuestionManagementFrame frame =
-                        new QuestionManagementFrame(controller.getQuestionManager());
+                        new QuestionManagementFrame(controller.getQuestionManager(), this::showMainMenu);
                 frame.setVisible(true);
+
             } else {
                 JOptionPane.showMessageDialog(dialog,
                         "Access denied.",
