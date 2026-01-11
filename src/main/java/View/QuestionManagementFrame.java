@@ -30,7 +30,6 @@ public class QuestionManagementFrame extends JFrame {
     private JComboBox<String> correctAnswerFilter;
     private JTextField idFilter;
 
-
     private final Runnable onExitToMenu;
 
     // Colors (Same as GameHistoryFrame)
@@ -41,11 +40,9 @@ public class QuestionManagementFrame extends JFrame {
     private static final Color TABLE_ROW_BG = new Color(20, 20, 20);
     private static final Color TABLE_SELECTION_BG = new Color(60, 60, 80);
 
-
     public QuestionManagementFrame(QuestionManager manager) {
         this(manager, null);
     }
-
 
     public QuestionManagementFrame(QuestionManager manager, Runnable onExitToMenu) {
         super("Question Management");
@@ -86,8 +83,6 @@ public class QuestionManagementFrame extends JFrame {
         JButton btnEdit = createStyledButton("Edit");
         JButton btnDelete = createStyledButton("Delete");
         JButton btnSave = createStyledButton("Save");
-
-
         JButton btnExit = createStyledButton("Back to Menu");
 
         btnAdd.addActionListener(e -> addQuestion());
@@ -104,7 +99,6 @@ public class QuestionManagementFrame extends JFrame {
             }
         });
         btnSave.addActionListener(e -> saveQuestions());
-
 
         btnExit.addActionListener(e -> {
             dispose();
@@ -133,20 +127,18 @@ public class QuestionManagementFrame extends JFrame {
         btnPanel.add(right, BorderLayout.EAST);
 
         // Use BackgroundPanel for the main content
-        BackgroundPanel content = new BackgroundPanel("/ui/menu/bg.png");
+        BackgroundPanel content = new BackgroundPanel("/ui/menu/question_management_bg.png");
         content.setLayout(new BorderLayout());
 
         // Increased top padding to 100 to push table down
         content.setBorder(BorderFactory.createEmptyBorder(100, 20, 10, 20));
 
-        content.add(scroll, BorderLayout.CENTER);
-        // Add filter panel above the table
+        // Add filter panel above the table + table in center
         JPanel centerWrapper = new JPanel(new BorderLayout());
         centerWrapper.setOpaque(false);
         centerWrapper.add(filterPanel, BorderLayout.NORTH);
         centerWrapper.add(scroll, BorderLayout.CENTER);
 
-        // Removed the NeonTextLabel title so the background title is visible
         content.add(centerWrapper, BorderLayout.CENTER);
         content.add(btnPanel, BorderLayout.SOUTH);
 
@@ -224,6 +216,10 @@ public class QuestionManagementFrame extends JFrame {
         return btn;
     }
 
+    // =======================
+    //   TABLE DATA
+    // =======================
+
     private void loadTable() {
         model.setRowCount(0);
         for (Question q : manager.getAllQuestions()) {
@@ -280,70 +276,53 @@ public class QuestionManagementFrame extends JFrame {
         String correctStr = model.getValueAt(row, 6).toString();
         char correct = numberToChar(Integer.parseInt(correctStr));
         String diff = model.getValueAt(row, 7).toString();
+
         List<String> opts = new ArrayList<>();
         opts.add(a);
         opts.add(b);
         opts.add(c);
         opts.add(d);
+
         return new Question(id, text, opts, correct, diff);
     }
 
     /**
      * Simple prompt dialog to add/edit a question.
+     * Uses combo boxes for correct answer (1-4). Difficulty is typed (EASY/MEDIUM/HARD/EXPERT).
      */
     private Question promptForQuestion(Question existing) {
         JTextField idField = new JTextField(existing == null ? "" : String.valueOf(existing.getId()));
         JTextField textField = new JTextField(existing == null ? "" : existing.getText());
 
-        // safe get options
-        List<String> exOpts = existing == null ? List.of("", "", "", "") : existing.getOptions();
-        while (exOpts.size() < 4) exOpts = new ArrayList<>(exOpts) {{ add(""); }};
+        List<String> exOpts = (existing == null)
+                ? new ArrayList<>(List.of("", "", "", ""))
+                : new ArrayList<>(existing.getOptions());
+        while (exOpts.size() < 4) exOpts.add("");
 
-        JTextField aField = new JTextField(existing == null ? "" : exOpts.get(0));
-        JTextField bField = new JTextField(existing == null ? "" : exOpts.get(1));
-        JTextField cField = new JTextField(existing == null ? "" : exOpts.get(2));
-        JTextField dField = new JTextField(existing == null ? "" : exOpts.get(3));
+        JTextField aField = new JTextField(exOpts.get(0));
+        JTextField bField = new JTextField(exOpts.get(1));
+        JTextField cField = new JTextField(exOpts.get(2));
+        JTextField dField = new JTextField(exOpts.get(3));
 
-        JTextField correctField = new JTextField(existing == null ? "A" : String.valueOf(existing.getCorrectOption()));
-        JTextField diffField = new JTextField(existing == null ? "EASY" : existing.getDifficultyLevel());
-
-        JPanel panel = new JPanel(new GridLayout(0, 2, 6, 6));
-        panel.add(new JLabel("ID:"));
-        panel.add(idField);
-        panel.add(new JLabel("Text:"));
-        panel.add(textField);
-        panel.add(new JLabel("Option A:"));
-        panel.add(aField);
-        panel.add(new JLabel("Option B:"));
-        panel.add(bField);
-        panel.add(new JLabel("Option C:"));
-        panel.add(cField);
-        panel.add(new JLabel("Option D:"));
-        panel.add(dField);
-        panel.add(new JLabel("Correct (A-D):"));
-        panel.add(correctField);
-        panel.add(new JLabel("Difficulty (EASY/MEDIUM/HARD/EXPERT):"));
-        panel.add(diffField);
-        JTextField aField = new JTextField(existing == null ? "" : existing.getOptions().get(0));
-        JTextField bField = new JTextField(existing == null ? "" : existing.getOptions().get(1));
-        JTextField cField = new JTextField(existing == null ? "" : existing.getOptions().get(2));
-        JTextField dField = new JTextField(existing == null ? "" : existing.getOptions().get(3));
-        
-        // Create dropdown with values 1-4
+        // Correct answer dropdown (1-4)
         Integer[] options = {1, 2, 3, 4};
         JComboBox<Integer> correctComboBox = new JComboBox<>(options);
-        
-        // If editing existing question, convert char to number and preselect
         if (existing != null) {
-            char correctChar = existing.getCorrectOption();
-            int selectedValue = charToNumber(correctChar);
-            correctComboBox.setSelectedItem(selectedValue);
+            correctComboBox.setSelectedItem(charToNumber(existing.getCorrectOption()));
         } else {
-            // Default to 1 (A) for new questions
-            correctComboBox.setSelectedItem(1);
+            correctComboBox.setSelectedItem(1); // default A
         }
-        
-        JTextField diffField = new JTextField(existing == null ? "EASY" : existing.getDifficultyLevel());
+
+// Difficulty dropdown
+        String[] diffs = {"EASY", "MEDIUM", "HARD", "EXPERT"};
+        JComboBox<String> diffComboBox = new JComboBox<>(diffs);
+
+// preselect when editing
+        if (existing != null && existing.getDifficultyLevel() != null) {
+            diffComboBox.setSelectedItem(existing.getDifficultyLevel().toUpperCase());
+        } else {
+            diffComboBox.setSelectedItem("EASY");
+        }
 
         JPanel panel = new JPanel(new GridLayout(0, 2, 6, 6));
         panel.add(new JLabel("ID:")); panel.add(idField);
@@ -353,35 +332,38 @@ public class QuestionManagementFrame extends JFrame {
         panel.add(new JLabel("Option C:")); panel.add(cField);
         panel.add(new JLabel("Option D:")); panel.add(dField);
         panel.add(new JLabel("Correct Answer (1–4):")); panel.add(correctComboBox);
-        panel.add(new JLabel("Difficulty (EASY/MEDIUM/HARD/EXPERT):")); panel.add(diffField);
+        panel.add(new JLabel("Difficulty:")); panel.add(diffComboBox);
 
-        int res = JOptionPane.showConfirmDialog(this, panel,
+        int res = JOptionPane.showConfirmDialog(
+                this,
+                panel,
                 existing == null ? "Add Question" : "Edit Question",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
         if (res != JOptionPane.OK_OPTION) return null;
 
         try {
             int id = Integer.parseInt(idField.getText().trim());
             String text = textField.getText().trim();
+            String diff = ((String) diffComboBox.getSelectedItem()).toUpperCase();
+
             List<String> opts = new ArrayList<>();
             opts.add(aField.getText().trim());
             opts.add(bField.getText().trim());
             opts.add(cField.getText().trim());
             opts.add(dField.getText().trim());
 
-            String corr = correctField.getText().trim().toUpperCase();
-            if (corr.isEmpty()) throw new IllegalArgumentException("Correct option is empty.");
-            char correct = corr.charAt(0);
-            if (correct < 'A' || correct > 'D') throw new IllegalArgumentException("Correct must be A-D.");
-
-            // Convert selected number (1-4) to char ('A'-'D')
             int selectedNumber = (Integer) correctComboBox.getSelectedItem();
             char correct = numberToChar(selectedNumber);
-            String diff = diffField.getText().trim();
+
             return new Question(id, text, opts, correct, diff);
+
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Invalid input: " + ex.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Invalid input: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
             return null;
         }
     }
@@ -412,8 +394,7 @@ public class QuestionManagementFrame extends JFrame {
             }
         }
     }
-}
-    
+
     /**
      * Converts a number (1-4) to the corresponding char ('A'-'D').
      */
@@ -423,10 +404,10 @@ public class QuestionManagementFrame extends JFrame {
             case 2: return 'B';
             case 3: return 'C';
             case 4: return 'D';
-            default: return 'A'; // fallback
+            default: return 'A';
         }
     }
-    
+
     /**
      * Converts a char ('A'-'D') to the corresponding number (1-4).
      */
@@ -436,13 +417,13 @@ public class QuestionManagementFrame extends JFrame {
             case 'B': return 2;
             case 'C': return 3;
             case 'D': return 4;
-            default: return 1; // fallback
+            default: return 1;
         }
     }
 
     // =======================
-//   FILTER UI + LOGIC
-// =======================
+    //   FILTER UI + LOGIC
+    // =======================
 
     private JPanel createFilterPanel() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 6));
@@ -532,5 +513,4 @@ public class QuestionManagementFrame extends JFrame {
             sorter.setRowFilter(RowFilter.andFilter(filters));
         }
     }
-
 }

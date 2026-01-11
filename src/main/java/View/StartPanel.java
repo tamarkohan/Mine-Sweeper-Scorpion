@@ -90,7 +90,7 @@ public class StartPanel extends JPanel {
         group.add(tHard);
         tEasy.setSelected(true);
 
-        btnStart = new IconButton("/ui/start/start_btn.png");
+        btnStart = new IconButton("/ui/start/start_btnnn.png");
         btnStart.setOnClick(this::handleStart);
         bg.add(btnStart);
 

@@ -134,7 +134,7 @@ public class ActivationConfirmDialog extends JDialog {
         // If you already have icons in /ui/cells/ use them, else fallback to UIManager icon.
         String path = cellType.equalsIgnoreCase("Question")
                 ? "/ui/cells/question.png"
-                : "/ui/cells/surprise.png";
+                : "/ui/cells/surprise_btn.png";
 
         java.net.URL url = getClass().getResource(path);
         if (url != null) {

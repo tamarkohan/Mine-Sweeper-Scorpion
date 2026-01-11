@@ -358,7 +358,7 @@ public class BoardPanel extends JPanel {
                     btn.setDisabledIcon(icon);
                 }
                 else if ("S".equals(t)) {
-                    Icon icon = IconCache.icon("/ui/cells/surprise.png", (int)(cellSize * 0.82));
+                    Icon icon = IconCache.icon("/ui/cells/surprise_btn.png", (int)(cellSize * 0.82));
                     btn.setIcon(icon);
                     btn.setDisabledIcon(icon);
                 }

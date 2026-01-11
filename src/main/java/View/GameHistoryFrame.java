@@ -240,7 +240,7 @@ public class GameHistoryFrame extends JFrame {
         searchField.textField.addActionListener(e -> reloadTables());
 
         // ====== CENTER CONTENT (Background + Tables) ======
-        BackgroundPanel content = new BackgroundPanel("/ui/menu/backgroundGameHistory.png");
+        BackgroundPanel content = new BackgroundPanel("/ui/menu/game_history_bg.png");
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setBorder(BorderFactory.createEmptyBorder(10, 30, 20, 30));
 
