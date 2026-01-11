@@ -21,6 +21,9 @@ public class QuestionManagementFrame extends JFrame {
     private final QuestionManager manager;
     private final DefaultTableModel model;
 
+
+    private final Runnable onExitToMenu;
+
     // Colors (Same as GameHistoryFrame)
     private static final Color BG_COLOR = Color.BLACK;
     private static final Color TEXT_COLOR = Color.WHITE;
@@ -29,9 +32,18 @@ public class QuestionManagementFrame extends JFrame {
     private static final Color TABLE_ROW_BG = new Color(20, 20, 20);
     private static final Color TABLE_SELECTION_BG = new Color(60, 60, 80);
 
+
     public QuestionManagementFrame(QuestionManager manager) {
+        this(manager, null);
+    }
+
+
+    public QuestionManagementFrame(QuestionManager manager, Runnable onExitToMenu) {
         super("Question Management");
         this.manager = manager;
+        this.onExitToMenu = onExitToMenu;
+
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         // Set window icon
         try {
@@ -60,27 +72,48 @@ public class QuestionManagementFrame extends JFrame {
         JButton btnDelete = createStyledButton("Delete");
         JButton btnSave = createStyledButton("Save");
 
+
+        JButton btnExit = createStyledButton("Back to Menu");
+
         btnAdd.addActionListener(e -> addQuestion());
         btnEdit.addActionListener(e -> editQuestion(table.getSelectedRow()));
         btnDelete.addActionListener(e -> deleteQuestion(table.getSelectedRow()));
         btnSave.addActionListener(e -> saveQuestions());
 
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+        btnExit.addActionListener(e -> {
+            dispose();
+            if (onExitToMenu != null) onExitToMenu.run();
+        });
+
+        // ===== Buttons panel (bottom) =====
+        JPanel btnPanel = new JPanel(new BorderLayout());
         btnPanel.setBackground(BG_COLOR);
         btnPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        btnPanel.add(btnAdd);
-        btnPanel.add(btnEdit);
-        btnPanel.add(btnDelete);
-        btnPanel.add(btnSave);
+
+        // Left: exit
+        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        left.setBackground(BG_COLOR);
+        left.add(btnExit);
+
+        // Right: actions
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        right.setBackground(BG_COLOR);
+        right.add(btnAdd);
+        right.add(btnEdit);
+        right.add(btnDelete);
+        right.add(btnSave);
+
+        btnPanel.add(left, BorderLayout.WEST);
+        btnPanel.add(right, BorderLayout.EAST);
 
         // Use BackgroundPanel for the main content
         BackgroundPanel content = new BackgroundPanel("/ui/menu/bg.png");
         content.setLayout(new BorderLayout());
-        
+
         // Increased top padding to 100 to push table down
         content.setBorder(BorderFactory.createEmptyBorder(100, 20, 10, 20));
 
-        // Removed the NeonTextLabel title so the background title is visible
         content.add(scroll, BorderLayout.CENTER);
         content.add(btnPanel, BorderLayout.SOUTH);
 
@@ -112,7 +145,7 @@ public class QuestionManagementFrame extends JFrame {
         header.setBackground(TABLE_HEADER_BG);
         header.setForeground(ACCENT_COLOR);
         header.setFont(new Font("Arial", Font.BOLD, 14));
-        ((DefaultTableCellRenderer)header.getDefaultRenderer()).setHorizontalAlignment(JLabel.CENTER);
+        ((DefaultTableCellRenderer) header.getDefaultRenderer()).setHorizontalAlignment(JLabel.CENTER);
 
         // Center cell content
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -139,6 +172,7 @@ public class QuestionManagementFrame extends JFrame {
         btn.setForeground(ACCENT_COLOR);
         btn.setFont(new Font("Arial", Font.BOLD, 14));
         btn.setFocusPainted(false);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(ACCENT_COLOR, 1),
                 BorderFactory.createEmptyBorder(5, 15, 5, 15)
@@ -149,6 +183,7 @@ public class QuestionManagementFrame extends JFrame {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 btn.setBackground(new Color(60, 60, 60));
             }
+
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 btn.setBackground(new Color(40, 40, 40));
             }
@@ -210,7 +245,10 @@ public class QuestionManagementFrame extends JFrame {
         char correct = model.getValueAt(row, 6).toString().charAt(0);
         String diff = model.getValueAt(row, 7).toString();
         List<String> opts = new ArrayList<>();
-        opts.add(a); opts.add(b); opts.add(c); opts.add(d);
+        opts.add(a);
+        opts.add(b);
+        opts.add(c);
+        opts.add(d);
         return new Question(id, text, opts, correct, diff);
     }
 
@@ -220,22 +258,36 @@ public class QuestionManagementFrame extends JFrame {
     private Question promptForQuestion(Question existing) {
         JTextField idField = new JTextField(existing == null ? "" : String.valueOf(existing.getId()));
         JTextField textField = new JTextField(existing == null ? "" : existing.getText());
-        JTextField aField = new JTextField(existing == null ? "" : existing.getOptions().get(0));
-        JTextField bField = new JTextField(existing == null ? "" : existing.getOptions().get(1));
-        JTextField cField = new JTextField(existing == null ? "" : existing.getOptions().get(2));
-        JTextField dField = new JTextField(existing == null ? "" : existing.getOptions().get(3));
+
+        // safe get options
+        List<String> exOpts = existing == null ? List.of("", "", "", "") : existing.getOptions();
+        while (exOpts.size() < 4) exOpts = new ArrayList<>(exOpts) {{ add(""); }};
+
+        JTextField aField = new JTextField(existing == null ? "" : exOpts.get(0));
+        JTextField bField = new JTextField(existing == null ? "" : exOpts.get(1));
+        JTextField cField = new JTextField(existing == null ? "" : exOpts.get(2));
+        JTextField dField = new JTextField(existing == null ? "" : exOpts.get(3));
+
         JTextField correctField = new JTextField(existing == null ? "A" : String.valueOf(existing.getCorrectOption()));
         JTextField diffField = new JTextField(existing == null ? "EASY" : existing.getDifficultyLevel());
 
         JPanel panel = new JPanel(new GridLayout(0, 2, 6, 6));
-        panel.add(new JLabel("ID:")); panel.add(idField);
-        panel.add(new JLabel("Text:")); panel.add(textField);
-        panel.add(new JLabel("Option A:")); panel.add(aField);
-        panel.add(new JLabel("Option B:")); panel.add(bField);
-        panel.add(new JLabel("Option C:")); panel.add(cField);
-        panel.add(new JLabel("Option D:")); panel.add(dField);
-        panel.add(new JLabel("Correct (A-D):")); panel.add(correctField);
-        panel.add(new JLabel("Difficulty (EASY/MEDIUM/HARD/EXPERT):")); panel.add(diffField);
+        panel.add(new JLabel("ID:"));
+        panel.add(idField);
+        panel.add(new JLabel("Text:"));
+        panel.add(textField);
+        panel.add(new JLabel("Option A:"));
+        panel.add(aField);
+        panel.add(new JLabel("Option B:"));
+        panel.add(bField);
+        panel.add(new JLabel("Option C:"));
+        panel.add(cField);
+        panel.add(new JLabel("Option D:"));
+        panel.add(dField);
+        panel.add(new JLabel("Correct (A-D):"));
+        panel.add(correctField);
+        panel.add(new JLabel("Difficulty (EASY/MEDIUM/HARD/EXPERT):"));
+        panel.add(diffField);
 
         int res = JOptionPane.showConfirmDialog(this, panel,
                 existing == null ? "Add Question" : "Edit Question",
@@ -250,13 +302,45 @@ public class QuestionManagementFrame extends JFrame {
             opts.add(bField.getText().trim());
             opts.add(cField.getText().trim());
             opts.add(dField.getText().trim());
-            char correct = correctField.getText().trim().toUpperCase().charAt(0);
+
+            String corr = correctField.getText().trim().toUpperCase();
+            if (corr.isEmpty()) throw new IllegalArgumentException("Correct option is empty.");
+            char correct = corr.charAt(0);
+            if (correct < 'A' || correct > 'D') throw new IllegalArgumentException("Correct must be A-D.");
+
             String diff = diffField.getText().trim();
             return new Question(id, text, opts, correct, diff);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Invalid input: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
             return null;
+        }
+    }
+
+    // =======================
+    //   BACKGROUND PANEL
+    // =======================
+    private static class BackgroundPanel extends JPanel {
+        private Image backgroundImage;
+
+        public BackgroundPanel(String resourcePath) {
+            URL url = getClass().getResource(resourcePath);
+            if (url != null) {
+                backgroundImage = new ImageIcon(url).getImage();
+            } else {
+                System.err.println("ERROR: Could not find background image at: " + resourcePath);
+            }
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (backgroundImage != null) {
+                g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+            } else {
+                g.setColor(Color.BLACK);
+                g.fillRect(0, 0, getWidth(), getHeight());
+            }
         }
     }
 }
