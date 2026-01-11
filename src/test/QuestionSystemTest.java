@@ -12,12 +12,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Black-box style test for the Question System flow.
- *
+ * <p>
  * Scenario (TC-BB-QUESTION-01):
  * - A QUESTION cell is activated during a running game.
  * - The QuestionManager would return a known question (simulated here).
  * - The player selects the CORRECT answer.
- *
+ * <p>
  * Expectations:
  * - The question is evaluated as correct (we simulate by calling processQuestionAnswer with true).
  * - Shared score increases by the configured reward for the chosen difficulty/level.

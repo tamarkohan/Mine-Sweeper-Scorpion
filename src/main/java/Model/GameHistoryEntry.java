@@ -42,16 +42,45 @@ public class GameHistoryEntry {
         this.correctAnswers = correctAnswers;
     }
 
-    public LocalDateTime getTimestamp()      { return timestamp; }
-    public String getPlayer1Name()           { return player1Name; }
-    public String getPlayer2Name()           { return player2Name; }
-    public String getDifficulty()            { return difficulty; }
-    public String getResult()                { return result; }
-    public int getFinalScore()               { return finalScore; }
-    public int getLivesLeft()                { return livesLeft; }
-    public long getDurationSeconds()         { return durationSeconds; }
-    public int getTotalQuestions()           { return totalQuestions; }
-    public int getCorrectAnswers()           { return correctAnswers; }
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public String getPlayer1Name() {
+        return player1Name;
+    }
+
+    public String getPlayer2Name() {
+        return player2Name;
+    }
+
+    public String getDifficulty() {
+        return difficulty;
+    }
+
+    public String getResult() {
+        return result;
+    }
+
+    public int getFinalScore() {
+        return finalScore;
+    }
+
+    public int getLivesLeft() {
+        return livesLeft;
+    }
+
+    public long getDurationSeconds() {
+        return durationSeconds;
+    }
+
+    public int getTotalQuestions() {
+        return totalQuestions;
+    }
+
+    public int getCorrectAnswers() {
+        return correctAnswers;
+    }
 
     public double getAccuracy() {
         if (totalQuestions <= 0) return 0.0;

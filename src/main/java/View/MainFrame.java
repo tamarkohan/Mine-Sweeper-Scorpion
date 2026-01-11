@@ -12,7 +12,7 @@ import java.net.URL;
  * - MainMenuPanel (home screen)
  * - StartPanel    (enter players + difficulty)
  * - GamePanel     (actual game)
- *
+ * <p>
  * Communicates with the Model layer only through GameController (MVC).
  */
 public class MainFrame extends JFrame
@@ -36,7 +36,7 @@ public class MainFrame extends JFrame
 
         this.controller = GameController.getInstance();
         this.cardLayout = new CardLayout();
-        this.cardPanel  = new JPanel(cardLayout);
+        this.cardPanel = new JPanel(cardLayout);
 
         createAndShowGUI();
     }
@@ -56,13 +56,12 @@ public class MainFrame extends JFrame
         }
 
 
-
         // ===== create screens (cards) =====
         mainMenuPanel = new MainMenuPanel(this);   // first screen with 4 buttons
-        startPanel    = new StartPanel(this);      // existing screen
+        startPanel = new StartPanel(this);      // existing screen
 
         cardPanel.add(mainMenuPanel, "MENU");
-        cardPanel.add(startPanel,    "START");
+        cardPanel.add(startPanel, "START");
 
         setContentPane(cardPanel);
 
@@ -94,8 +93,8 @@ public class MainFrame extends JFrame
 
             return switch (ans) {
                 case CORRECT -> Model.QuestionResult.CORRECT;
-                case WRONG   -> Model.QuestionResult.WRONG;
-                default      -> Model.QuestionResult.SKIPPED;
+                case WRONG -> Model.QuestionResult.WRONG;
+                default -> Model.QuestionResult.SKIPPED;
             };
         });
 
@@ -321,6 +320,7 @@ public class MainFrame extends JFrame
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 btn.setBackground(new Color(60, 60, 60));
             }
+
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 btn.setBackground(new Color(40, 40, 40));
             }

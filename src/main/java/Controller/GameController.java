@@ -4,7 +4,10 @@ import Model.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Controller class between the UI (View) and the Game model.
@@ -18,11 +21,12 @@ public class GameController {
     private Game currentGame;
     private QuestionManager questionManager;
     private final GameSubject gameSubject = new GameSubject();
-    
+
     // Private constructor – prevents external instantiation
 
     private GameController() {
     }
+
     // Returns the single shared Controller instance
     public static GameController getInstance() {
         if (instance == null) {
@@ -30,6 +34,7 @@ public class GameController {
         }
         return instance;
     }
+
     /**
      * Creates a new Game instance with the selected difficulty.
      * This is the main entry point for starting a cooperative game.
@@ -108,15 +113,18 @@ public class GameController {
     public boolean isGameRunning() {
         return currentGame != null && currentGame.getGameState() == GameState.RUNNING;
     }
+
     // Returns true if the game has ended with WIN or LOSS.
     public boolean isGameOver() {
         if (currentGame == null) return false;
         return currentGame.getGameState() != GameState.RUNNING;
     }
+
     // Returns the current player's turn
     public int getCurrentPlayerTurn() {
         return (currentGame != null) ? currentGame.getCurrentPlayerTurn() : 0;
     }
+
     // Switches turn between players.
     public void switchTurn() {
         if (currentGame != null) {
@@ -152,7 +160,7 @@ public class GameController {
         }
         return null;
     }
-    
+
     public void processTurnEnd() {
         if (currentGame == null || currentGame.getGameState() != GameState.RUNNING) return;
         currentGame.switchTurn();
@@ -167,16 +175,19 @@ public class GameController {
         if (currentGame == null) return null;
         return (boardNumber == 1) ? currentGame.getBoard1() : currentGame.getBoard2();
     }
+
     // Returns the number of rows for the specified board.
     public int getBoardRows(int boardNumber) {
         Board b = getBoard(boardNumber);
         return (b != null) ? b.getRows() : 0;
     }
+
     // Returns the number of columns for the specified board.
     public int getBoardCols(int boardNumber) {
         Board b = getBoard(boardNumber);
         return (b != null) ? b.getCols() : 0;
     }
+
     // Returns the total number of mines placed on the specified board.
     public int getTotalMines(int boardNumber) {
         Board b = getBoard(boardNumber);
@@ -238,12 +249,9 @@ public class GameController {
     }
 
 
-
-
-
     /**
-         * Provides UI-only cell data (text + enabled state) without exposing Model internals.
-         */
+     * Provides UI-only cell data (text + enabled state) without exposing Model internals.
+     */
     public CellViewData getCellViewData(int boardNumber, int row, int col) {
         Board board = getBoard(boardNumber);
         if (board == null) return new CellViewData(true, "");
@@ -299,8 +307,6 @@ public class GameController {
     }
 
 
-
-
     /**
      * Small DTO for what the View needs for each cell.
      * No direct Model enums/types נחשפים ל-View.
@@ -321,9 +327,10 @@ public class GameController {
      * - Checks if the cell was already used
      * - If already used, skips the special effect and does nothing
      * - If not used, marks it as used and triggers the special effect
+     *
      * @param boardNumber 1 for board1, 2 for board2
-     * @param row the row index of the cell
-     * @param col the column index of the cell
+     * @param row         the row index of the cell
+     * @param col         the column index of the cell
      * @return true if the cell was successfully revealed/activated, false otherwise
      */
 
@@ -337,6 +344,7 @@ public class GameController {
         }
         return result;
     }
+
     public boolean isQuestionOrSurprise(int boardNumber, int row, int col) {
         Board board = getBoard(boardNumber);
         if (board == null) return false;
@@ -452,7 +460,7 @@ public class GameController {
                                                String resultFilter,
                                                String searchTerm) {
         String diff = (difficultyFilter == null) ? "All" : difficultyFilter;
-        String res  = (resultFilter == null) ? "All" : resultFilter;
+        String res = (resultFilter == null) ? "All" : resultFilter;
         String search = (searchTerm == null) ? "" : searchTerm.trim().toLowerCase();
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yy HH:mm");
@@ -484,7 +492,7 @@ public class GameController {
                         : "";
 
                 String diffLower = (e.getDifficulty() == null) ? "" : e.getDifficulty().toLowerCase();
-                String resLower  = (e.getResult() == null) ? "" : e.getResult().toLowerCase();
+                String resLower = (e.getResult() == null) ? "" : e.getResult().toLowerCase();
 
                 String scoreStr = String.valueOf(e.getFinalScore());      // number -> string
                 String livesStr = String.valueOf(e.getLivesLeft());       // number -> string
@@ -524,6 +532,7 @@ public class GameController {
 
         return rows;
     }
+
     public List<PlayerHistoryRow> getPlayersHistory(String difficultyFilter,
                                                     String resultFilter,
                                                     String searchTerm) {
@@ -533,7 +542,7 @@ public class GameController {
         // We need to re-read entries to get numeric accuracy etc.
 
         String diff = (difficultyFilter == null) ? "All" : difficultyFilter;
-        String res  = (resultFilter == null) ? "All" : resultFilter;
+        String res = (resultFilter == null) ? "All" : resultFilter;
         String search = (searchTerm == null) ? "" : searchTerm.trim().toLowerCase();
 
         Map<String, PlayerStats> map = new HashMap<>();
@@ -555,7 +564,7 @@ public class GameController {
 
             if (!search.isEmpty()) {
                 String diffLower = (e.getDifficulty() == null) ? "" : e.getDifficulty().toLowerCase();
-                String resLower  = (e.getResult() == null) ? "" : e.getResult().toLowerCase();
+                String resLower = (e.getResult() == null) ? "" : e.getResult().toLowerCase();
 
                 boolean match =
                         p1.toLowerCase().contains(search) ||
@@ -651,6 +660,7 @@ public class GameController {
 
     /**
      * Registers an observer to receive game state change notifications.
+     *
      * @param observer the observer to register
      */
     public void registerObserver(GameObserver observer) {
@@ -659,6 +669,7 @@ public class GameController {
 
     /**
      * Removes an observer from the notification list.
+     *
      * @param observer the observer to remove
      */
     public void removeObserver(GameObserver observer) {
@@ -736,10 +747,10 @@ public class GameController {
 
         return new QuestionDTO(q.getText(), opts, q.getCorrectOption());
     }
+
     public int getTotalSurprisesOpened() {
         return (currentGame != null) ? currentGame.getTotalSurprisesOpened() : 0;
     }
-
 
 
 }

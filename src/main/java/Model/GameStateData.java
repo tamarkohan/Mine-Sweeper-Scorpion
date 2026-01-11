@@ -10,6 +10,7 @@ public class GameStateData {
 
     /**
      * Creates a new GameStateData instance.
+     *
      * @param score the current game score
      * @param level the current difficulty level (e.g., "EASY", "MEDIUM", "HARD")
      */
@@ -20,6 +21,7 @@ public class GameStateData {
 
     /**
      * Gets the current score.
+     *
      * @return the score
      */
     public int getScore() {
@@ -28,6 +30,7 @@ public class GameStateData {
 
     /**
      * Gets the current difficulty level.
+     *
      * @return the level name
      */
     public String getLevel() {

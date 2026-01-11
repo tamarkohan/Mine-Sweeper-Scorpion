@@ -7,25 +7,25 @@ import java.util.List;
 
 public class NeonMessageDialog extends JDialog {
 
-    public enum Type { SUCCESS, ERROR, INFO }
+    public enum Type {SUCCESS, ERROR, INFO}
 
     // ===== Theme =====
-    private static final Color BG_TOP    = new Color(6, 10, 28);
+    private static final Color BG_TOP = new Color(6, 10, 28);
     private static final Color BG_BOTTOM = new Color(10, 18, 55);
 
-    private static final Color CYAN      = new Color(65, 255, 240);
+    private static final Color CYAN = new Color(65, 255, 240);
     private static final Color CYAN_SOFT = new Color(65, 255, 240, 140);
 
-    private static final Color RED       = new Color(255, 70, 70);
-    private static final Color RED_SOFT  = new Color(255, 70, 70, 140);
+    private static final Color RED = new Color(255, 70, 70);
+    private static final Color RED_SOFT = new Color(255, 70, 70, 140);
 
-    private static final Color TEXT      = new Color(245, 245, 255);
-    private static final Color MUTED     = new Color(200, 210, 240);
+    private static final Color TEXT = new Color(245, 245, 255);
+    private static final Color MUTED = new Color(200, 210, 240);
 
-    private static final Color CARD_BG   = new Color(0, 0, 0, 115);
+    private static final Color CARD_BG = new Color(0, 0, 0, 115);
 
-    private static final Color BTN_BG    = new Color(18, 26, 60);
-    private static final Color BTN_BG_H  = new Color(24, 38, 88);
+    private static final Color BTN_BG = new Color(18, 26, 60);
+    private static final Color BTN_BG_H = new Color(24, 38, 88);
 
     private NeonMessageDialog(Window owner, String title, Type type,
                               String mainLine,
@@ -121,19 +121,7 @@ public class NeonMessageDialog extends JDialog {
         setLocationRelativeTo(owner);
     }
 
-    // Public helper: build from your existing long message text (simple parsing)
-    public static void showFromText(Window owner, String title, Type type, String rawMessage) {
-        Parsed p = parse(rawMessage);
-        NeonMessageDialog dlg = new NeonMessageDialog(
-                owner,
-                title,
-                type,
-                p.mainLine,
-                p.rows,
-                p.footer
-        );
-        dlg.setVisible(true);
-    }
+
 
     // Public helper: build structured (best option)
     public static void show(Window owner, String title, Type type, String mainLine, List<Row> rows, String footerNote) {
@@ -142,7 +130,7 @@ public class NeonMessageDialog extends JDialog {
     }
 
     // ===== Row model =====
-    public enum BadgeType { NONE, POSITIVE, NEGATIVE, NEUTRAL }
+    public enum BadgeType {NONE, POSITIVE, NEGATIVE, NEUTRAL}
 
     public static class Row {
         public final String label;
@@ -232,12 +220,13 @@ public class NeonMessageDialog extends JDialog {
 
     private static JPanel line(Color c) {
         return new JPanel() {
-            @Override protected void paintComponent(Graphics g) {
+            @Override
+            protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(c);
-                g2.fillRoundRect(0, getHeight()/2 - 1, getWidth(), 2, 8, 8);
+                g2.fillRoundRect(0, getHeight() / 2 - 1, getWidth(), 2, 8, 8);
                 g2.dispose();
             }
         };
@@ -266,11 +255,14 @@ public class NeonMessageDialog extends JDialog {
 
     private static class RoundedCard extends JPanel {
         private final Color accent;
+
         RoundedCard(Color accent) {
             this.accent = accent;
             setOpaque(false);
         }
-        @Override protected void paintComponent(Graphics g) {
+
+        @Override
+        protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -304,7 +296,6 @@ public class NeonMessageDialog extends JDialog {
         for (String s : lines) {
             s = s.trim();
             if (s.isEmpty()) continue;
-            // remove leading bullets like "✅" or "❌"
             clean.add(s);
         }
 

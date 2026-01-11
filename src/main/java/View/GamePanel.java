@@ -7,7 +7,6 @@ import java.awt.*;
 import java.util.ArrayList;
 
 
-
 /**
  * Main in-game panel: displays two boards, player info, score, lives and controls.
  * Communicates only with GameController (no direct access to the Model layer).
@@ -47,7 +46,7 @@ public class GamePanel extends JPanel {
 
 
     public GamePanel(GameController controller,
-                     String player1Name, String player2Name,Runnable onBackToMenu) {
+                     String player1Name, String player2Name, Runnable onBackToMenu) {
         this.controller = controller;
         this.player1Name = player1Name;
         this.player2Name = player2Name;
@@ -64,11 +63,10 @@ public class GamePanel extends JPanel {
             // Convert back to Model.QuestionResult (because the Model expects it)
             return switch (ans) {
                 case CORRECT -> Model.QuestionResult.CORRECT;
-                case WRONG   -> Model.QuestionResult.WRONG;
-                default      -> Model.QuestionResult.SKIPPED;
+                case WRONG -> Model.QuestionResult.WRONG;
+                default -> Model.QuestionResult.SKIPPED;
             };
         });
-
 
 
         initComponents();
@@ -155,7 +153,7 @@ public class GamePanel extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.CENTER;
-        gbc.fill = GridBagConstraints.NONE;     // ✅ DO NOT stretch
+        gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
         gbc.weighty = 0;
 
@@ -212,7 +210,7 @@ public class GamePanel extends JPanel {
         gbc2.gridx = 0;
         gbc2.gridy = 0;
         gbc2.anchor = GridBagConstraints.CENTER;
-        gbc2.fill = GridBagConstraints.NONE;    // ✅ DO NOT stretch
+        gbc2.fill = GridBagConstraints.NONE;
         gbc2.weightx = 0;
         gbc2.weighty = 0;
 
@@ -277,7 +275,7 @@ public class GamePanel extends JPanel {
         controlsBar.setBorder(BorderFactory.createEmptyBorder(0, 30, 18, 30));
 
         btnRestart = new IconButton("/ui/icons/restart.png", true);
-        btnExit    = new IconButton("/ui/icons/back.png", true);
+        btnExit = new IconButton("/ui/icons/back.png", true);
 
         btnRestart.setPreferredSize(new Dimension(40, 30));
         btnExit.setPreferredSize(new Dimension(40, 30));
@@ -310,15 +308,12 @@ public class GamePanel extends JPanel {
         bg.add(footer, BorderLayout.SOUTH);
 
 
-
-
         addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
             public void componentResized(java.awt.event.ComponentEvent e) {
                 requestResizeBoards();
             }
         });
-
 
 
         SwingUtilities.invokeLater(() -> {
@@ -328,7 +323,6 @@ public class GamePanel extends JPanel {
 
 
     }
-
 
 
     /**
@@ -341,7 +335,7 @@ public class GamePanel extends JPanel {
         heartsPanel.removeAll();
 
         Color heartFill = new Color(255, 70, 70);      // softer red
-        Color glow      = new Color(255, 40, 40);      // subtle halo
+        Color glow = new Color(255, 40, 40);      // subtle halo
 
 
         for (int i = 0; i < maxLives; i++) {
@@ -406,16 +400,14 @@ public class GamePanel extends JPanel {
                                 SwingUtilities.getWindowAncestor(this),
                                 outcomeMessage
                         );
-                    }
-                    else if (looksLikeSurpriseOutcome) {
+                    } else if (looksLikeSurpriseOutcome) {
                         //  big dialog for surprise too (cyan border)
                         OutcomeDialog.showSurpriseOutcomeFromMessage(
                                 SwingUtilities.getWindowAncestor(this),
                                 outcomeMessage
                         );
 
-                    }
-                    else {
+                    } else {
                         // keep toast only for small/other messages
                         showToast(outcomeMessage, neon);
                     }
@@ -493,31 +485,6 @@ public class GamePanel extends JPanel {
     }
 
 
-    /**
-     * Displays a dialog at the end of the game (victory or game over) with final score.
-     */
-    private void showGameOverDialog() {
-        String title;
-        String message;
-
-        // אם אין יותר לבבות – הפסד
-        if (controller.getSharedLives() <= 0) {
-            title = "Game Over";
-            message = "All lives are gone.\nFinal score: " + controller.getSharedScore();
-        } else {
-            // אחרת – הנחנו שכל הלוחות נפתרו -> ניצחון
-            title = "Victory!";
-            message = "All safe cells are revealed!\nFinal score: " + controller.getSharedScore();
-        }
-
-        JOptionPane.showMessageDialog(
-                this,
-                message,
-                title,
-                JOptionPane.INFORMATION_MESSAGE
-        );
-    }
-
 
     /**
      * Updates score, lives, mines-left labels and heart colors.
@@ -532,22 +499,6 @@ public class GamePanel extends JPanel {
         revalidate();
         repaint();
     }
-
-    /**
-     * Displays the result of the Surprise tile.
-     */
-    private void displayOutcomePopup(String message) {
-        Window w = SwingUtilities.getWindowAncestor(this);
-
-        if (message != null && message.toLowerCase().contains("correct")) {
-            OutcomeDialog.showCorrect(w, message);
-        } else if (message != null && message.toLowerCase().contains("wrong")) {
-            OutcomeDialog.showWrong(w, message);
-        } else {
-            OutcomeDialog.show(w, "Message", message);
-        }
-    }
-
 
 
 
@@ -612,8 +563,7 @@ public class GamePanel extends JPanel {
             boardPanel1.refresh();
             boardPanel2.refresh();
             requestResizeBoards();
-        }
-        else if (action == GameResultDialog.ResultAction.EXIT) {
+        } else if (action == GameResultDialog.ResultAction.EXIT) {
             controller.endGame();
             if (onBackToMenu != null) onBackToMenu.run();
         }
@@ -633,10 +583,22 @@ public class GamePanel extends JPanel {
         // grid size by difficulty (adjust if yours are different!)
         int rows, cols;
         switch (diff) {
-            case "EASY" -> { rows = 10; cols = 10; }
-            case "MEDIUM" -> { rows = 14; cols = 14; }
-            case "HARD" -> { rows = 16; cols = 16; }
-            default -> { rows = 10; cols = 10; }
+            case "EASY" -> {
+                rows = 10;
+                cols = 10;
+            }
+            case "MEDIUM" -> {
+                rows = 14;
+                cols = 14;
+            }
+            case "HARD" -> {
+                rows = 16;
+                cols = 16;
+            }
+            default -> {
+                rows = 10;
+                cols = 10;
+            }
         }
 
         // leave a little margin inside the wrapper so it doesn't touch
@@ -658,31 +620,6 @@ public class GamePanel extends JPanel {
         boardPanel2.setCellSize(cell);
     }
 
-
-
-
-
-
-
-
-
-    private void updateCenterPadding() {
-        // Minimal padding to maximize board space
-        int top = 15;
-        int side = 15;
-        int bottom = 0;
-
-        // In large screens - almost no padding
-        if (getHeight() > 800) {
-            top = 5;
-            side = 10;
-            bottom = 0;
-        }
-
-        centerPanel.setBorder(
-                BorderFactory.createEmptyBorder(top, side, bottom, side)
-        );
-    }
 
 
     private void requestResizeBoards() {

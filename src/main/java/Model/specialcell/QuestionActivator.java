@@ -1,12 +1,6 @@
 package Model.specialcell;
 
-import Model.Board;
-import Model.Cell;
-import Model.Game;
-import Model.Question;
-import Model.QuestionManager;
-import Model.ScoreRules;
-import Model.QuestionResult;
+import Model.*;
 
 public class QuestionActivator extends SpecialCellActivator {
 
@@ -62,7 +56,7 @@ public class QuestionActivator extends SpecialCellActivator {
         boolean isCorrect = result.isCorrect;
         Game.QuestionLevel level = question.getQuestionLevel();
 
-        // your existing "Easy game special effects"
+        //  existing "Easy game special effects"
         if (game.getDifficulty() == Model.Difficulty.EASY && isCorrect) {
             if (level == Game.QuestionLevel.MEDIUM) {
                 board.revealRandomMine();

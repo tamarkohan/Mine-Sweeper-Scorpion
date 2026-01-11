@@ -9,7 +9,8 @@ import java.awt.event.MouseEvent;
 
 public class GameResultDialog extends JDialog {
 
-    public enum ResultAction { RESTART, EXIT }
+    public enum ResultAction {RESTART, EXIT}
+
     private ResultAction action = ResultAction.EXIT; // default if user closes window
 
 
@@ -75,8 +76,14 @@ public class GameResultDialog extends JDialog {
         NeonButton btnRestart = new NeonButton("Restart", true, accent);
         NeonButton btnExit = new NeonButton("Exit", false, accent);
 
-        btnRestart.addActionListener(e -> { action = ResultAction.RESTART; dispose(); });
-        btnExit.addActionListener(e -> { action = ResultAction.EXIT; dispose(); });
+        btnRestart.addActionListener(e -> {
+            action = ResultAction.RESTART;
+            dispose();
+        });
+        btnExit.addActionListener(e -> {
+            action = ResultAction.EXIT;
+            dispose();
+        });
 
         btnPanel.add(btnRestart);
         btnPanel.add(btnExit);
@@ -137,7 +144,9 @@ public class GameResultDialog extends JDialog {
         return String.format("%.0f%%", p);
     }
 
-    public ResultAction getAction() { return action; }
+    public ResultAction getAction() {
+        return action;
+    }
 
     // NEW signature (adds duration + surprisesOpened)
     public static ResultAction showResultDialog(Window owner,
@@ -276,8 +285,17 @@ public class GameResultDialog extends JDialog {
             setPreferredSize(new Dimension(120, 42));
 
             addMouseListener(new MouseAdapter() {
-                @Override public void mouseEntered(MouseEvent e) { hover = true; repaint(); }
-                @Override public void mouseExited(MouseEvent e) { hover = false; repaint(); }
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    hover = true;
+                    repaint();
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    hover = false;
+                    repaint();
+                }
             });
         }
 

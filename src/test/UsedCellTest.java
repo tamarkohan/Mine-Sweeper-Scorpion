@@ -7,7 +7,7 @@ import Model.GameState;
 
 /**
  * USER STORY 2 - USED QUESTION/SURPRISE CELLS:
- * 
+ * <p>
  * Unit tests to verify that question and surprise cells can only be used once.
  * Tests both the Board.revealCell() logic (core implementation) and the
  * GameController integration.
@@ -23,7 +23,7 @@ public class UsedCellTest {
 
         // Test Board.revealCell() directly (core logic)
         allTestsPassed &= testBoardRevealCellLogic();
-        
+
         // Test GameController integration
         allTestsPassed &= testGameControllerIntegration();
 
@@ -42,15 +42,15 @@ public class UsedCellTest {
      */
     private static boolean testBoardRevealCellLogic() {
         System.out.println("=== Test: Board.revealCell() Logic ===\n");
-        
+
         Game game = new Game(Difficulty.EASY);
         Board board = game.getBoard1();
-        
+
         // Set initial score to allow activation
         game.setSharedScore(20);
         int initialScore = game.getSharedScore();
         int activationCost = game.getDifficulty().getActivationCost();
-        
+
         boolean allPassed = true;
 
         // ----- Test 1: First activation of question cell -----
@@ -60,11 +60,11 @@ public class UsedCellTest {
         questionCell.setQuestionId(1);
         questionCell.setState(Cell.CellState.HIDDEN);
         questionCell.setUsed(false);
-        
+
         allPassed &= check("Question cell should not be used initially", !questionCell.isUsed());
-        allPassed &= check("Cell should be HIDDEN initially", 
+        allPassed &= check("Cell should be HIDDEN initially",
                 questionCell.getState() == Cell.CellState.HIDDEN);
-        
+
         // Reveal via Board.revealCell() - this should mark as used and trigger effect
         board.revealCell(0, 0);
 
@@ -79,11 +79,11 @@ public class UsedCellTest {
         // ----- Test 2: Second activation attempt (should skip effect) -----
         System.out.println("\nTest 2: Second activation attempt (should skip effect)");
         int scoreBeforeSecondClick = game.getSharedScore();
-        
+
         // Manually reset state to HIDDEN to simulate another click attempt
         // (In real game, cell would already be revealed, but we test the logic)
         questionCell.setState(Cell.CellState.HIDDEN);
-        
+
         // Try to reveal again - should skip effect since cell is already used
         // Note: Even though effect is skipped, revealing a safe cell still gives +1 point
         board.revealCell(0, 0);
@@ -93,7 +93,7 @@ public class UsedCellTest {
         allPassed &= check("Score should increase by +1 for second reveal",
                 game.getSharedScore() == scoreBeforeSecondClick + 1);
 
-        allPassed &= check("Cell should be REVEALED after second click", 
+        allPassed &= check("Cell should be REVEALED after second click",
                 questionCell.getState() == Cell.CellState.REVEALED);
 
         // ----- Test 3: Surprise cell -----
@@ -137,7 +137,6 @@ public class UsedCellTest {
                 game.getSharedScore() == scoreBeforeSurprise + 1);
 
 
-
         // Try to activate again
         surpriseCell.setState(Cell.CellState.HIDDEN);
         int scoreBeforeSecondSurprise = game.getSharedScore();
@@ -146,7 +145,7 @@ public class UsedCellTest {
                 !surpriseCell.isUsed());
 
         // When cell is already used, special effect is skipped, but revealing still gives +1 point
-        allPassed &= check("Score should increase by +1 only (effect skipped, no activation cost)", 
+        allPassed &= check("Score should increase by +1 only (effect skipped, no activation cost)",
                 game.getSharedScore() == scoreBeforeSecondSurprise + 1);
 
         // ----- Test 4: Normal cells (not question/surprise) should work normally -----
@@ -155,9 +154,9 @@ public class UsedCellTest {
         normalCell.setContent(Cell.CellContent.EMPTY);
         normalCell.setState(Cell.CellState.HIDDEN);
         normalCell.setUsed(false);
-        
+
         board.revealCell(2, 2);
-        allPassed &= check("Normal cell should be REVEALED", 
+        allPassed &= check("Normal cell should be REVEALED",
                 normalCell.getState() == Cell.CellState.REVEALED);
         allPassed &= check("Normal cell should not be marked as used", !normalCell.isUsed());
 
@@ -171,25 +170,25 @@ public class UsedCellTest {
      */
     private static boolean testGameControllerIntegration() {
         System.out.println("=== Test: GameController Integration ===\n");
-        
+
         GameController controller = GameController.getInstance();
 
         controller.startNewGame(Difficulty.EASY);
         Game game = controller.getCurrentGame();
         Board board = game.getBoard1();
-        
+
         // Get a cell and manually set it as a question cell for testing
         Cell questionCell = board.getCell(0, 0);
         questionCell.setContent(Cell.CellContent.QUESTION);
         questionCell.setQuestionId(1);
         questionCell.setState(Cell.CellState.HIDDEN);
         questionCell.setUsed(false);
-        
+
         // Set initial score to allow activation
         game.setSharedScore(20);
         int initialScore = game.getSharedScore();
         int activationCost = game.getDifficulty().getActivationCost();
-        
+
         boolean allPassed = true;
 
         // First activation via controller
@@ -217,7 +216,7 @@ public class UsedCellTest {
         int scoreBeforeSecondClick = game.getSharedScore();
         controller.revealCellUI(1, 0, 0); // Should be blocked since already revealed
         allPassed &= check("Question cell should still be marked as used", questionCell.isUsed());
-        allPassed &= check("Score should NOT change (cell already revealed)", 
+        allPassed &= check("Score should NOT change (cell already revealed)",
                 game.getSharedScore() == scoreBeforeSecondClick);
 
         System.out.println();

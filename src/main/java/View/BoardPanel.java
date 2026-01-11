@@ -6,7 +6,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import View.IconCache;
 
 /**
  * View component for a single player's board.
@@ -16,18 +15,20 @@ public class BoardPanel extends JPanel {
 
     private final GameController controller;
     private final int boardNumber;   // 1 or 2
+
     public interface MoveCallback {
         void onMove(boolean endedTurn);
     }
+
     private static final int MIN_CELL = 18;
-    private static final int MAX_CELL = 80;
     private int cellSize = 40;
 
     private final MoveCallback moveCallback;
     private JButton[][] buttons;
 
     private boolean waiting;
-    public enum EffectType { REVEAL_3X3, REVEAL_1_MINE }
+
+    public enum EffectType {REVEAL_3X3, REVEAL_1_MINE}
 
     public EffectType pendingEffect = null;
 
@@ -70,7 +71,7 @@ public class BoardPanel extends JPanel {
                 for (int c = 0; c < cols; c++) {
                     buttons[r][c].setPreferredSize(new Dimension(cellSize, cellSize));
                     // Keep font relative to size
-                    buttons[r][c].setFont(new Font("Segoe UI Black", Font.BOLD, (int)(cellSize * 0.6)));
+                    buttons[r][c].setFont(new Font("Segoe UI Black", Font.BOLD, (int) (cellSize * 0.6)));
                 }
             }
         }
@@ -345,36 +346,32 @@ public class BoardPanel extends JPanel {
                 String t = data.text;
 
                 if ("🚩".equals(t)) {
-                    btn.setIcon(IconCache.icon("/ui/cells/flag.png", (int)(cellSize * 0.80)));
+                    btn.setIcon(IconCache.icon("/ui/cells/flag.png", (int) (cellSize * 0.80)));
                     btn.setDisabledIcon(btn.getIcon()); // Icon shows even if disabled
-                }
-                else if ("M".equals(t)) {
-                    btn.setIcon(IconCache.icon("/ui/cells/mine.png", (int)(cellSize * 0.85)));
+                } else if ("M".equals(t)) {
+                    btn.setIcon(IconCache.icon("/ui/cells/mine.png", (int) (cellSize * 0.85)));
                     btn.setDisabledIcon(btn.getIcon());
-                }
-                else if ("Q".equals(t)) {
-                    Icon icon = IconCache.icon("/ui/cells/question.png", (int)(cellSize * 0.82));
+                } else if ("Q".equals(t)) {
+                    Icon icon = IconCache.icon("/ui/cells/question.png", (int) (cellSize * 0.82));
                     btn.setIcon(icon);
                     btn.setDisabledIcon(icon);
-                }
-                else if ("S".equals(t)) {
-                    Icon icon = IconCache.icon("/ui/cells/surprise_btn.png", (int)(cellSize * 0.82));
+                } else if ("S".equals(t)) {
+                    Icon icon = IconCache.icon("/ui/cells/surprise_btn.png", (int) (cellSize * 0.82));
                     btn.setIcon(icon);
                     btn.setDisabledIcon(icon);
-                }
-                else {
+                } else {
                     // NUMBER or EMPTY
                     btn.setText(t);
                     if (!t.isEmpty() && Character.isDigit(t.charAt(0))) {
                         int val = Integer.parseInt(t);
                         // THIS SETS THE NUMBER COLOR
                         btn.setForeground(getNumberColor(val));
-                        btn.setFont(new Font("Segoe UI Black", Font.BOLD, (int)(cellSize * 0.6)));
+                        btn.setFont(new Font("Segoe UI Black", Font.BOLD, (int) (cellSize * 0.6)));
                     }
                 }
 
                 // --- 3. Enable/Disable Logic ---
-                // CRITICAL FIX: We MUST keep buttons enabled for the colors to show.
+                //  We MUST keep buttons enabled for the colors to show.
                 // If setEnabled(false) is called, Swing forces the text to be gray.
                 if (!gameIsRunning || waiting) {
                     // Truly disable during waiting/game over

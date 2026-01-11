@@ -43,7 +43,9 @@ public class AddQuestionDialog extends JDialog {
         JLabel qLabel = new JLabel("Question");
         NeonUI.styleLabel(qLabel);
 
-        gc.gridx = 0; gc.gridy = 2; gc.weightx = 0;
+        gc.gridx = 0;
+        gc.gridy = 2;
+        gc.weightx = 0;
         card.add(qLabel, gc);
 
         NeonUI.styleArea(txtQuestion);
@@ -54,7 +56,9 @@ public class AddQuestionDialog extends JDialog {
         scroll.setBorder(NeonUI.neonLine(NeonUI.ACCENT));
         scroll.getViewport().setBackground(NeonUI.PANEL);
 
-        gc.gridx = 1; gc.gridy = 2; gc.weightx = 1;
+        gc.gridx = 1;
+        gc.gridy = 2;
+        gc.weightx = 1;
         card.add(scroll, gc);
 
         // Row 3: Answer
@@ -89,18 +93,21 @@ public class AddQuestionDialog extends JDialog {
         JLabel l = new JLabel(label);
         NeonUI.styleLabel(l);
 
-        gc.gridx = 0; gc.gridy = row; gc.weightx = 0;
+        gc.gridx = 0;
+        gc.gridy = row;
+        gc.weightx = 0;
         card.add(l, gc);
 
         if (input instanceof JTextField tf) NeonUI.styleField(tf);
         if (input instanceof JComboBox<?> cb) NeonUI.styleCombo(cb);
 
-        gc.gridx = 1; gc.gridy = row; gc.weightx = 1;
+        gc.gridx = 1;
+        gc.gridy = row;
+        gc.weightx = 1;
         card.add(input, gc);
     }
 
     private void onSave() {
-        // TODO: validate + send to controller
         // Example validation:
         if (txtTitle.getText().trim().isEmpty() || txtAnswer.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(

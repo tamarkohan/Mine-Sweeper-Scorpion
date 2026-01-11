@@ -4,19 +4,20 @@ import Model.Question;
 import Model.QuestionManager;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
-import javax.swing.border.*;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.table.TableRowSorter;
-import javax.swing.RowFilter;
-import javax.swing.RowSorter;
 
 public class QuestionManagementFrame extends JFrame {
 
@@ -168,7 +169,6 @@ public class QuestionManagementFrame extends JFrame {
         loadTable();
 
 
-
         setUndecorated(true);               // removes the top window strip
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
@@ -245,7 +245,7 @@ public class QuestionManagementFrame extends JFrame {
         JScrollPane scroll = new JScrollPane(view);
         scroll.setOpaque(false);
         scroll.getViewport().setOpaque(false);
-        scroll.getViewport().setBackground(new Color(0,0,0,0)); // fully transparent
+        scroll.getViewport().setBackground(new Color(0, 0, 0, 0)); // fully transparent
         scroll.setBorder(BorderFactory.createEmptyBorder());
         return scroll;
     }
@@ -266,6 +266,7 @@ public class QuestionManagementFrame extends JFrame {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 btn.setBackground(new Color(60, 60, 60));
             }
+
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 btn.setBackground(new Color(40, 40, 40));
             }
@@ -367,7 +368,10 @@ public class QuestionManagementFrame extends JFrame {
         String diff = model.getValueAt(row, 7).toString();
 
         List<String> opts = new ArrayList<>();
-        opts.add(a); opts.add(b); opts.add(c); opts.add(d);
+        opts.add(a);
+        opts.add(b);
+        opts.add(c);
+        opts.add(d);
         return new Question(id, text, opts, correct, diff);
     }
 
@@ -518,10 +522,14 @@ public class QuestionManagementFrame extends JFrame {
             JLabel l = new JLabel(label + ":");
             styleNeonLabel(l);
 
-            gc.gridx = 0; gc.gridy = row; gc.weightx = 0;
+            gc.gridx = 0;
+            gc.gridy = row;
+            gc.weightx = 0;
             card.add(l, gc);
 
-            gc.gridx = 1; gc.gridy = row; gc.weightx = 1;
+            gc.gridx = 1;
+            gc.gridy = row;
+            gc.weightx = 1;
             card.add(input, gc);
         }
 
@@ -582,11 +590,16 @@ public class QuestionManagementFrame extends JFrame {
      */
     private char numberToChar(int number) {
         switch (number) {
-            case 1: return 'A';
-            case 2: return 'B';
-            case 3: return 'C';
-            case 4: return 'D';
-            default: return 'A';
+            case 1:
+                return 'A';
+            case 2:
+                return 'B';
+            case 3:
+                return 'C';
+            case 4:
+                return 'D';
+            default:
+                return 'A';
         }
     }
 
@@ -595,11 +608,16 @@ public class QuestionManagementFrame extends JFrame {
      */
     private int charToNumber(char ch) {
         switch (Character.toUpperCase(ch)) {
-            case 'A': return 1;
-            case 'B': return 2;
-            case 'C': return 3;
-            case 'D': return 4;
-            default: return 1;
+            case 'A':
+                return 1;
+            case 'B':
+                return 2;
+            case 'C':
+                return 3;
+            case 'D':
+                return 4;
+            default:
+                return 1;
         }
     }
 
@@ -700,9 +718,13 @@ public class QuestionManagementFrame extends JFrame {
         if (o == null) return Integer.MIN_VALUE;
         String s = o.toString().trim();
         if (s.isEmpty() || s.equals("-")) return Integer.MIN_VALUE;
-        try { return Integer.parseInt(s); }
-        catch (Exception e) { return Integer.MIN_VALUE; }
+        try {
+            return Integer.parseInt(s);
+        } catch (Exception e) {
+            return Integer.MIN_VALUE;
+        }
     }
+
     private boolean isSortableColumn(int modelCol) {
         return modelCol == 0 || modelCol == 6 || modelCol == 7;
     }

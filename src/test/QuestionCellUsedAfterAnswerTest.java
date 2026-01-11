@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test to verify that QUESTION cells are marked as USED after answering
  * and cannot be triggered again.
- * 
+ * <p>
  * Test ID: TC-BB-QUESTION-01 (extended)
  * Branch: feature/question-cell-used-after-answer
  */
@@ -32,11 +32,11 @@ public class QuestionCellUsedAfterAnswerTest {
         // Set up QuestionManager with a test question
         questionManager = new QuestionManager();
         Question testQuestion = new Question(
-            1,
-            "What is 2+2?",
-            Arrays.asList("3", "4", "5", "6"),
-            'B',
-            "EASY"
+                1,
+                "What is 2+2?",
+                Arrays.asList("3", "4", "5", "6"),
+                'B',
+                "EASY"
         );
         // Manually add question to manager (bypassing CSV)
         questionManager.addOrReplaceQuestion(testQuestion);
@@ -71,14 +71,14 @@ public class QuestionCellUsedAfterAnswerTest {
         // Step 2: Activate the QUESTION cell (simulates user clicking on revealed Q cell)
         questionPresenter.setNextAnswer(true); // Simulate correct answer
         boolean firstActivation = board.activateSpecialCell(0, 0);
-        
+
         assertTrue(firstActivation, "First activation should succeed");
         assertTrue(questionCell.isUsed(), "Cell should be marked as used after activation");
 
         // Step 3: Try to activate the same cell again
         questionPresenter.setNextAnswer(true); // Set answer (but shouldn't be called)
         boolean secondActivation = board.activateSpecialCell(0, 0);
-        
+
         assertFalse(secondActivation, "Second activation should fail (cell is already used)");
         assertTrue(questionCell.isUsed(), "Cell should remain used");
 
@@ -99,13 +99,13 @@ public class QuestionCellUsedAfterAnswerTest {
         // Step 2: Activate with wrong answer
         questionPresenter.setNextAnswer(false); // Simulate wrong answer
         boolean firstActivation = board.activateSpecialCell(0, 0);
-        
+
         assertTrue(firstActivation, "First activation should succeed even with wrong answer");
         assertTrue(questionCell.isUsed(), "Cell should be marked as used after activation (even if wrong)");
 
         // Step 3: Try to activate again
         boolean secondActivation = board.activateSpecialCell(0, 0);
-        
+
         assertFalse(secondActivation, "Second activation should fail (cell is already used)");
         assertTrue(questionCell.isUsed(), "Cell should remain used");
 
@@ -160,16 +160,16 @@ public class QuestionCellUsedAfterAnswerTest {
         assertFalse(secondAttempt, "Second activation should fail");
 
         // Verify game state unchanged
-        assertEquals(scoreAfterFirst, game.getSharedScore(), 
-            "Score should not change on failed reactivation");
-        assertEquals(livesAfterFirst, game.getSharedLives(), 
-            "Lives should not change on failed reactivation");
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-            "Game state should remain RUNNING");
-        
+        assertEquals(scoreAfterFirst, game.getSharedScore(),
+                "Score should not change on failed reactivation");
+        assertEquals(livesAfterFirst, game.getSharedLives(),
+                "Lives should not change on failed reactivation");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING");
+
         // Verify no exceptions were thrown
-        assertDoesNotThrow(() -> board.activateSpecialCell(0, 0), 
-            "Should not throw exception when activating used cell");
+        assertDoesNotThrow(() -> board.activateSpecialCell(0, 0),
+                "Should not throw exception when activating used cell");
     }
 
     /**

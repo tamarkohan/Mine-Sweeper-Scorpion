@@ -7,43 +7,66 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Manages persistence and access to game history records.
+ *
+ * Responsibilities:
+ * - Load game history from CSV on startup
+ * - Seed initial CSV from resources if no user file exists
+ * - Store finished games in memory
+ * - Persist history back to CSV after each addition
+ *
+ * Implemented as a Singleton to ensure a single source of truth.
+ */
 public class GameHistoryManager {
 
+    // Singleton instance
     private static GameHistoryManager instance;
 
-    //  writeable location (works in JAR + IDE)
-    private static final String RESOURCE_CSV = "/data/game_history.csv"; // <-- match your folder
+    // CSV bundled with the application (used for first-time seeding)
+    private static final String RESOURCE_CSV = "/data/game_history.csv";
+
+    // CSV file name stored on the user's machine
     private static final String HISTORY_FILE_NAME = "game_history.csv";
 
+    // Default location under the user's home directory
     private static final String DEFAULT_CSV = new File(
             System.getProperty("user.home"),
             ".scorpion-minesweeper" + File.separator + "data" + File.separator + HISTORY_FILE_NAME
     ).getAbsolutePath();
 
-
+    // Absolute path to the CSV file used by this instance
     private final String csvPath;
+
+    // In-memory cache of all history entries
     private final List<GameHistoryEntry> entries = new ArrayList<>();
 
+    // Private constructor to enforce Singleton usage
     private GameHistoryManager() {
         this(DEFAULT_CSV);
     }
 
+    // Allows specifying a custom CSV path (used internally)
     private GameHistoryManager(String csvPath) {
         this.csvPath = csvPath;
 
-        //if external file doesn't exist yet -> copy initial history from resources
+        // Ensure a CSV file exists (seed from resources if missing)
         seedFromResourceIfMissing();
 
+        // Load existing history into memory
         loadFromFile();
-
     }
 
+    /**
+     * Copies the bundled CSV resource into the user directory
+     * only if no history file exists yet.
+     */
     private void seedFromResourceIfMissing() {
         File outFile = new File(csvPath);
         if (outFile.exists()) return;
 
         if (outFile.getParentFile() != null) {
-            outFile.getParentFile().mkdirs(); // creates folders like /data if missing
+            outFile.getParentFile().mkdirs();
         }
 
         try (InputStream in = getClass().getResourceAsStream(RESOURCE_CSV)) {
@@ -56,9 +79,9 @@ public class GameHistoryManager {
         }
     }
 
-
-
-
+    /**
+     * Returns the singleton instance of the manager.
+     */
     public static GameHistoryManager getInstance() {
         if (instance == null) {
             instance = new GameHistoryManager();
@@ -66,12 +89,21 @@ public class GameHistoryManager {
         return instance;
     }
 
+    /**
+     * Returns an unmodifiable view of all stored history entries.
+     * Prevents external modification of internal state.
+     */
     public List<GameHistoryEntry> getEntries() {
         return Collections.unmodifiableList(entries);
     }
 
+    /**
+     * Adds a completed game entry and persists it immediately.
+     */
     public void addEntry(GameHistoryEntry entry) {
         if (entry == null) return;
+
+        // Debug information useful during development
         System.out.println("ADDING HISTORY ENTRY: " + entry);
         System.out.println("CSV PATH USED: " + csvPath);
         System.out.println("ABSOLUTE PATH: " + new java.io.File(csvPath).getAbsolutePath());
@@ -81,15 +113,19 @@ public class GameHistoryManager {
         saveToFile();
     }
 
-
     // ========================
-    // Persist to CSV
+    // CSV persistence
     // ========================
 
+    /**
+     * Writes the entire history list to the CSV file.
+     * Overwrites the file to keep it consistent with memory.
+     */
     private void saveToFile() {
         try (BufferedWriter bw = new BufferedWriter(
                 new OutputStreamWriter(new FileOutputStream(csvPath), StandardCharsets.UTF_8))) {
 
+            // CSV header
             bw.write("timestamp,player1,player2,difficulty,result,finalScore,livesLeft,durationSeconds,totalQuestions,correctAnswers");
             bw.newLine();
 
@@ -103,6 +139,9 @@ public class GameHistoryManager {
         }
     }
 
+    /**
+     * Loads history entries from the CSV file into memory.
+     */
     private void loadFromFile() {
         entries.clear();
 
@@ -125,6 +164,9 @@ public class GameHistoryManager {
         }
     }
 
+    /**
+     * Converts a GameHistoryEntry into a single CSV line.
+     */
     private String toCsvLine(GameHistoryEntry e) {
         return escape(e.getTimestamp().toString()) + "," +
                 escape(e.getPlayer1Name()) + "," +
@@ -138,6 +180,9 @@ public class GameHistoryManager {
                 e.getCorrectAnswers();
     }
 
+    /**
+     * Parses a CSV line back into a GameHistoryEntry object.
+     */
     private GameHistoryEntry parseCsvLine(String line) {
         List<String> parts = splitCsv(line);
         if (parts.size() < 10) return null;
@@ -157,10 +202,14 @@ public class GameHistoryManager {
             return new GameHistoryEntry(ts, p1, p2, diff, res, score, lives, dur, totalQ, correctQ);
 
         } catch (Exception ex) {
+            // Invalid or corrupted CSV line
             return null;
         }
     }
 
+    /**
+     * Escapes a string for safe CSV writing.
+     */
     private String escape(String s) {
         if (s == null) s = "";
         if (s.contains(",") || s.contains("\"") || s.contains("\n")) {
@@ -170,6 +219,9 @@ public class GameHistoryManager {
         return s;
     }
 
+    /**
+     * Reverses CSV escaping back into the original string.
+     */
     private String unescape(String s) {
         if (s == null) return "";
         s = s.trim();
@@ -179,6 +231,9 @@ public class GameHistoryManager {
         return s;
     }
 
+    /**
+     * Splits a CSV line while respecting quoted values.
+     */
     private List<String> splitCsv(String line) {
         List<String> out = new ArrayList<>();
         StringBuilder cur = new StringBuilder();
@@ -201,12 +256,8 @@ public class GameHistoryManager {
                 cur.append(ch);
             }
         }
+
         out.add(cur.toString());
         return out;
-    }
-
-    // optional: useful for debug
-    public String getCsvPath() {
-        return csvPath;
     }
 }

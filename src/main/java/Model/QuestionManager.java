@@ -8,27 +8,28 @@ public class QuestionManager {
 
     private static final String RESOURCE_CSV = "/questions.csv";
 
-    // IDE path (your resources file)
+    // IDE path
     private static final String DEV_RES_PATH = "src/main/resources/questions.csv";
 
-    // fallback writable path (for JAR / packaged runs)
+    // fallback writable path
     private static final String APP_FOLDER = "ScorpionMinesweeper";
-    private static final String FILE_NAME  = "questions.csv";
+    private static final String FILE_NAME = "questions.csv";
 
     private final List<Question> questions = new ArrayList<>();
     private final Random random = new Random();
     private final Set<Integer> usedQuestionIdsThisGame = new HashSet<>();
 
-    private final File csvFile;   // the ONE file we will read+write (dev OR user-home)
+    private final File csvFile;   // the ONE file we will read+write
 
     public QuestionManager() {
         this.csvFile = resolveCsvFile();
         debugWhere();
     }
 
-    /** Choose where we read/write:
-     *  - If running in IDE and src/main/resources/questions.csv exists -> use it
-     *  - Else -> use user-home/ScorpionMinesweeper/questions.csv
+    /**
+     * Choose where we read/write:
+     * - If running in IDE and src/main/resources/questions.csv exists -> use it
+     * - Else -> use user-home/ScorpionMinesweeper/questions.csv
      */
     private File resolveCsvFile() {
         File dev = new File(DEV_RES_PATH);
@@ -48,9 +49,6 @@ public class QuestionManager {
         System.out.println("===========================");
     }
 
-    public String getCsvAbsolutePath() {
-        return csvFile.getAbsolutePath();
-    }
 
     public void resetForNewGame() {
         usedQuestionIdsThisGame.clear();
@@ -88,7 +86,7 @@ public class QuestionManager {
                 try {
                     Question q = Question.fromCsvRow(cols.toArray(new String[0]));
 
-                    // ✅ normalize correct option (if CSV has "1"/"2"/"3"/"4")
+                    //  normalize correct option (if CSV has "1"/"2"/"3"/"4")
                     q = normalizeCorrectOptionIfNeeded(q);
 
                     questions.add(q);
@@ -129,7 +127,9 @@ public class QuestionManager {
         }
     }
 
-    /** If Question.fromCsvRow loaded correctOption as '1'..'4', convert to 'A'..'D' */
+    /**
+     * If Question.fromCsvRow loaded correctOption as '1'..'4', convert to 'A'..'D'
+     */
     private Question normalizeCorrectOptionIfNeeded(Question q) {
         char c = q.getCorrectOption();
         if (c >= '1' && c <= '4') {

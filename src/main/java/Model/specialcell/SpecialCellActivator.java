@@ -119,7 +119,7 @@ public abstract class SpecialCellActivator {
                                            String extra);
 
     // ------------------------
-    // Result object (simple)
+    // Result object
     // ------------------------
     public static class ActivationResult {
         public final boolean success;

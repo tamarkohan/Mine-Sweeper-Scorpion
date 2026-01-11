@@ -15,7 +15,8 @@ public class BackgroundPanel extends JPanel {
         setBackground(Color.BLACK);
         try (InputStream in = getClass().getResourceAsStream(resourcePath)) {
             if (in != null) bg = ImageIO.read(in);
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
     }
 
     @Override

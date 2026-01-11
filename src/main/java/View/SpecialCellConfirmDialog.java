@@ -5,7 +5,8 @@ import java.awt.*;
 
 public class SpecialCellConfirmDialog extends JDialog {
 
-    public enum Choice { YES, NO }
+    public enum Choice {YES, NO}
+
     private Choice choice = Choice.NO;
 
     private static final Color BG_TOP = new Color(6, 10, 28);

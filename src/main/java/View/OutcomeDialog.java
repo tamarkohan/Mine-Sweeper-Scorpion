@@ -15,7 +15,7 @@ public class OutcomeDialog extends JDialog {
     private static final Color MUTED = new Color(225, 230, 255);
 
     private static final Color ACCENT_GREEN = new Color(80, 255, 120);
-    private static final Color ACCENT_RED   = new Color(255, 90, 90);
+    private static final Color ACCENT_RED = new Color(255, 90, 90);
 
     private OutcomeDialog(Window owner, String title, String message, Color accent) {
         super(owner, title, ModalityType.APPLICATION_MODAL);
@@ -56,31 +56,6 @@ public class OutcomeDialog extends JDialog {
         pack();
         setResizable(false);
         setLocationRelativeTo(owner);
-    }
-
-    // ---------- Public API ----------
-    public static void showWrong(Window owner, String message) {
-        new OutcomeDialog(owner, "Wrong!", message, ACCENT_RED).setVisible(true);
-    }
-
-    public static void showCorrect(Window owner, String message) {
-        new OutcomeDialog(owner, "Correct!", message, ACCENT_GREEN).setVisible(true);
-    }
-
-    public static void showQuestionOutcome(Window owner,
-                                           boolean isCorrect,
-                                           String yourAnswer,
-                                           String correctAnswer,
-                                           String details) {
-        Color accent = isCorrect ? ACCENT_GREEN : ACCENT_RED;
-        String title = isCorrect ? " CORRECT!" : " WRONG!";
-
-        String msg =
-                "Your answer: " + (yourAnswer == null ? "-" : yourAnswer) + "\n" +
-                        "Correct answer: " + (correctAnswer == null ? "-" : correctAnswer) + "\n\n" +
-                        (details == null ? "" : details);
-
-        new OutcomeDialog(owner, title, msg, accent).setVisible(true);
     }
 
 
@@ -221,48 +196,49 @@ public class OutcomeDialog extends JDialog {
             g2.dispose();
         }
     }
-        public static void showQuestionOutcomeFromMessage(Window owner, String outcomeMessage) {
-            if (outcomeMessage == null) return;
 
-            String lower = outcomeMessage.toLowerCase();
+    public static void showQuestionOutcomeFromMessage(Window owner, String outcomeMessage) {
+        if (outcomeMessage == null) return;
 
-            boolean isCorrect = lower.contains("correct");
-            boolean isWrong = lower.contains("wrong");
-            boolean isSkipped = lower.contains("didn't answer") || lower.contains("did not answer") || lower.contains("skipped");
+        String lower = outcomeMessage.toLowerCase();
 
-            Color accent;
-            String title;
+        boolean isCorrect = lower.contains("correct");
+        boolean isWrong = lower.contains("wrong");
+        boolean isSkipped = lower.contains("didn't answer") || lower.contains("did not answer") || lower.contains("skipped");
 
-            if (isCorrect) {
-                accent = ACCENT_GREEN;
-                title = "CORRECT!";
-            } else if (isWrong) {
-                accent = ACCENT_RED;
-                title = "WRONG!";
-            } else if (isSkipped) {
-                // keep cyan for skipped / neutral
-                accent = new Color(65, 255, 240);
-                title = "SKIPPED";
-            } else {
-                // fallback if message doesn't match
-                accent = new Color(65, 255, 240);
-                title = "OUTCOME";
-            }
+        Color accent;
+        String title;
 
-            // optional: remove leading "Correct!/Wrong!" if your model puts it
-            String cleaned = outcomeMessage
-                    .replaceFirst("(?i)^\\s*correct!\\s*\\R", "")
-                    .replaceFirst("(?i)^\\s*wrong!\\s*\\R", "");
-
-            new OutcomeDialog(owner, title, cleaned, accent).setVisible(true);
+        if (isCorrect) {
+            accent = ACCENT_GREEN;
+            title = "CORRECT!";
+        } else if (isWrong) {
+            accent = ACCENT_RED;
+            title = "WRONG!";
+        } else if (isSkipped) {
+            // keep cyan for skipped / neutral
+            accent = new Color(65, 255, 240);
+            title = "SKIPPED";
+        } else {
+            // fallback if message doesn't match
+            accent = new Color(65, 255, 240);
+            title = "OUTCOME";
         }
+
+        // optional: remove leading "Correct!/Wrong!" if your model puts it
+        String cleaned = outcomeMessage
+                .replaceFirst("(?i)^\\s*correct!\\s*\\R", "")
+                .replaceFirst("(?i)^\\s*wrong!\\s*\\R", "");
+
+        new OutcomeDialog(owner, title, cleaned, accent).setVisible(true);
+    }
 
     public static void showSurpriseOutcomeFromMessage(Window owner, String outcomeMessage) {
         if (outcomeMessage == null) return;
 
         String lower = outcomeMessage.toLowerCase();
         boolean good = lower.contains("good");
-        boolean bad  = lower.contains("bad");
+        boolean bad = lower.contains("bad");
 
         Color accent = good ? ACCENT_GREEN : (bad ? ACCENT_RED : new Color(65, 255, 240));
         String title = good ? "SURPRISE: GOOD!" : (bad ? "SURPRISE: BAD!" : "SURPRISE!");

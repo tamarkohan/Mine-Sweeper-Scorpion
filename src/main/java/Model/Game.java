@@ -351,6 +351,7 @@ public class Game {
     public QuestionResult presentQuestion(Question q) {
         return questionPresenter.presentQuestion(q);
     }
+
     public int getTotalSurprisesOpened() {
         return totalSurprisesOpened;
     }

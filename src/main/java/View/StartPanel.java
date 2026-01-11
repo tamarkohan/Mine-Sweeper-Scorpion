@@ -7,6 +7,7 @@ public class StartPanel extends JPanel {
 
     public interface StartGameListener {
         void onStartGame(String player1Name, String player2Name, String difficultyKey);
+
         void onBackToMenu();
     }
 
@@ -61,7 +62,6 @@ public class StartPanel extends JPanel {
         bg.add(p2Field);
 
 
-
         tEasy = new IconToggleButton(
                 "/ui/start/easy_btn.png",
                 new Color(120, 255, 170)   // green
@@ -78,7 +78,6 @@ public class StartPanel extends JPanel {
         );
 
 
-
         Font diffFont = new Font("Arial Black", Font.PLAIN, 28);
         tEasy.setFont(diffFont);
         tMed.setFont(diffFont);
@@ -93,7 +92,6 @@ public class StartPanel extends JPanel {
         btnStart = new IconButton("/ui/start/start_btnnn.png");
         btnStart.setOnClick(this::handleStart);
         bg.add(btnStart);
-
 
 
         // BACK icon (must exist in resources)
@@ -138,23 +136,17 @@ public class StartPanel extends JPanel {
         // --- Difficulty buttons: same size, same Y, one line ---
         // --- Difficulty buttons: same size, same Y, one line ---
         // ===== LEVEL BUTTONS (PIXEL CONTROL – LIKE MAIN MENU) =====
-        int btnW = (int)(W * 0.23);   // width
-        int btnH = (int)(H * 0.23);   // height
-        int gap  = (int)(W * 0.015);  // small gap between buttons
+        int btnW = (int) (W * 0.23);   // width
+        int btnH = (int) (H * 0.23);   // height
+        int gap = (int) (W * 0.015);  // small gap between buttons
 
         int total = btnW * 3 + gap * 2;
         int startX = (W - total) / 2;
-        int y = (int)(H * 0.50);
+        int y = (int) (H * 0.50);
 
-        tEasy.setBounds(startX,               y, btnW, btnH);
-        tMed .setBounds(startX + btnW + gap,  y, btnW, btnH);
-        tHard.setBounds(startX + (btnW + gap)*2, y, btnW, btnH);
-
-
-
-
-
-
+        tEasy.setBounds(startX, y, btnW, btnH);
+        tMed.setBounds(startX + btnW + gap, y, btnW, btnH);
+        tHard.setBounds(startX + (btnW + gap) * 2, y, btnW, btnH);
 
 
         setBoundsRatio(btnStart, 0.31, 0.63, 0.40, 0.41, W, H);
@@ -168,7 +160,7 @@ public class StartPanel extends JPanel {
     }
 
     private void setBoundsRatio(JComponent c, double x, double y, double w, double h, int W, int H) {
-        c.setBounds((int)(x * W), (int)(y * H), (int)(w * W), (int)(h * H));
+        c.setBounds((int) (x * W), (int) (y * H), (int) (w * W), (int) (h * H));
     }
 
     private void handleStart() {
@@ -209,6 +201,7 @@ public class StartPanel extends JPanel {
         lbl.setForeground(c);
         lbl.setFont(new Font("Arial", Font.BOLD, 18));
     }
+
     public void resetFields() {
         // clear text
         p1Field.setText("");

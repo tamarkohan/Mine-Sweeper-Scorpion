@@ -50,7 +50,9 @@ public class NeonInputField extends JComponent {
         return textField.getText();
     }
 
-    /** Make it look like a name box: not editable, no caret, no focus. */
+    /**
+     * Make it look like a name box: not editable, no caret, no focus.
+     */
     public void setDisplayMode(boolean displayMode) {
         textField.setEditable(!displayMode);
         textField.setFocusable(!displayMode);
@@ -58,7 +60,9 @@ public class NeonInputField extends JComponent {
         textField.setCaretPosition(0);
     }
 
-    /** Set custom width for the field (useful for making it narrower) */
+    /**
+     * Set custom width for the field (useful for making it narrower)
+     */
     public void setFieldWidth(int width) {
         this.customWidth = width;
         revalidate();

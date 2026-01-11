@@ -75,7 +75,6 @@ public class Question {
         }
         return s;
     }
-    // inside Model.Question
 
     public Game.QuestionLevel getQuestionLevel() {
         // Map the CSV difficultyLevel string to the enum used in Game

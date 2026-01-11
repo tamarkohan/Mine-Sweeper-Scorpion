@@ -7,6 +7,7 @@ package Model;
 public interface GameObserver {
     /**
      * Called by the subject when the game state changes.
+     *
      * @param state the current game state containing score and level information
      */
     void update(GameStateData state);

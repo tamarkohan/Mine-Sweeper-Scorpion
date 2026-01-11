@@ -11,7 +11,7 @@ public class ScoreRules {
     public static class Result {
         public final int deltaScore;
         public final int deltaLives;
-        public final String details;   //  explanation text (includes OR choice)
+        public final String details;   //  explanation text
 
         public Result(int deltaScore, int deltaLives, String details) {
             this.deltaScore = deltaScore;
@@ -25,8 +25,8 @@ public class ScoreRules {
 
     /**
      * @param gameDifficulty EASY / MEDIUM / HARD
-     * @param qLevel EASY / MEDIUM / HARD / EXPERT
-     * @param correct whether the answer was correct
+     * @param qLevel         EASY / MEDIUM / HARD / EXPERT
+     * @param correct        whether the answer was correct
      */
     public static Result compute(Difficulty gameDifficulty, Game.QuestionLevel qLevel, boolean correct) {
         return switch (gameDifficulty) {
@@ -42,9 +42,10 @@ public class ScoreRules {
     private static Result easyGame(Game.QuestionLevel q, boolean correct) {
         if (correct) {
             return switch (q) {
-                case EASY   -> new Result(+3, +1, "Correct EASY: +3 pts, +1 life.");
+                case EASY -> new Result(+3, +1, "Correct EASY: +3 pts, +1 life.");
                 case MEDIUM -> new Result(+6, 0, "Correct MEDIUM: +6 pts. Special effect: reveal 1 mine (Easy game).");
-                case HARD   -> new Result(+10, 0, "Correct HARD: +10 pts. Special effect: reveal random 3x3 (Easy game).");
+                case HARD ->
+                        new Result(+10, 0, "Correct HARD: +10 pts. Special effect: reveal random 3x3 (Easy game).");
                 case EXPERT -> new Result(+15, +2, "Correct EXPERT: +15 pts, +2 lives.");
             };
         } else {
@@ -68,18 +69,16 @@ public class ScoreRules {
     }
 
 
-    // ==========================
-    // MEDIUM GAME RULES
-    // ==========================
+
     // ==========================
 // MEDIUM GAME RULES
 // ==========================
     private static Result mediumGame(Game.QuestionLevel q, boolean correct) {
         if (correct) {
             return switch (q) {
-                case EASY   -> new Result(+8, +1, "Correct EASY: +8 pts, +1 life.");
+                case EASY -> new Result(+8, +1, "Correct EASY: +8 pts, +1 life.");
                 case MEDIUM -> new Result(+10, +1, "Correct MEDIUM: +10 pts, +1 life.");
-                case HARD   -> new Result(+15, +1, "Correct HARD: +15 pts, +1 life.");
+                case HARD -> new Result(+15, +1, "Correct HARD: +15 pts, +1 life.");
                 case EXPERT -> new Result(+20, +2, "Correct EXPERT: +20 pts, +2 lives.");
             };
         } else {

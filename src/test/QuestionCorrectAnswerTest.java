@@ -8,9 +8,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * JUnit tests for correct-answer behavior for Question cells according to TC-BB-QUESTION-001.
- * 
+ * <p>
  * Tests logic only, no UI.
- * 
+ * <p>
  * Acceptance Criteria:
  * - Selected answer is evaluated as CORRECT
  * - Shared score increases according to score table
@@ -38,7 +38,7 @@ public class QuestionCorrectAnswerTest {
         initialScore = game.getSharedScore();
         initialLives = game.getSharedLives();
         initialState = game.getGameState();
-        
+
         // Verify initial state
         assertEquals(GameState.RUNNING, initialState, "Game should start in RUNNING state");
         assertTrue(initialLives > 0, "Game should start with positive lives");
@@ -61,15 +61,15 @@ public class QuestionCorrectAnswerTest {
         game.processQuestionAnswer(qLevel, true);
 
         // Then: Verify all acceptance criteria
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-                    "Game state should remain RUNNING after correct answer");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING after correct answer");
         assertEquals(initialScore + expectedScoreIncrease, game.getSharedScore(),
-                    "Score should increase by " + expectedScoreIncrease + " points");
+                "Score should increase by " + expectedScoreIncrease + " points");
         assertTrue(game.getSharedLives() >= initialLives,
-                  "Lives should NOT decrease (initial: " + initialLives + 
-                  ", current: " + game.getSharedLives() + ")");
+                "Lives should NOT decrease (initial: " + initialLives +
+                        ", current: " + game.getSharedLives() + ")");
         assertEquals(initialLives + expectedLifeIncrease, game.getSharedLives(),
-                    "Lives should increase by " + expectedLifeIncrease);
+                "Lives should increase by " + expectedLifeIncrease);
     }
 
     @Test
@@ -85,14 +85,14 @@ public class QuestionCorrectAnswerTest {
         game.processQuestionAnswer(qLevel, true);
 
         // Then
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-                    "Game state should remain RUNNING");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING");
         assertEquals(initialScore + expectedScoreIncrease, game.getSharedScore(),
-                    "Score should increase by " + expectedScoreIncrease + " points");
+                "Score should increase by " + expectedScoreIncrease + " points");
         assertTrue(game.getSharedLives() >= initialLives,
-                  "Lives should NOT decrease");
+                "Lives should NOT decrease");
         assertEquals(initialLives + expectedLifeIncrease, game.getSharedLives(),
-                    "Lives should remain unchanged");
+                "Lives should remain unchanged");
     }
 
     @Test
@@ -108,14 +108,14 @@ public class QuestionCorrectAnswerTest {
         game.processQuestionAnswer(qLevel, true);
 
         // Then
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-                    "Game state should remain RUNNING");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING");
         assertEquals(initialScore + expectedScoreIncrease, game.getSharedScore(),
-                    "Score should increase by " + expectedScoreIncrease + " points");
+                "Score should increase by " + expectedScoreIncrease + " points");
         assertTrue(game.getSharedLives() >= initialLives,
-                  "Lives should NOT decrease");
+                "Lives should NOT decrease");
         assertEquals(initialLives + expectedLifeIncrease, game.getSharedLives(),
-                    "Lives should remain unchanged");
+                "Lives should remain unchanged");
     }
 
     @Test
@@ -131,14 +131,14 @@ public class QuestionCorrectAnswerTest {
         game.processQuestionAnswer(qLevel, true);
 
         // Then
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-                    "Game state should remain RUNNING");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING");
         assertEquals(initialScore + expectedScoreIncrease, game.getSharedScore(),
-                    "Score should increase by " + expectedScoreIncrease + " points");
+                "Score should increase by " + expectedScoreIncrease + " points");
         assertTrue(game.getSharedLives() >= initialLives,
-                  "Lives should NOT decrease");
+                "Lives should NOT decrease");
         assertEquals(initialLives + expectedLifeIncrease, game.getSharedLives(),
-                    "Lives should increase by " + expectedLifeIncrease);
+                "Lives should increase by " + expectedLifeIncrease);
     }
 
     // ============================================================
@@ -158,14 +158,14 @@ public class QuestionCorrectAnswerTest {
         game.processQuestionAnswer(qLevel, true);
 
         // Then
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-                    "Game state should remain RUNNING");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING");
         assertEquals(initialScore + expectedScoreIncrease, game.getSharedScore(),
-                    "Score should increase by " + expectedScoreIncrease + " points");
+                "Score should increase by " + expectedScoreIncrease + " points");
         assertTrue(game.getSharedLives() >= initialLives,
-                  "Lives should NOT decrease");
+                "Lives should NOT decrease");
         assertEquals(initialLives + expectedLifeIncrease, game.getSharedLives(),
-                    "Lives should increase by " + expectedLifeIncrease);
+                "Lives should increase by " + expectedLifeIncrease);
     }
 
     @Test
@@ -181,14 +181,14 @@ public class QuestionCorrectAnswerTest {
         game.processQuestionAnswer(qLevel, true);
 
         // Then
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-                    "Game state should remain RUNNING");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING");
         assertEquals(initialScore + expectedScoreIncrease, game.getSharedScore(),
-                    "Score should increase by " + expectedScoreIncrease + " points");
+                "Score should increase by " + expectedScoreIncrease + " points");
         assertTrue(game.getSharedLives() >= initialLives,
-                  "Lives should NOT decrease");
+                "Lives should NOT decrease");
         assertEquals(initialLives + expectedLifeIncrease, game.getSharedLives(),
-                    "Lives should increase by " + expectedLifeIncrease);
+                "Lives should increase by " + expectedLifeIncrease);
     }
 
     @Test
@@ -204,14 +204,14 @@ public class QuestionCorrectAnswerTest {
         game.processQuestionAnswer(qLevel, true);
 
         // Then
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-                    "Game state should remain RUNNING");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING");
         assertEquals(initialScore + expectedScoreIncrease, game.getSharedScore(),
-                    "Score should increase by " + expectedScoreIncrease + " points");
+                "Score should increase by " + expectedScoreIncrease + " points");
         assertTrue(game.getSharedLives() >= initialLives,
-                  "Lives should NOT decrease");
+                "Lives should NOT decrease");
         assertEquals(initialLives + expectedLifeIncrease, game.getSharedLives(),
-                    "Lives should increase by " + expectedLifeIncrease);
+                "Lives should increase by " + expectedLifeIncrease);
     }
 
     @Test
@@ -227,14 +227,14 @@ public class QuestionCorrectAnswerTest {
         game.processQuestionAnswer(qLevel, true);
 
         // Then
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-                    "Game state should remain RUNNING");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING");
         assertEquals(initialScore + expectedScoreIncrease, game.getSharedScore(),
-                    "Score should increase by " + expectedScoreIncrease + " points");
+                "Score should increase by " + expectedScoreIncrease + " points");
         assertTrue(game.getSharedLives() >= initialLives,
-                  "Lives should NOT decrease");
+                "Lives should NOT decrease");
         assertEquals(initialLives + expectedLifeIncrease, game.getSharedLives(),
-                    "Lives should increase by " + expectedLifeIncrease);
+                "Lives should increase by " + expectedLifeIncrease);
     }
 
     // ============================================================
@@ -254,14 +254,14 @@ public class QuestionCorrectAnswerTest {
         game.processQuestionAnswer(qLevel, true);
 
         // Then
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-                    "Game state should remain RUNNING");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING");
         assertEquals(initialScore + expectedScoreIncrease, game.getSharedScore(),
-                    "Score should increase by " + expectedScoreIncrease + " points");
+                "Score should increase by " + expectedScoreIncrease + " points");
         assertTrue(game.getSharedLives() >= initialLives,
-                  "Lives should NOT decrease");
+                "Lives should NOT decrease");
         assertEquals(initialLives + expectedLifeIncrease, game.getSharedLives(),
-                    "Lives should increase by " + expectedLifeIncrease);
+                "Lives should increase by " + expectedLifeIncrease);
     }
 
     @Test
@@ -280,17 +280,17 @@ public class QuestionCorrectAnswerTest {
         game.processQuestionAnswer(qLevel, true);
 
         // Then
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-                    "Game state should remain RUNNING");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING");
         assertEquals(initialScore + expectedScoreIncrease, game.getSharedScore(),
-                    "Score should increase by " + expectedScoreIncrease + " points");
+                "Score should increase by " + expectedScoreIncrease + " points");
         assertTrue(game.getSharedLives() >= initialLives,
-                  "Lives should NOT decrease");
+                "Lives should NOT decrease");
         int actualLifeIncrease = game.getSharedLives() - initialLives;
-        assertTrue(actualLifeIncrease >= minExpectedLifeIncrease && 
-                  actualLifeIncrease <= maxExpectedLifeIncrease,
-                  "Lives should increase by " + minExpectedLifeIncrease + 
-                  " or " + maxExpectedLifeIncrease + " (actual: " + actualLifeIncrease + ")");
+        assertTrue(actualLifeIncrease >= minExpectedLifeIncrease &&
+                        actualLifeIncrease <= maxExpectedLifeIncrease,
+                "Lives should increase by " + minExpectedLifeIncrease +
+                        " or " + maxExpectedLifeIncrease + " (actual: " + actualLifeIncrease + ")");
     }
 
     @Test
@@ -306,14 +306,14 @@ public class QuestionCorrectAnswerTest {
         game.processQuestionAnswer(qLevel, true);
 
         // Then
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-                    "Game state should remain RUNNING");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING");
         assertEquals(initialScore + expectedScoreIncrease, game.getSharedScore(),
-                    "Score should increase by " + expectedScoreIncrease + " points");
+                "Score should increase by " + expectedScoreIncrease + " points");
         assertTrue(game.getSharedLives() >= initialLives,
-                  "Lives should NOT decrease");
+                "Lives should NOT decrease");
         assertEquals(initialLives + expectedLifeIncrease, game.getSharedLives(),
-                    "Lives should increase by " + expectedLifeIncrease);
+                "Lives should increase by " + expectedLifeIncrease);
     }
 
     @Test
@@ -329,14 +329,14 @@ public class QuestionCorrectAnswerTest {
         game.processQuestionAnswer(qLevel, true);
 
         // Then
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-                    "Game state should remain RUNNING");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING");
         assertEquals(initialScore + expectedScoreIncrease, game.getSharedScore(),
-                    "Score should increase by " + expectedScoreIncrease + " points");
+                "Score should increase by " + expectedScoreIncrease + " points");
         assertTrue(game.getSharedLives() >= initialLives,
-                  "Lives should NOT decrease");
+                "Lives should NOT decrease");
         assertEquals(initialLives + expectedLifeIncrease, game.getSharedLives(),
-                    "Lives should increase by " + expectedLifeIncrease);
+                "Lives should increase by " + expectedLifeIncrease);
     }
 
     // ============================================================
@@ -358,13 +358,13 @@ public class QuestionCorrectAnswerTest {
         }
 
         // Then
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-                    "Game state should remain RUNNING after multiple answers");
-        assertEquals(initialScore + (expectedScorePerAnswer * numberOfAnswers), 
-                    game.getSharedScore(),
-                    "Score should accumulate correctly");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING after multiple answers");
+        assertEquals(initialScore + (expectedScorePerAnswer * numberOfAnswers),
+                game.getSharedScore(),
+                "Score should accumulate correctly");
         assertTrue(game.getSharedLives() >= initialLives,
-                  "Lives should NOT decrease after multiple correct answers");
+                "Lives should NOT decrease after multiple correct answers");
     }
 
     @Test
@@ -376,7 +376,7 @@ public class QuestionCorrectAnswerTest {
         game.setSharedLives(10);
         initialLives = game.getSharedLives();
         initialScore = game.getSharedScore();
-        
+
         Game.QuestionLevel qLevel = Game.QuestionLevel.EASY;
         int expectedScoreIncrease = 3;
         int expectedLifeReward = 1; // This should convert to score
@@ -385,13 +385,13 @@ public class QuestionCorrectAnswerTest {
         game.processQuestionAnswer(qLevel, true);
 
         // Then
-        assertEquals(GameState.RUNNING, game.getGameState(), 
-                    "Game state should remain RUNNING");
+        assertEquals(GameState.RUNNING, game.getGameState(),
+                "Game state should remain RUNNING");
         // Score should increase by points + converted life value
         assertTrue(game.getSharedScore() > initialScore + expectedScoreIncrease,
-                  "Score should increase more than base points when life is converted");
+                "Score should increase more than base points when life is converted");
         assertEquals(initialLives, game.getSharedLives(),
-                    "Lives should remain at max (should NOT decrease)");
+                "Lives should remain at max (should NOT decrease)");
     }
 
     @Test
@@ -408,11 +408,11 @@ public class QuestionCorrectAnswerTest {
 
         // Then: Verify it was treated as correct (score increased, no penalty)
         assertTrue(game.getSharedScore() > initialScoreBefore,
-                  "Score should increase when isCorrect=true");
+                "Score should increase when isCorrect=true");
         assertTrue(game.getSharedLives() >= initialLivesBefore,
-                  "Lives should NOT decrease when isCorrect=true");
+                "Lives should NOT decrease when isCorrect=true");
         assertEquals(GameState.RUNNING, game.getGameState(),
-                    "Game state should remain RUNNING");
+                "Game state should remain RUNNING");
     }
 
     @Test
@@ -421,17 +421,17 @@ public class QuestionCorrectAnswerTest {
         // Given: Game in RUNNING state
         setupGameState(Difficulty.EASY);
         Game.QuestionLevel qLevel = Game.QuestionLevel.EASY;
-        
+
         // Verify initial state
         assertEquals(GameState.RUNNING, game.getGameState(),
-                    "Game should be in RUNNING state initially");
+                "Game should be in RUNNING state initially");
 
         // When: Process correct answer
         game.processQuestionAnswer(qLevel, true);
 
         // Then: State should still be RUNNING
         assertEquals(GameState.RUNNING, game.getGameState(),
-                    "Game state should remain RUNNING after correct answer");
+                "Game state should remain RUNNING after correct answer");
     }
 }
 

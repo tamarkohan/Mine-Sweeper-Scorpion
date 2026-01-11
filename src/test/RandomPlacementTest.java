@@ -5,14 +5,14 @@ import Model.Game;
 
 /**
  * USER STORY 1 - RANDOM PLACEMENT STATISTICAL VALIDATION:
- * 
+ * <p>
  * This test class validates that the random placement algorithm:
  * 1. Places the correct number of mines, question cells, and surprise cells
- *    according to difficulty rules
+ * according to difficulty rules
  * 2. Ensures fair and balanced distribution across many board generations
  * 3. Verifies that the observed averages match the expected configuration
- *    within a reasonable tolerance
- * 
+ * within a reasonable tolerance
+ * <p>
  * The test creates many random boards (500-1000) for each difficulty level
  * and performs statistical analysis to ensure the placement is truly random
  * and respects the difficulty configuration.
@@ -49,7 +49,7 @@ public class RandomPlacementTest {
     /**
      * Tests random placement for a specific difficulty level.
      * Creates many boards and validates that the placement matches expected counts.
-     * 
+     *
      * @param difficulty The difficulty level to test
      * @return true if all validations pass, false otherwise
      */
@@ -107,18 +107,18 @@ public class RandomPlacementTest {
 
             // Validate each board has exactly the expected counts
             if (minesOnBoard != expectedMines) {
-                System.out.println("[FAIL] Board #" + i + ": Expected " + expectedMines + 
-                    " mines, found " + minesOnBoard);
+                System.out.println("[FAIL] Board #" + i + ": Expected " + expectedMines +
+                        " mines, found " + minesOnBoard);
                 return false;
             }
             if (questionsOnBoard != expectedQuestions) {
-                System.out.println("[FAIL] Board #" + i + ": Expected " + expectedQuestions + 
-                    " question cells, found " + questionsOnBoard);
+                System.out.println("[FAIL] Board #" + i + ": Expected " + expectedQuestions +
+                        " question cells, found " + questionsOnBoard);
                 return false;
             }
             if (surprisesOnBoard != expectedSurprises) {
-                System.out.println("[FAIL] Board #" + i + ": Expected " + expectedSurprises + 
-                    " surprise cells, found " + surprisesOnBoard);
+                System.out.println("[FAIL] Board #" + i + ": Expected " + expectedSurprises +
+                        " surprise cells, found " + surprisesOnBoard);
                 return false;
             }
 
@@ -160,18 +160,18 @@ public class RandomPlacementTest {
         // Validate that total special cells don't exceed board size
         int totalSpecialCells = expectedMines + expectedQuestions + expectedSurprises;
         if (totalSpecialCells > totalCells) {
-            System.out.println("[FAIL] Total special cells (" + totalSpecialCells + 
-                ") exceeds board size (" + totalCells + ")");
+            System.out.println("[FAIL] Total special cells (" + totalSpecialCells +
+                    ") exceeds board size (" + totalCells + ")");
             allPassed = false;
         } else {
-            System.out.println("[PASS] Total special cells (" + totalSpecialCells + 
-                ") is within board size (" + totalCells + ")");
+            System.out.println("[PASS] Total special cells (" + totalSpecialCells +
+                    ") is within board size (" + totalCells + ")");
         }
 
         // Validate that numbers are calculated correctly (should be > 0 if there are mines)
         if (expectedMines > 0 && avgNumbers == 0) {
             System.out.println("[WARN] No number cells found, but mines are present. " +
-                "This might indicate a calculation issue.");
+                    "This might indicate a calculation issue.");
         }
 
         System.out.println();
@@ -180,10 +180,10 @@ public class RandomPlacementTest {
 
     /**
      * Validates that an observed average is within tolerance of the expected value.
-     * 
-     * @param name The name of the metric being validated
-     * @param observed The observed average value
-     * @param expected The expected value
+     *
+     * @param name             The name of the metric being validated
+     * @param observed         The observed average value
+     * @param expected         The expected value
      * @param tolerancePercent The tolerance percentage (e.g., 2.0 for 2%)
      * @return true if within tolerance, false otherwise
      */
@@ -205,11 +205,11 @@ public class RandomPlacementTest {
 
         if (difference <= tolerance) {
             System.out.println(String.format("[PASS] %s: Expected %d, observed %.2f (difference: %.2f%%)",
-                name, expected, observed, percentDifference));
+                    name, expected, observed, percentDifference));
             return true;
         } else {
             System.out.println(String.format("[FAIL] %s: Expected %d, observed %.2f (difference: %.2f%%, tolerance: %.2f%%)",
-                name, expected, observed, percentDifference, tolerancePercent));
+                    name, expected, observed, percentDifference, tolerancePercent));
             return false;
         }
     }

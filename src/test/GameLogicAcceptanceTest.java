@@ -541,6 +541,7 @@ public class GameLogicAcceptanceTest {
             }
         }
     }
+
     /**
      * Sets up a specific board layout for recursive reveal testing.
      * Only a 5x5 area (0..4, 0..4) is used for assertions.
@@ -555,6 +556,7 @@ public class GameLogicAcceptanceTest {
         calculateAdjacentMines(board, 3, 1);
         calculateAdjacentMines(board, 4, 1);
     }
+
     /**
      * Sets up a board with:
      * - a mine at (0,0),
@@ -566,12 +568,14 @@ public class GameLogicAcceptanceTest {
         board.getCell(1, 1).setContent(Cell.CellContent.QUESTION);
         board.getCell(1, 1).setQuestionId(1);
     }
+
     /**
      * Sets one mine on the board for lose-condition tests.
      */
     private static void configureLoseTestBoard(Board board) {
         board.getCell(2, 2).setContent(Cell.CellContent.MINE);
     }
+
     /**
      * Puts a small number of mines on the board so that
      * most cells are safe and can be revealed for win scoring tests.
@@ -620,6 +624,7 @@ public class GameLogicAcceptanceTest {
     // ============================================================
     // Helper Methods for Display and Testing
     // ============================================================
+
     /**
      * Prints a 5x5 view of the board (state + content) for debugging.
      */
@@ -675,6 +680,7 @@ public class GameLogicAcceptanceTest {
         }
         System.out.println();
     }
+
     /**
      * Prints a single check result line and returns the condition value.
      */
@@ -686,6 +692,7 @@ public class GameLogicAcceptanceTest {
         }
         return condition;
     }
+
     /**
      * Prints a summary for a logical test block.
      */

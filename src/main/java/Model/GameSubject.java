@@ -13,6 +13,7 @@ public class GameSubject {
 
     /**
      * Registers an observer to receive state change notifications.
+     *
      * @param observer the observer to register
      */
     public void registerObserver(GameObserver observer) {
@@ -23,6 +24,7 @@ public class GameSubject {
 
     /**
      * Removes an observer from the notification list.
+     *
      * @param observer the observer to remove
      */
     public void removeObserver(GameObserver observer) {
@@ -32,6 +34,7 @@ public class GameSubject {
     /**
      * Notifies all registered observers of a state change.
      * This method should be called whenever the game state (score or level) changes.
+     *
      * @param newState the updated game state
      */
     public void notifyObservers(GameStateData newState) {
@@ -43,10 +46,9 @@ public class GameSubject {
 
     /**
      * Gets the current game state.
+     *
      * @return the current state, or null if no state has been set
      */
-    public GameStateData getCurrentState() {
-        return currentState;
-    }
+
 }
 

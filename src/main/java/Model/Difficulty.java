@@ -1,4 +1,5 @@
 package Model;
+
 /**
  * Defines game difficulty levels and their configuration parameters.
  * Each level controls board size, mines, special cells, lives and scoring rules.
@@ -61,15 +62,45 @@ public enum Difficulty {
         this.mineFlagReward = mineFlagReward;
         this.nonMineFlagPenalty = nonMineFlagPenalty;
     }
+
     // --- Getters ---
-    public int getRows() { return rows; }
-    public int getCols() { return cols; }
-    public int getMines() { return mines; }
-    public int getQuestionCells() { return questionCells; }
-    public int getSurpriseCells() { return surpriseCells; }
-    public int getStartingLives() { return startingLives; }
-    public int getActivationCost() { return activationCost; }
-    public int getSurpriseValue() { return surpriseValue; }
-    public int getMineFlagReward() { return mineFlagReward; }       // NEW
-    public int getNonMineFlagPenalty() { return nonMineFlagPenalty; } // NEW
+    public int getRows() {
+        return rows;
+    }
+
+    public int getCols() {
+        return cols;
+    }
+
+    public int getMines() {
+        return mines;
+    }
+
+    public int getQuestionCells() {
+        return questionCells;
+    }
+
+    public int getSurpriseCells() {
+        return surpriseCells;
+    }
+
+    public int getStartingLives() {
+        return startingLives;
+    }
+
+    public int getActivationCost() {
+        return activationCost;
+    }
+
+    public int getSurpriseValue() {
+        return surpriseValue;
+    }
+
+    public int getMineFlagReward() {
+        return mineFlagReward;
+    }       // NEW
+
+    public int getNonMineFlagPenalty() {
+        return nonMineFlagPenalty;
+    } // NEW
 }

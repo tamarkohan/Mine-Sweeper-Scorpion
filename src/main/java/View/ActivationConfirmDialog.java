@@ -5,22 +5,22 @@ import java.awt.*;
 
 public class ActivationConfirmDialog extends JDialog {
 
-    public enum Choice { ACTIVATE, CANCEL }
+    public enum Choice {ACTIVATE, CANCEL}
 
     private Choice choice = Choice.CANCEL;
 
     // Theme
-    private static final Color BG_TOP    = new Color(6, 10, 28);
+    private static final Color BG_TOP = new Color(6, 10, 28);
     private static final Color BG_BOTTOM = new Color(10, 18, 55);
 
-    private static final Color CYAN      = new Color(65, 255, 240);
+    private static final Color CYAN = new Color(65, 255, 240);
     private static final Color CYAN_SOFT = new Color(65, 255, 240, 140);
 
-    private static final Color TEXT      = new Color(245, 245, 255);
-    private static final Color MUTED     = new Color(200, 210, 240);
+    private static final Color TEXT = new Color(245, 245, 255);
+    private static final Color MUTED = new Color(200, 210, 240);
 
-    private static final Color BTN_BG    = new Color(18, 26, 60);
-    private static final Color BTN_BG_H  = new Color(24, 38, 88);
+    private static final Color BTN_BG = new Color(18, 26, 60);
+    private static final Color BTN_BG_H = new Color(24, 38, 88);
 
     private ActivationConfirmDialog(Window owner, String cellType) {
         super(owner, cellType + " Cell", ModalityType.APPLICATION_MODAL);
@@ -46,12 +46,13 @@ public class ActivationConfirmDialog extends JDialog {
 
         // underline
         JPanel underline = new JPanel() {
-            @Override protected void paintComponent(Graphics g) {
+            @Override
+            protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(CYAN_SOFT);
-                g2.fillRoundRect(0, getHeight()/2 - 1, getWidth(), 2, 8, 8);
+                g2.fillRoundRect(0, getHeight() / 2 - 1, getWidth(), 2, 8, 8);
                 g2.dispose();
             }
         };
@@ -74,8 +75,14 @@ public class ActivationConfirmDialog extends JDialog {
         JButton cancel = makeButton("Cancel", false);
         JButton activate = makeButton("Activate", true);
 
-        cancel.addActionListener(e -> { choice = Choice.CANCEL; dispose(); });
-        activate.addActionListener(e -> { choice = Choice.ACTIVATE; dispose(); });
+        cancel.addActionListener(e -> {
+            choice = Choice.CANCEL;
+            dispose();
+        });
+        activate.addActionListener(e -> {
+            choice = Choice.ACTIVATE;
+            dispose();
+        });
 
         buttons.add(cancel);
         buttons.add(activate);
@@ -131,7 +138,7 @@ public class ActivationConfirmDialog extends JDialog {
     }
 
     private Icon loadIconForType(String cellType) {
-        // If you already have icons in /ui/cells/ use them, else fallback to UIManager icon.
+
         String path = cellType.equalsIgnoreCase("Question")
                 ? "/ui/cells/question.png"
                 : "/ui/cells/surprise_btn.png";

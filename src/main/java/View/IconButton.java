@@ -17,10 +17,10 @@ public class IconButton extends JComponent {
     private final boolean cropBlackPadding;
 
     // Glow tuning
-    private float hoverGlowAlpha   = 0.22f;
+    private float hoverGlowAlpha = 0.22f;
     private float pressedGlowAlpha = 0.60f;
-    private int   hoverGlowPx      = 10;
-    private int   pressedGlowPx    = 18;
+    private int hoverGlowPx = 10;
+    private int pressedGlowPx = 18;
 
     // Pop tuning
     private double pressedScale = 1.03;
@@ -50,11 +50,27 @@ public class IconButton extends JComponent {
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         addMouseListener(new MouseAdapter() {
-            @Override public void mouseEntered(MouseEvent e) { hover = true; repaint(); }
-            @Override public void mouseExited(MouseEvent e)  { hover = false; pressed = false; repaint(); }
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                hover = true;
+                repaint();
+            }
 
-            @Override public void mousePressed(MouseEvent e) { pressed = true; repaint(); }
-            @Override public void mouseReleased(MouseEvent e) {
+            @Override
+            public void mouseExited(MouseEvent e) {
+                hover = false;
+                pressed = false;
+                repaint();
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                pressed = true;
+                repaint();
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
                 boolean inside = contains(e.getPoint());
                 pressed = false;
                 repaint();
@@ -63,11 +79,20 @@ public class IconButton extends JComponent {
         });
     }
 
-    public void setOnClick(Runnable r) { this.onClick = r; }
+    public void setOnClick(Runnable r) {
+        this.onClick = r;
+    }
 
     // Optional setters if you want to tweak later
-    public void setSafePadPx(int px) { this.safePadPx = Math.max(0, px); repaint(); }
-    public void setPressedScale(double s) { this.pressedScale = Math.max(1.0, s); repaint(); }
+    public void setSafePadPx(int px) {
+        this.safePadPx = Math.max(0, px);
+        repaint();
+    }
+
+    public void setPressedScale(double s) {
+        this.pressedScale = Math.max(1.0, s);
+        repaint();
+    }
 
     @Override
     protected void paintComponent(Graphics g) {

@@ -28,7 +28,7 @@ public class TurnSystemTest {
     @BeforeEach
     void setup() {
         controller = GameController.getInstance();
-        controller.startNewGame("MEDIUM");   // כמו בדרישה
+        controller.startNewGame("MEDIUM");
         game = controller.getCurrentGame();
         assertNotNull(game);
         assertEquals(Difficulty.MEDIUM, game.getDifficulty());
@@ -70,7 +70,8 @@ public class TurnSystemTest {
                 controller,
                 2,          // boardNumber = 2 (לוח היריב)
                 true,       // waiting = true (כי תור של Player 1)
-                endedTurn -> { }    // moveCallback – לא עושה כלום
+                endedTurn -> {
+                }    // moveCallback – לא עושה כלום
         );
 
         // תא חוקי למשל (0,0)
@@ -140,7 +141,8 @@ public class TurnSystemTest {
                 controller,
                 1,
                 false,                      // Player 1 is not waiting
-                endedTurn -> { }
+                endedTurn -> {
+                }
         );
 
         // פעולה: שחקן 1 לוחץ על תא חוקי בלוח שלו
@@ -195,13 +197,15 @@ public class TurnSystemTest {
                 controller,
                 1,
                 false,
-                endedTurn -> { }   // callback ריק
+                endedTurn -> {
+                }   // callback ריק
         );
         BoardPanel board2Panel = new BoardPanel(
                 controller,
                 2,
                 true,                        // P2 מחכה בשלב זה
-                endedTurn -> { }
+                endedTurn -> {
+                }
         );
 
         int scoreBefore = game.getSharedScore();

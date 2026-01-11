@@ -112,6 +112,7 @@ public class GameStartTest {
     // -------------------------------------------------------------
     // Helper Methods
     // -------------------------------------------------------------
+
     /**
      * Prints a PASS/FAIL line for a single condition.
      */
@@ -122,6 +123,7 @@ public class GameStartTest {
             System.out.println("[FAIL] " + description);
         }
     }
+
     /**
      * Finds the first cell on the board that matches the given content type.
      * Returns null if no such cell exists.

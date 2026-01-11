@@ -101,7 +101,6 @@ public class Board {
             for (int c = 0; c < cols; c++) {
                 Cell cell = cells[r][c];
 
-                // רק תאים שהם EMPTY וגם אין לידם מוקשים
                 if (cell.getContent() == Cell.CellContent.EMPTY && cell.getAdjacentMines() == 0) {
                     eligible.add(cell);
                 }
@@ -355,7 +354,7 @@ public class Board {
     }
 
     /**
-     * 🔥 NEW: Helper method for the Controller to check flag status (Fixes error #2 in Controller).
+     *  Helper method for the Controller to check flag status (Fixes error #2 in Controller).
      */
     public boolean isFlagged(int r, int c) {
         if (r < 0 || r >= rows || c < 0 || c >= cols) return false;

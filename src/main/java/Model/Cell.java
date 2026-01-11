@@ -1,13 +1,15 @@
 package Model;
+
 /**
  * Represents a single cell on the Minesweeper board.
  * Stores position, content type, current state, and metadata for special cell logic.
  */
 public class Cell {
     // Cell content types
-    public enum CellContent { EMPTY, MINE, QUESTION, SURPRISE, NUMBER }
+    public enum CellContent {EMPTY, MINE, QUESTION, SURPRISE, NUMBER}
+
     // Cell visibility states
-    public enum CellState { HIDDEN, REVEALED, FLAGGED }
+    public enum CellState {HIDDEN, REVEALED, FLAGGED}
 
     private final int row;
     private final int col;
@@ -16,7 +18,7 @@ public class Cell {
     private int adjacentMines;
     private boolean used;
     private Integer questionId;
-    private boolean askedActivation = false;
+
 
     /**
      * Creates a new EMPTY, HIDDEN cell at the specified board coordinates.
@@ -45,8 +47,13 @@ public class Cell {
         this.adjacentMines = adjacentMines;
     }
 
-    public int getRow() { return row; }
-    public int getCol() { return col; }
+    public int getRow() {
+        return row;
+    }
+
+    public int getCol() {
+        return col;
+    }
 
     // --- HELPER METHODS FOR LOGIC  ---
 
@@ -83,6 +90,7 @@ public class Cell {
     /**
      * Toggles the visible state between HIDDEN and FLAGGED.
      * A cell must be HIDDEN to be flagged or unflagged.
+     *
      * @return true if the state was successfully changed, false otherwise.
      */
     public boolean toggleFlag() {
@@ -122,22 +130,13 @@ public class Cell {
         this.used = used;
     }
 
-    public Integer getQuestionId() {
-        return questionId;
-    }
 
     public void setQuestionId(Integer questionId) {
         this.questionId = questionId;
     }
+
     public int getAdjacentMines() {
         return adjacentMines;
     }
 
-    public boolean wasAskedActivation() {
-        return askedActivation;
-    }
-
-    public void setAskedActivation(boolean asked) {
-        this.askedActivation = asked;
-    }
 }

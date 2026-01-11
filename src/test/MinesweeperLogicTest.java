@@ -387,6 +387,7 @@ public class MinesweeperLogicTest {
         calculateAdjacentMines(board, 1, 2);
         calculateAdjacentMines(board, 2, 2);
     }
+
     /**
      * Calculates NUMBER value for a specific cell based on surrounding mines.
      */
@@ -413,6 +414,7 @@ public class MinesweeperLogicTest {
     // ============================================================
     // Helper Methods for Display and Testing
     // ============================================================
+
     /**
      * Prints the top-left TEST_SIZE x TEST_SIZE area of the board (state + content).
      */
@@ -466,6 +468,7 @@ public class MinesweeperLogicTest {
         }
         System.out.println();
     }
+
     /**
      * Prints [PASS]/[FAIL] and returns the condition (for accumulating results).
      */
@@ -477,6 +480,7 @@ public class MinesweeperLogicTest {
         }
         return condition;
     }
+
     /**
      * Prints a short summary line for each test block.
      */
