@@ -11,6 +11,7 @@ import java.net.URL;
  * Manages navigation between:
  * - MainMenuPanel (home screen)
  * - StartPanel    (enter players + difficulty)
+ * - HowToPlayPanel (game instructions)
  * - GamePanel     (actual game)
  *
  * Communicates with the Model layer only through GameController (MVC).
@@ -25,6 +26,7 @@ public class MainFrame extends JFrame
 
     private MainMenuPanel mainMenuPanel;
     private StartPanel startPanel;
+    private HowToPlayPanel howToPlayPanel;
     private GamePanel gamePanel;   // created when starting a game
 
     // Styling constants
@@ -55,15 +57,16 @@ public class MainFrame extends JFrame
             System.err.println("Could not load icon: " + e.getMessage());
         }
 
-        // Admin/debug menu for question management & history
-        setJMenuBar(buildMenuBar());
 
         // ===== create screens (cards) =====
         mainMenuPanel = new MainMenuPanel(this);   // first screen with 4 buttons
         startPanel    = new StartPanel(this);      // existing screen
+        howToPlayPanel = new HowToPlayPanel(this::onBackToMenu); // How to play panel
 
         cardPanel.add(mainMenuPanel, "MENU");
         cardPanel.add(startPanel,    "START");
+        cardPanel.add(howToPlayPanel, "HOWTOPLAY");
+        // "GAME" card will be added later when game starts
 
         setContentPane(cardPanel);
 
@@ -81,7 +84,18 @@ public class MainFrame extends JFrame
     @Override
     public void onStartGame(String player1Name, String player2Name, String difficultyKey) {
         controller.startNewGame(difficultyKey);
-        controller.registerQuestionPresenter(q -> QuestionDialog.showQuestionDialog(this, q));
+        controller.registerQuestionPresenter(q -> {
+            GameController.QuestionDTO dto = controller.buildQuestionDTO(q);
+
+            GameController.QuestionAnswerResult ans =
+                    QuestionDialog.showQuestionDialog(this, dto);
+
+            return switch (ans) {
+                case CORRECT -> Model.QuestionResult.CORRECT;
+                case WRONG   -> Model.QuestionResult.WRONG;
+                default      -> Model.QuestionResult.SKIPPED;
+            };
+        });
 
         if (gamePanel != null) {
             cardPanel.remove(gamePanel);
@@ -91,8 +105,13 @@ public class MainFrame extends JFrame
                 controller,
                 player1Name,
                 player2Name,
-                this::showMainMenu
+                () -> {
+                    controller.endGame();     // clear model
+                    startPanel.resetFields(); // clear names + reset difficulty
+                    cardLayout.show(cardPanel, "MENU");
+                }
         );
+
 
         cardPanel.add(gamePanel, "GAME");
         cardLayout.show(cardPanel, "GAME");
@@ -100,7 +119,8 @@ public class MainFrame extends JFrame
 
     @Override
     public void onBackToMenu() {
-        showMainMenu();
+        startPanel.resetFields();
+        cardLayout.show(cardPanel, "MENU");
     }
 
     // =================================================================
@@ -121,7 +141,7 @@ public class MainFrame extends JFrame
 
     @Override
     public void onHowToPlayClicked() {
-        showHowToPlayDialog();
+        cardLayout.show(cardPanel, "HOWTOPLAY");
     }
 
     @Override
@@ -154,37 +174,13 @@ public class MainFrame extends JFrame
     }
 
     // =================================================================
-    //  Helpers: How to play + Admin access
+    //  Helpers: Admin access
     // =================================================================
 
-    private void showHowToPlayDialog() {
-        String msg =
-                "HOW TO PLAY\n\n" +
-                        "Two players, each has a board.\n" +
-                        "You share lives and score.\n\n" +
-                        "Your turn:\n" +
-                        "Left click = reveal a cell.\n" +
-                        "Right click = flag a cell you think is a mine.\n" +
-                        "• After your move, the turn switches.\n\n" +
-                        "Cell types:\n" +
-                        "Mine – losing a life if revealed.\n" +
-                        "Number – tells how many mines around.\n" +
-                        "Question (Q) – after reveal, you can pay points and answer a quiz\n" +
-                        "(correct gives bonus, wrong can hurt).\n" +
-                        "Surprise (S) – after reveal, you can pay points for random good/bad effect.\n\n" +
-                        "Win / Lose:\n" +
-                        "Win = all safe cells cleared.\n" +
-                        "Lose = shared lives reach 0.\n" +
-                        "Remaining lives turn into extra score at the end.\n";
-
-        JOptionPane.showMessageDialog(
-                this,
-                msg,
-                "How to Play",
-                JOptionPane.INFORMATION_MESSAGE
-        );
-    }
-
+    /**
+     * Simple admin gate for Question Management.
+     * Uses a custom styled dialog.
+     */
     private void handleAdminQuestionManagement() {
         JDialog dialog = new JDialog(this, "Admin Access", true);
         dialog.setUndecorated(true);

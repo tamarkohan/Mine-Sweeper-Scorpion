@@ -1,11 +1,5 @@
 package Model;
 
-import java.util.Random;
-
-// REMOVE these direct-creation imports (we won't create activators directly anymore)
-// import Model.specialcell.QuestionActivator;
-// import Model.specialcell.SurpriseActivator;
-
 import Model.specialcell.SpecialCellActivator;
 import Model.specialcell.factory.ActivatorFactoryRegistry;
 import Model.specialcell.factory.QuestionActivatorFactory;
@@ -27,6 +21,7 @@ public class Game {
     private int currentPlayerTurn;
     private QuestionManager questionManager;
     private QuestionPresenter questionPresenter;
+    private int totalSurprisesOpened;
 
     //  Field to store the message for the View
     private String lastActionMessage;
@@ -43,7 +38,7 @@ public class Game {
     /**
      * Question difficulty levels used for scoring and life rewards/penalties.
      */
-    public enum QuestionLevel { EASY, MEDIUM, HARD, EXPERT }
+    public enum QuestionLevel {EASY, MEDIUM, HARD, EXPERT}
 
     /**
      * Creates a new game with the given difficulty.
@@ -68,6 +63,8 @@ public class Game {
 
         this.board1 = new Board(difficulty, this);
         this.board2 = new Board(difficulty, this);
+        this.totalSurprisesOpened = 0;
+
     }
 
     /**
@@ -80,6 +77,7 @@ public class Game {
     }
 
     // --- Game Status & End Game Logic ---
+
     /**
      * Checks if the game has been won or lost, based on lives and safe cells.
      * Updates the game state and triggers end-of-game processing if needed.
@@ -198,10 +196,11 @@ public class Game {
     }
 
     // --- LOGIC FROM IMAGES ---
+
     /**
      * Activates the behavior of a QUESTION or SURPRISE cell after it was revealed and chosen.
      * Deducts activation cost from score, then routes to surprise logic or question handling.
-     *
+     * <p>
      * DP1: Factory Method - Game no longer decides which activator to instantiate.
      */
     public boolean activateSpecialCell(Board board, Cell.CellContent cellContent) {
@@ -246,8 +245,9 @@ public class Game {
      * Hook for UI to present a question and return true/false for correctness.
      */
     public interface QuestionPresenter {
-        boolean presentQuestion(Question question);
+        QuestionResult presentQuestion(Question question);
     }
+
 
     public void setQuestionPresenter(QuestionPresenter presenter) {
         this.questionPresenter = presenter;
@@ -308,13 +308,34 @@ public class Game {
 
     // --- Getters ---
 
-    public GameState getGameState() { return gameState; }
-    public Board getBoard1() { return board1; }
-    public Board getBoard2() { return board2; }
-    public Difficulty getDifficulty() { return difficulty; }
-    public int getSharedLives() { return sharedLives; }
-    public int getSharedScore() { return sharedScore; }
-    public int getMaxLives() { return MAX_LIVES; }
+    public GameState getGameState() {
+        return gameState;
+    }
+
+    public Board getBoard1() {
+        return board1;
+    }
+
+    public Board getBoard2() {
+        return board2;
+    }
+
+    public Difficulty getDifficulty() {
+        return difficulty;
+    }
+
+    public int getSharedLives() {
+        return sharedLives;
+    }
+
+    public int getSharedScore() {
+        return sharedScore;
+    }
+
+    public int getMaxLives() {
+        return MAX_LIVES;
+    }
+
     public int getTotalQuestionsAnswered() {
         return totalQuestionsAnswered;
     }
@@ -327,7 +348,15 @@ public class Game {
         return questionPresenter != null;
     }
 
-    public boolean presentQuestion(Question q) {
+    public QuestionResult presentQuestion(Question q) {
         return questionPresenter.presentQuestion(q);
     }
+    public int getTotalSurprisesOpened() {
+        return totalSurprisesOpened;
+    }
+
+    public void incrementSurprisesOpened() {
+        totalSurprisesOpened++;
+    }
+
 }

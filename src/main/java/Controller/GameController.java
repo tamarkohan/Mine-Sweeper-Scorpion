@@ -17,6 +17,8 @@ public class GameController {
 
     private Game currentGame;
     private QuestionManager questionManager;
+    private final GameSubject gameSubject = new GameSubject();
+    
     // Private constructor – prevents external instantiation
 
     private GameController() {
@@ -38,6 +40,7 @@ public class GameController {
         currentGame = new Game(difficulty);
         currentGame.setQuestionManager(questionManager);
         // Presenter is set by the View layer via registerQuestionPresenter
+        notifyStateChange();
     }
 
     /**
@@ -61,6 +64,7 @@ public class GameController {
     public void restartGame() {
         if (currentGame != null) {
             currentGame.restartGame();
+            notifyStateChange();
         }
     }
 
@@ -212,6 +216,7 @@ public class GameController {
         if (board == null) return false;
         if (row < 0 || row >= board.getRows() || col < 0 || col >= board.getCols()) return true;
         board.revealCell(row, col);
+        notifyStateChange();
         return true;
     }
 
@@ -219,18 +224,26 @@ public class GameController {
      * Used by the UI (right-click) to toggle the flag state of a cell.
      * This delegates to Board.toggleFlag, which contains the game logic and scoring.
      */
-    public void toggleFlagUI(int boardNumber, int row, int col) {
-        if (currentGame == null || !isGameRunning()) return;
+    public boolean toggleFlagUI(int boardNumber, int row, int col) {
+        if (currentGame == null || !isGameRunning()) return false;
+
         Board board = getBoard(boardNumber);
-        if (board == null) return;
-        if (row < 0 || row >= board.getRows() || col < 0 || col >= board.getCols()) return;
-        board.toggleFlag(row, col);
+        if (board == null) return false;
+
+        if (row < 0 || row >= board.getRows() || col < 0 || col >= board.getCols()) return false;
+
+        boolean ok = board.toggleFlag(row, col);
+        notifyStateChange();
+        return ok;
     }
 
 
+
+
+
     /**
-     * Provides UI-only cell data (text + enabled state) without exposing Model internals.
-     */
+         * Provides UI-only cell data (text + enabled state) without exposing Model internals.
+         */
     public CellViewData getCellViewData(int boardNumber, int row, int col) {
         Board board = getBoard(boardNumber);
         if (board == null) return new CellViewData(true, "");
@@ -318,7 +331,11 @@ public class GameController {
         if (currentGame == null || !isGameRunning()) return false;
         Board board = getBoard(boardNumber);
         if (board == null) return false;
-        return board.activateSpecialCell(row, col);
+        boolean result = board.activateSpecialCell(row, col);
+        if (result) {
+            notifyStateChange();
+        }
+        return result;
     }
     public boolean isQuestionOrSurprise(int boardNumber, int row, int col) {
         Board board = getBoard(boardNumber);
@@ -368,19 +385,22 @@ public class GameController {
         public final String correctAnswers;
         public final String accuracy;
         public final String duration;
+        public final String result;
 
         public GameHistoryRow(String players, String dateTime, String difficulty,
-                              int finalScore, int remainingLives,
+                              String result, int finalScore, int remainingLives,
                               String correctAnswers, String accuracy, String duration) {
             this.players = players;
             this.dateTime = dateTime;
             this.difficulty = difficulty;
+            this.result = result;
             this.finalScore = finalScore;
             this.remainingLives = remainingLives;
             this.correctAnswers = correctAnswers;
             this.accuracy = accuracy;
             this.duration = duration;
         }
+
     }
 
     public static class PlayerHistoryRow {
@@ -466,12 +486,14 @@ public class GameController {
                     playersCombined,
                     e.getTimestamp().format(fmt),
                     e.getDifficulty(),
+                    e.getResult(),
                     e.getFinalScore(),
                     e.getLivesLeft(),
                     e.getCorrectAnswers() + "/" + e.getTotalQuestions(),
                     e.getFormattedAccuracy(),
                     e.getFormattedDuration()
             ));
+
         }
 
         return rows;
@@ -590,7 +612,100 @@ public class GameController {
         currentGame = null;
     }
 
+    // ======================================================
+    //  OBSERVER PATTERN METHODS
+    // ======================================================
 
+    /**
+     * Registers an observer to receive game state change notifications.
+     * @param observer the observer to register
+     */
+    public void registerObserver(GameObserver observer) {
+        gameSubject.registerObserver(observer);
+    }
+
+    /**
+     * Removes an observer from the notification list.
+     * @param observer the observer to remove
+     */
+    public void removeObserver(GameObserver observer) {
+        gameSubject.removeObserver(observer);
+    }
+
+    /**
+     * Notifies all observers of a state change.
+     * This is called automatically when score or level changes.
+     */
+    private void notifyStateChange() {
+        if (currentGame != null) {
+            int score = currentGame.getSharedScore();
+            String level = getDifficultyName();
+            GameStateData state = new GameStateData(score, level);
+            gameSubject.notifyObservers(state);
+        }
+    }
+// ===== UI DTOs (View-safe, no Model exposure) =====
+
+    public static class GameSummaryDTO {
+        public final boolean isWin;
+        public final int sharedScore;
+        public final int sharedLives;
+        public final int totalQuestions;
+        public final int correctAnswers;
+
+        public GameSummaryDTO(boolean isWin, int sharedScore, int sharedLives,
+                              int totalQuestions, int correctAnswers) {
+            this.isWin = isWin;
+            this.sharedScore = sharedScore;
+            this.sharedLives = sharedLives;
+            this.totalQuestions = totalQuestions;
+            this.correctAnswers = correctAnswers;
+        }
+    }
+
+    public static class QuestionDTO {
+        public final String text;
+        public final List<String> options;  // should be size 4
+        public final char correctOption;
+
+        public QuestionDTO(String text, List<String> options, char correctOption) {
+            this.text = text;
+            this.options = options;
+            this.correctOption = correctOption;
+        }
+    }
+
+    public enum QuestionAnswerResult {
+        CORRECT, WRONG, SKIPPED
+    }
+
+    public GameSummaryDTO getGameSummaryDTO() {
+        if (currentGame == null) {
+            return new GameSummaryDTO(false, 0, 0, 0, 0);
+        }
+        boolean isWin = currentGame.getGameState() == GameState.WON;
+
+        return new GameSummaryDTO(
+                isWin,
+                currentGame.getSharedScore(),
+                currentGame.getSharedLives(),
+                currentGame.getTotalQuestionsAnswered(),
+                currentGame.getTotalCorrectAnswers()
+        );
+    }
+
+
+    public QuestionDTO buildQuestionDTO(Question q) {
+        if (q == null) return null;
+
+        List<String> opts = new ArrayList<>(q.getOptions());
+        while (opts.size() < 4) opts.add("");
+
+        return new QuestionDTO(q.getText(), opts, q.getCorrectOption());
+    }
+    public int getTotalSurprisesOpened() {
+        return (currentGame != null) ? currentGame.getTotalSurprisesOpened() : 0;
+    }
 
 
 

@@ -6,6 +6,7 @@ import Model.Game;
 import Model.Question;
 import Model.QuestionManager;
 import Model.ScoreRules;
+import Model.QuestionResult;
 
 public class QuestionActivator extends SpecialCellActivator {
 
@@ -32,17 +33,27 @@ public class QuestionActivator extends SpecialCellActivator {
             return new ActivationResult(false, false, "No questions available.");
         }
 
-        boolean isCorrect = game.presentQuestion(question); // we add this helper in step 6
+        //  get 3-state result from UI
+        QuestionResult ans = game.presentQuestion(question);
+
+        //  SKIPPED: only activation cost was paid (by template), no wrong penalty, no stats
+        if (ans == QuestionResult.SKIPPED) {
+            return new ActivationResult(true, false,
+                    "You didn't answer the question.\nActivation cost was deducted.");
+        }
+
+        boolean isCorrect = (ans == QuestionResult.CORRECT);
         Game.QuestionLevel level = question.getQuestionLevel();
 
         ScoreRules.Result r = game.processQuestionAnswer(level, isCorrect);
 
         String base =
-                (isCorrect ? "✅ Correct!\n" : "❌ Wrong!\n") +
+                (isCorrect ? "Correct!\n" : "Wrong!\n") +
                         r.details;
 
         return new ActivationResult(true, isCorrect, base);
     }
+
 
     @Override
     protected String extraEffects(ActivationResult result) {
