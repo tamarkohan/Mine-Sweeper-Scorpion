@@ -141,8 +141,11 @@ public class QuestionManagementFrame extends JFrame {
 
         loadTable();
 
-        setSize(900, 600);
+        setUndecorated(true);               // removes the top window strip
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
+
+
     }
 
     private JTable createStyledTable(DefaultTableModel model) {

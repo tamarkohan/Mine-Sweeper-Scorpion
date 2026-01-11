@@ -179,10 +179,11 @@ public class GameHistoryFrame extends JFrame {
         resultFilter.addActionListener(e -> reloadTables());
         searchBtn.addActionListener(e -> reloadTables());
         searchBox.addActionListener(e -> reloadTables());
-
-        setSize(1000, 750);
+        setUndecorated(true);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
         reloadTables();
+
     }
 
     // ================= HELPERS =================
