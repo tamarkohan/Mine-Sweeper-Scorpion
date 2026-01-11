@@ -476,11 +476,37 @@ public class GameController {
             String playersCombined = p1 + " + " + p2;
 
             if (!search.isEmpty()) {
-                if (!p1.toLowerCase().contains(search) &&
-                        !p2.toLowerCase().contains(search)) {
-                    continue;
-                }
+
+                String playersCombinedLower = playersCombined.toLowerCase();
+
+                String dateLower = (e.getTimestamp() != null)
+                        ? e.getTimestamp().format(fmt).toLowerCase()
+                        : "";
+
+                String diffLower = (e.getDifficulty() == null) ? "" : e.getDifficulty().toLowerCase();
+                String resLower  = (e.getResult() == null) ? "" : e.getResult().toLowerCase();
+
+                String scoreStr = String.valueOf(e.getFinalScore());      // number -> string
+                String livesStr = String.valueOf(e.getLivesLeft());       // number -> string
+
+                String correctAnsStr = (e.getCorrectAnswers() + "/" + e.getTotalQuestions()).toLowerCase();
+                String accuracyStr = (e.getFormattedAccuracy() == null) ? "" : e.getFormattedAccuracy().toLowerCase();
+                String durationStr = (e.getFormattedDuration() == null) ? "" : e.getFormattedDuration().toLowerCase();
+
+                boolean match =
+                        playersCombinedLower.contains(search) ||
+                                dateLower.contains(search) ||
+                                diffLower.contains(search) ||
+                                resLower.contains(search) ||
+                                scoreStr.contains(search) ||
+                                livesStr.contains(search) ||
+                                correctAnsStr.contains(search) ||
+                                accuracyStr.contains(search) ||
+                                durationStr.contains(search);
+
+                if (!match) continue;
             }
+
 
             rows.add(new GameHistoryRow(
                     playersCombined,
@@ -528,11 +554,18 @@ public class GameController {
             String p2 = e.getPlayer2Name() == null ? "" : e.getPlayer2Name();
 
             if (!search.isEmpty()) {
-                if (!p1.toLowerCase().contains(search) &&
-                        !p2.toLowerCase().contains(search)) {
-                    continue;
-                }
+                String diffLower = (e.getDifficulty() == null) ? "" : e.getDifficulty().toLowerCase();
+                String resLower  = (e.getResult() == null) ? "" : e.getResult().toLowerCase();
+
+                boolean match =
+                        p1.toLowerCase().contains(search) ||
+                                p2.toLowerCase().contains(search) ||
+                                diffLower.contains(search) ||
+                                resLower.contains(search);
+
+                if (!match) continue;
             }
+
 
             double gameAcc = e.getAccuracy();
 
