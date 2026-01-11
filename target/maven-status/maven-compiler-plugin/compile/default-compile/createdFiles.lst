@@ -1,5 +1,7 @@
+Controller\GameController$QuestionAnswerResult.class
 View\NeonMessageDialog$Row.class
 View\GameResultDialog.class
+View\GameHistoryFrame$5.class
 View\NeonTextLabel.class
 View\QuestionDialog.class
 Model\ScoreRules.class
@@ -10,6 +12,7 @@ Model\GameState.class
 View\GameResultDialog$ResultAction.class
 Model\Game$QuestionPresenter.class
 View\MainFrame$1.class
+View\QuestionManagementFrame$4.class
 View\GameResultDialog$NeonCard.class
 View\QuestionManagementFrame$1.class
 Model\Question.class
@@ -35,15 +38,16 @@ Model\specialcell\factory\SurpriseActivatorFactory.class
 Controller\GameController$GameHistoryRow.class
 Model\Cell$CellContent.class
 View\NeonMessageDialog$Type.class
+View\GamePanel$2.class
 View\NeonHeart.class
 View\GamePanel.class
 Model\Cell.class
 View\ActivationConfirmDialog.class
 View\GameHistoryFrame$3.class
+View\GameResultDialog$1.class
 View\HowToPlayPanel$1.class
 View\OutcomeDialog$BackgroundPanel.class
 View\BoardPanel$EffectType.class
-Model\Player.class
 View\MainFrame.class
 View\ConfirmActivateDialog.class
 View\GlowTextField.class
@@ -57,6 +61,7 @@ View\StartPanel$StartGameListener.class
 View\QuestionDialog$BackgroundPanel.class
 Model\GameSubject.class
 Model\Board$1.class
+Controller\GameController$GameSummaryDTO.class
 View\NeonInputField.class
 View\ConfirmActivateDialog$BackgroundPanel.class
 View\GameHistoryFrame$2.class
@@ -84,6 +89,7 @@ Model\QuestionManager.class
 View\ActivationConfirmDialog$Choice.class
 View\NeonMessageDialog$GradientPanel.class
 Model\QuestionResult.class
+View\MainFrame$2.class
 View\MainMenuPanel$MainMenuListener.class
 View\HowToPlayPanel$2.class
 Model\specialcell\SpecialCellActivator$ActivationResult.class
@@ -93,6 +99,7 @@ Controller\GameController$PlayerHistoryRow.class
 View\NeonMessageDialog.class
 View\GameResultDialog$BackgroundPanel.class
 View\QuestionManagementFrame$2.class
+Controller\GameController$QuestionDTO.class
 Model\Game.class
 View\IconCache.class
 Model\specialcell\QuestionActivator.class
@@ -105,5 +112,6 @@ View\MainMenuPanel.class
 View\MainMenuPanel$1.class
 View\HowToPlayPanel.class
 View\SpecialCellConfirmDialog$Choice.class
+View\QuestionManagementFrame$3.class
 View\GameResultDialog$NeonButton.class
 Model\specialcell\factory\QuestionActivatorFactory.class
