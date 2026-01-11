@@ -14,12 +14,21 @@ import java.awt.event.ComponentEvent;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.table.TableRowSorter;
+import javax.swing.RowFilter;
 
 public class QuestionManagementFrame extends JFrame {
 
     private final QuestionManager manager;
     private final DefaultTableModel model;
     private final Runnable onExitToMenu;
+    private JTable table;
+    private TableRowSorter<DefaultTableModel> sorter;
+
+    // Filter controls
+    private JComboBox<String> difficultyFilter;
+    private JComboBox<String> correctAnswerFilter;
+    private JTextField idFilter;
 
     // Colors
     private static final Color BG_COLOR = Color.BLACK;
@@ -115,7 +124,7 @@ public class QuestionManagementFrame extends JFrame {
         btnPanel.add(left, BorderLayout.WEST);
         btnPanel.add(right, BorderLayout.EAST);
 
-        BackgroundPanel content = new BackgroundPanel("/ui/menu/bg.png");
+        BackgroundPanel content = new BackgroundPanel("/ui/menu/question_management_bg.png");
         content.setLayout(new BorderLayout());
         content.setBorder(BorderFactory.createEmptyBorder(100, 20, 10, 20));
 
@@ -326,7 +335,7 @@ public class QuestionManagementFrame extends JFrame {
             root.setBackground(DIALOG_BG);
             root.setBorder(new EmptyBorder(16, 16, 16, 16));
 
-            JLabel header = new JLabel(existing == null ? "➕ Add New Question" : "✏️ Edit Question");
+            JLabel header = new JLabel(existing == null ? " Add New Question" : " Edit Question");
             header.setForeground(ACCENT_COLOR);
             header.setFont(new Font("Segoe UI", Font.BOLD, 22));
             root.add(header, BorderLayout.NORTH);
