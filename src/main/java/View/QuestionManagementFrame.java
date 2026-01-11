@@ -147,8 +147,18 @@ public class QuestionManagementFrame extends JFrame {
         // Add filter panel above the table + table in center
         JPanel centerWrapper = new JPanel(new BorderLayout());
         centerWrapper.setOpaque(false);
+
+// ⬇️ makes table thinner horizontally
+        centerWrapper.setBorder(BorderFactory.createEmptyBorder(
+                0,   // top
+                30,  // left  (≈ 0.8 cm)
+                0,   // bottom
+                30   // right (≈ 0.8 cm)
+        ));
+
         centerWrapper.add(filterPanel, BorderLayout.NORTH);
         centerWrapper.add(scroll, BorderLayout.CENTER);
+
 
         content.add(centerWrapper, BorderLayout.CENTER);
         content.add(btnPanel, BorderLayout.SOUTH);
