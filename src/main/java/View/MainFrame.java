@@ -5,6 +5,7 @@ import Controller.GameController;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
+import util.SoundManager;
 
 /**
  * Main application frame.
@@ -74,7 +75,16 @@ public class MainFrame extends JFrame
         setResizable(true);
 
         cardLayout.show(cardPanel, "MENU");
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                SoundManager.stop();
+            }
+        });
         setVisible(true);
+        SoundManager.playLoop("/audio/bg_music.wav");
+
+
 
     }
 

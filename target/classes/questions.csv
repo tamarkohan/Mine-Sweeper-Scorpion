@@ -1,5 +1,5 @@
 2,"In Agile development, what is a User Story",A detailed technical design document,A list of all bugs in the project,A short description of functionality from the user's point of view,A meeting agenda for the sprint,C,EASY
-3,What does the acronym SRS stand for?,Software Review Specification,Software Requirements Specification,System Release Schedule,System Reliability Standard,B,EASY
+3,SDFDS,WSASDC,EDSFD,DSFD,FDSFW,A,EASY
 4,Which artifact is typically produced in the Requirements phase?,Unit test cases,Class diagrams,User manual,Software Requirements Specification (SRS),D,EASY
 5,Which of the following BEST describes Black-Box testing?,Testing based on the internal implementation of the code,Testing that focuses on inputs and outputs according to the specification,Testing done only by the development team,Testing that checks performance only,B,EASY
 6,What is the goal of a Code Review?,To rewrite the code from scratch,To check coding style only,To find defects and improve code quality before testing,To measure the execution time of the code,C,EASY
