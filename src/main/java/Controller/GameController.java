@@ -109,7 +109,16 @@ public class GameController {
     // ======================================================
 
     // Returns true if a game exists and is currently in RUNNING state.
+// Inside GameController.java
+    private util.LanguageManager.Language currentLanguage = util.LanguageManager.Language.EN;
 
+    public util.LanguageManager.Language getCurrentLanguage() {
+        return currentLanguage;
+    }
+
+    public void setCurrentLanguage(util.LanguageManager.Language lang) {
+        this.currentLanguage = lang;
+    }
     public boolean isGameRunning() {
         return currentGame != null && currentGame.getGameState() == GameState.RUNNING;
     }

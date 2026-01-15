@@ -4,132 +4,65 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.net.URL;
 
 public class IconToggleButton extends JToggleButton {
+    private BufferedImage img;
+    private final Color glowColor;
+    private final boolean cropTransparent;
 
-    private final BufferedImage img;   // cropped base image
-    private final Color glow;
+    public IconToggleButton(String imgPath, Color glowColor) {
+        this(imgPath, glowColor, true); // Default to cropping transparent padding
+    }
 
-    public IconToggleButton(String imagePath, Color glow) {
-        try {
-            BufferedImage raw = ImageIO.read(getClass().getResource(imagePath));
-            if (raw == null) throw new RuntimeException("Image is null: " + imagePath);
-            // Crop out empty transparent space (tolerance 20 removes faint shadows)
-            this.img = cropTransparent(raw, 20);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed loading: " + imagePath, e);
-        }
+    public IconToggleButton(String imgPath, Color glowColor, boolean cropTransparent) {
+        this.glowColor = glowColor;
+        this.cropTransparent = cropTransparent;
+        loadImage(imgPath);
 
-        this.glow = glow;
-
-        setOpaque(false);
         setContentAreaFilled(false);
-        setBorderPainted(false);
         setFocusPainted(false);
-        setRolloverEnabled(true);
+        setBorderPainted(false);
+        setOpaque(false);
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    private void loadImage(String path) {
+        try {
+            URL url = getClass().getResource(path);
+            if (url == null) {
+                System.err.println("Image not found: " + path);
+                return;
+            }
+            BufferedImage loadedImg = ImageIO.read(url);
 
-        int compW = getWidth();
-        int compH = getHeight();
-
-        // --- 1. Calculate Scale to Maintain Aspect Ratio ---
-        // This prevents the "Ruined" stretched look.
-        // We fit the image inside the component bounds while keeping its shape.
-        double imgAspect = (double) img.getWidth() / img.getHeight();
-        double compAspect = (double) compW / compH;
-
-        int drawW, drawH;
-        int margin = 4; // Space for the border
-
-        int availW = compW - (margin * 2);
-        int availH = compH - (margin * 2);
-
-        if (compAspect > imgAspect) {
-            // Component is wider than image -> constrain by height
-            drawH = availH;
-            drawW = (int) (availH * imgAspect);
-        } else {
-            // Component is taller than image -> constrain by width
-            drawW = availW;
-            drawH = (int) (availW / imgAspect);
+            // Crop transparent padding to maximize visible content
+            if (cropTransparent) {
+                this.img = cropTransparentPadding(loadedImg);
+            } else {
+                this.img = loadedImg;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        // --- 2. Center the Image ---
-        int drawX = (compW - drawW) / 2;
-        int drawY = (compH - drawH) / 2;
-
-        boolean hover = getModel().isRollover();
-        boolean selected = isSelected();
-        float a = selected ? 0.6f : (hover ? 0.2f : 0.0f);
-
-        // --- 3. Draw Glow (Behind) ---
-        if (a > 0f) {
-            int glowPx = 9;
-            int glowPx2 = 5;
-            BufferedImage glowImg = tinted(img, glow);
-
-            g2.setComposite(AlphaComposite.SrcOver.derive(a));
-            g2.drawImage(glowImg,
-                    drawX - glowPx, drawY - glowPx,
-                    drawW + glowPx * 2, drawH + glowPx * 2,
-                    null);
-
-            g2.setComposite(AlphaComposite.SrcOver.derive(a * 0.65f));
-            g2.drawImage(glowImg,
-                    drawX - glowPx2, drawY - glowPx2,
-                    drawW + glowPx2 * 2, drawH + glowPx2 * 2,
-                    null);
-
-            g2.setComposite(AlphaComposite.SrcOver);
-        }
-
-        // --- 4. Draw Main Image ---
-        g2.drawImage(img, drawX, drawY, drawW, drawH, null);
-
-        // --- 5. Draw Selection Border ---
-        if (selected) {
-            g2.setColor(glow);
-            g2.setStroke(new BasicStroke(3f));
-
-            // Draw the rectangle exactly around the image calculated above
-            // +/- adjustments allow the border to sit just outside the pixels
-            g2.drawRoundRect(drawX - 2, drawY - 2, drawW + 4, drawH + 4, 15, 15);
-        }
-
-        g2.dispose();
     }
 
-    // Helper: Tint the PNG
-    private static BufferedImage tinted(BufferedImage src, Color c) {
-        BufferedImage out = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        Graphics2D gg = out.createGraphics();
-        gg.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        gg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        gg.drawImage(src, 0, 0, null);
-        gg.setComposite(AlphaComposite.SrcAtop);
-        gg.setColor(c);
-        gg.fillRect(0, 0, out.getWidth(), out.getHeight());
-        gg.dispose();
-        return out;
-    }
-
-    // Helper: Crop transparent padding
-    private static BufferedImage cropTransparent(BufferedImage src, int tolerance) {
-        int w = src.getWidth(), h = src.getHeight();
+    /**
+     * Crops transparent padding from around the image content
+     */
+    private BufferedImage cropTransparentPadding(BufferedImage src) {
+        int w = src.getWidth();
+        int h = src.getHeight();
         int minX = w, minY = h, maxX = -1, maxY = -1;
 
+        // Find the actual content bounds (non-transparent pixels)
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
-                int a = (src.getRGB(x, y) >>> 24) & 0xFF;
-                if (a > tolerance) {
+                int argb = src.getRGB(x, y);
+                int alpha = (argb >>> 24) & 0xFF;
+
+                // If pixel is not fully transparent
+                if (alpha > 10) { // Threshold for near-transparent
                     if (x < minX) minX = x;
                     if (y < minY) minY = y;
                     if (x > maxX) maxX = x;
@@ -138,8 +71,54 @@ public class IconToggleButton extends JToggleButton {
             }
         }
 
-        if (maxX < minX || maxY < minY) return src;
+        // If no content found, return original
+        if (maxX < minX || maxY < minY) {
+            return src;
+        }
 
-        return src.getSubimage(minX, minY, maxX - minX + 1, maxY - minY + 1);
+        // Add small padding back
+        int pad = 2;
+        int realX = Math.max(0, minX - pad);
+        int realY = Math.max(0, minY - pad);
+        int realMaxX = Math.min(w - 1, maxX + pad);
+        int realMaxY = Math.min(h - 1, maxY + pad);
+
+        int newW = realMaxX - realX + 1;
+        int newH = realMaxY - realY + 1;
+
+        return src.getSubimage(realX, realY, newW, newH);
+    }
+
+    public void setIconPath(String path) {
+        loadImage(path);
+        repaint();
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+        int w = getWidth();
+        int h = getHeight();
+
+        // Draw the image to fill the entire button
+        if (img != null) {
+            g2.drawImage(img, 0, 0, w, h, null);
+        }
+
+        // Draw selection glow
+        if (isSelected()) {
+            g2.setColor(glowColor);
+            g2.setStroke(new BasicStroke(3f));
+            g2.drawRect(2, 2, w - 5, h - 5);
+
+            g2.setComposite(AlphaComposite.SrcOver.derive(0.3f));
+            g2.fillRect(4, 4, w - 8, h - 8);
+        }
+
+        g2.dispose();
     }
 }

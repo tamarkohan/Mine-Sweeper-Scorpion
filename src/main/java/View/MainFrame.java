@@ -5,7 +5,7 @@ import Controller.GameController;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
-
+import util.LanguageManager;
 import util.SoundManager;
 import util.SoundToggleOverlay;
 
@@ -300,7 +300,20 @@ public class MainFrame extends JFrame
         });
         return btn;
     }
+    @Override
+    public void onLanguageToggle() {
+        // 1. Refresh the StartPanel so it updates its text
+        if (startPanel != null) {
+            startPanel.resetFields();
+        }
 
+        // 2. Repaint the frame to apply changes to the window title/layout
+        revalidate();
+        repaint();
+
+        // REMOVED: JOptionPane.showMessageDialog(...)
+        // The small text notification is handled inside MainMenuPanel, so it stays!
+    }
     public void showMainMenu() {
         cardLayout.show(cardPanel, "MENU");
     }
