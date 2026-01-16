@@ -278,7 +278,10 @@ public class MainFrame extends JFrame
     }
 
     private void handleAdminQuestionManagement() {
-        JDialog dialog = new JDialog(this, "Admin Access", true);
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        boolean isHe = (lang == LanguageManager.Language.HE);
+
+        JDialog dialog = new JDialog(this, isHe ? "גישת מנהל" : "Admin Access", true);
         dialog.setUndecorated(true);
         dialog.setLayout(new BorderLayout());
 
@@ -289,7 +292,8 @@ public class MainFrame extends JFrame
                 BorderFactory.createEmptyBorder(30, 20, 20, 20)
         ));
 
-        JLabel lbl = new JLabel("Enter Admin Password:", SwingConstants.CENTER);
+        String labelText = isHe ? "הזן סיסמת מנהל:" : "Enter Admin Password:";
+        JLabel lbl = new JLabel(labelText, SwingConstants.CENTER);
         lbl.setForeground(Color.WHITE);
         lbl.setFont(new Font("Arial", Font.BOLD, 16));
 
@@ -310,8 +314,11 @@ public class MainFrame extends JFrame
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         btnPanel.setBackground(BG_COLOR);
 
-        JButton btnOk = createStyledButton("OK");
-        JButton btnCancel = createStyledButton("Cancel");
+        String okText = isHe ? "אישור" : "OK";
+        String cancelText = isHe ? "ביטול" : "Cancel";
+
+        JButton btnOk = createStyledButton(okText);
+        JButton btnCancel = createStyledButton(cancelText);
 
         btnPanel.add(btnOk);
         btnPanel.add(btnCancel);
@@ -333,9 +340,11 @@ public class MainFrame extends JFrame
                 QuestionManagementFrame frame = new QuestionManagementFrame(controller.getQuestionManager());
                 frame.setVisible(true);
             } else {
+                String errMsg = isHe ? "הגישה נדחתה." : "Access denied.";
+                String errTitle = isHe ? "סיסמה שגויה" : "Wrong password";
                 JOptionPane.showMessageDialog(dialog,
-                        "Access denied.",
-                        "Wrong password",
+                        errMsg,
+                        errTitle,
                         JOptionPane.ERROR_MESSAGE);
                 pwd.setText("");
             }

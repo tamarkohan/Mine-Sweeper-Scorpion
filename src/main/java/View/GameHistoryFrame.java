@@ -25,27 +25,22 @@ public class GameHistoryFrame extends JFrame {
     private final DefaultTableModel gamesModel;
     private final DefaultTableModel playersModel;
 
-    // UI Components
     private JComboBox<String> difficultyFilter;
     private JComboBox<String> resultFilter;
     private JTextField searchBox;
     private JLabel lblSearch, lblDiff, lblResult;
     private JButton searchBtn;
 
-    // Layout Containers
     private JPanel topBar;
-    private JPanel searchPanel;
     private JPanel filtersPanel;
     private JTable gamesTable;
     private JTable playersTable;
 
-    // Language & UI
     private final IconButton btnLanguage;
     private final JLabel toastLabel;
     private final Timer toastTimer;
     private static final String THINKING_ICON = "/ui/icons/thinking.png";
 
-    // Colors
     private static final Color TEXT_COLOR = Color.WHITE;
     private static final Color ACCENT_COLOR = new Color(0, 255, 255);
     private static final Color TABLE_HEADER_BG = new Color(30, 30, 30, 255);
@@ -58,7 +53,6 @@ public class GameHistoryFrame extends JFrame {
         this.onExitToMenu = onExitToMenu;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        // ================= ESC KEY BINDING =================
         getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "EXIT");
         getRootPane().getActionMap().put("EXIT", new AbstractAction() {
@@ -69,7 +63,6 @@ public class GameHistoryFrame extends JFrame {
             }
         });
 
-        // ================= MODELS =================
         gamesModel = new DefaultTableModel(0, 9) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -81,13 +74,11 @@ public class GameHistoryFrame extends JFrame {
         gamesTable = createStyledTable(gamesModel);
         playersTable = createStyledTable(playersModel);
 
-        // ================= SORTING =================
         setupSorters(gamesTable, playersTable);
 
         JScrollPane gamesScroll = createScroll(gamesTable);
         JScrollPane playersScroll = createScroll(playersTable);
 
-        // ================= TOP BAR (SEARCH) =================
         topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         topBar.setOpaque(false);
         topBar.setBorder(BorderFactory.createEmptyBorder(80, 20, 10, 20));
@@ -98,12 +89,10 @@ public class GameHistoryFrame extends JFrame {
         searchBtn = createButton("Search");
         searchBtn.setPreferredSize(new Dimension(80, 34));
 
-        // Add components once
         topBar.add(lblSearch);
         topBar.add(searchBox);
         topBar.add(searchBtn);
 
-        // ================= FILTER ROW =================
         lblDiff = label("Difficulty:");
         lblResult = label("Result:");
         difficultyFilter = createCombo();
@@ -116,7 +105,6 @@ public class GameHistoryFrame extends JFrame {
         filtersPanel.add(lblResult);
         filtersPanel.add(resultFilter);
 
-        // ================= TABLES LAYOUT =================
         JPanel tables = new JPanel();
         tables.setOpaque(false);
         tables.setLayout(new BoxLayout(tables, BoxLayout.Y_AXIS));
@@ -128,7 +116,6 @@ public class GameHistoryFrame extends JFrame {
         tables.add(Box.createVerticalStrut(20));
         tables.add(playersScroll);
 
-        // ================= BOTTOM BAR =================
         JPanel bottomBar = new JPanel(new BorderLayout());
         bottomBar.setOpaque(false);
         bottomBar.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
@@ -156,7 +143,6 @@ public class GameHistoryFrame extends JFrame {
         bottomBar.add(leftBottom, BorderLayout.WEST);
         bottomBar.add(rightBottom, BorderLayout.EAST);
 
-        // ================= ROOT PANEL =================
         JPanel root = new BackgroundPanel("/ui/menu/game_history_bg.png");
         root.setLayout(new BorderLayout());
         root.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
@@ -171,7 +157,6 @@ public class GameHistoryFrame extends JFrame {
         root.add(tablesWrapper, BorderLayout.CENTER);
         root.add(bottomBar, BorderLayout.SOUTH);
 
-        // -- TOAST --
         toastLabel = new JLabel("", SwingConstants.CENTER);
         toastLabel.setOpaque(true);
         toastLabel.setBackground(new Color(0, 0, 0, 180));
@@ -183,7 +168,6 @@ public class GameHistoryFrame extends JFrame {
         setContentPane(root);
         SoundToggleOverlay.attach(this);
 
-        // ================= EVENTS =================
         difficultyFilter.addActionListener(e -> reload());
         resultFilter.addActionListener(e -> reload());
         searchBtn.addActionListener(e -> reload());
@@ -192,7 +176,6 @@ public class GameHistoryFrame extends JFrame {
         toastTimer = new Timer(2000, e -> toastLabel.setVisible(false));
         toastTimer.setRepeats(false);
 
-        // Initialize UI
         updateUIText();
         updateComboItems();
         reload();
@@ -201,8 +184,6 @@ public class GameHistoryFrame extends JFrame {
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
     }
-
-    // ================= LOGIC & UI UPDATES =================
 
     private void handleLanguageSwitch() {
         btnLanguage.setIconPath(THINKING_ICON);
@@ -245,16 +226,12 @@ public class GameHistoryFrame extends JFrame {
         lblResult.setText(isHe ? "תוצאה:" : "Result:");
         searchBtn.setText(isHe ? "חפש" : "Search");
 
-        ComponentOrientation orientation = isHe ? ComponentOrientation.RIGHT_TO_LEFT : ComponentOrientation.LEFT_TO_RIGHT;
-
-        // Update FlowLayout alignment based on language
         FlowLayout topBarLayout = (FlowLayout) topBar.getLayout();
         topBarLayout.setAlignment(isHe ? FlowLayout.RIGHT : FlowLayout.LEFT);
 
         FlowLayout filtersLayout = (FlowLayout) filtersPanel.getLayout();
         filtersLayout.setAlignment(isHe ? FlowLayout.RIGHT : FlowLayout.LEFT);
 
-        // Rebuild topBar components in correct order
         topBar.removeAll();
         if (isHe) {
             topBar.add(searchBtn);
@@ -266,7 +243,6 @@ public class GameHistoryFrame extends JFrame {
             topBar.add(searchBtn);
         }
 
-        // Rebuild filtersPanel components in correct order
         filtersPanel.removeAll();
         if (isHe) {
             filtersPanel.add(resultFilter);
@@ -280,6 +256,7 @@ public class GameHistoryFrame extends JFrame {
             filtersPanel.add(resultFilter);
         }
 
+        ComponentOrientation orientation = isHe ? ComponentOrientation.RIGHT_TO_LEFT : ComponentOrientation.LEFT_TO_RIGHT;
         gamesTable.setComponentOrientation(orientation);
         playersTable.setComponentOrientation(orientation);
 
@@ -364,8 +341,6 @@ public class GameHistoryFrame extends JFrame {
         toastTimer.restart();
     }
 
-    // ================= DATA RELOAD =================
-
     private void reload() {
         gamesModel.setRowCount(0);
         playersModel.setRowCount(0);
@@ -437,8 +412,6 @@ public class GameHistoryFrame extends JFrame {
             default -> data;
         };
     }
-
-    // ================= HELPERS & STYLING =================
 
     private void styleSearchField(JTextField box) {
         box.setPreferredSize(new Dimension(180, 34));
@@ -526,8 +499,6 @@ public class GameHistoryFrame extends JFrame {
         pSorter.setComparator(2, (a, b) -> parseInt(a) - parseInt(b));
         pSorter.setComparator(3, (a, b) -> parsePercent(a) - parsePercent(b));
     }
-
-    // ================= RENDERERS & PARSERS =================
 
     private static class HeaderRenderer extends DefaultTableCellRenderer {
         @Override

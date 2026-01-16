@@ -18,7 +18,14 @@ public class QuestionManagerTest {
 
     @BeforeEach
     void setUp() {
-        questionManager = new QuestionManager();
+        // 1. Use Singleton instance (constructor is private)
+        questionManager = QuestionManager.getInstance();
+
+        // 2. Disable saving to avoid overwriting your real CSV files
+        questionManager.setPersistenceEnabled(false);
+
+        // 3. Clear any old data to ensure a clean test state
+        questionManager.clearQuestionsForTesting();
 
         testQuestions = new ArrayList<>();
         testQuestions.add(new Question(1, "What is 2+2?",
@@ -53,8 +60,12 @@ public class QuestionManagerTest {
         for (int i = 0; i < testQuestions.size(); i++) {
             Question result = questionManager.getRandomUnusedQuestionAnyLevel();
             assertNotNull(result, "Returned question should not be null");
-            assertTrue(questionManager.getAllQuestions().contains(result),
-                    "Returned question should exist in the manager's questions list");
+
+            // We check by ID to ensure it's the same question logically
+            boolean exists = questionManager.getAllQuestions().stream()
+                    .anyMatch(q -> q.getId() == result.getId());
+
+            assertTrue(exists, "Returned question should exist in the manager's questions list");
         }
     }
 
@@ -71,25 +82,24 @@ public class QuestionManagerTest {
     }
 
     @Test
-    @DisplayName("Multiple calls return valid questions until exhausted")
-    void testGetRandomQuestion_MultipleCalls_AllReturnValidQuestions() {
+    @DisplayName("Recycles questions after all are used (Game Loop behavior)")
+    void testGetRandomQuestion_Recycles_AfterExhaustion() {
         List<Question> results = new ArrayList<>();
 
+        // 1. Consume all available questions
         for (int i = 0; i < testQuestions.size(); i++) {
             Question result = questionManager.getRandomUnusedQuestionAnyLevel();
+            assertNotNull(result, "Should return question " + i);
             results.add(result);
         }
 
-        for (int i = 0; i < results.size(); i++) {
-            Question result = results.get(i);
-            assertNotNull(result, "Result at index " + i + " should not be null");
-            assertTrue(questionManager.getAllQuestions().contains(result),
-                    "Result at index " + i + " should exist in the questions list");
-        }
+        // 2. The next call should NOT return null.
+        // The QuestionManager is designed to reset (recycle) the pool if empty.
+        Question recycleResult = questionManager.getRandomUnusedQuestionAnyLevel();
 
-        // After all questions are used, the next call should return null
-        Question afterExhaust = questionManager.getRandomUnusedQuestionAnyLevel();
-        assertNull(afterExhaust, "Should return null after all questions are used in this game");
+        assertNotNull(recycleResult, "Should recycle questions instead of returning null");
+        assertTrue(questionManager.getAllQuestions().stream().anyMatch(q -> q.getId() == recycleResult.getId()),
+                "Recycled question should be one of the original questions");
     }
 
     @Test

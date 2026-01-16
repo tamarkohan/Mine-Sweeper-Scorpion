@@ -1,4 +1,4 @@
-2,"In Agile development, what is a User Story",A detailed technical design document,A list of all bugs in the project,A short description of functionality from the user's point of view,A meeting agenda for the sprint,C,EASY
+id,text,optionA,optionB,optionC,optionD,correctOption,difficultyLevel
 3,SDFDS,WSASDC,EDSFD,DSFD,FDSFW,A,EASY
 4,Which artifact is typically produced in the Requirements phase?,Unit test cases,Class diagrams,User manual,Software Requirements Specification (SRS),D,EASY
 5,Which of the following BEST describes Black-Box testing?,Testing based on the internal implementation of the code,Testing that focuses on inputs and outputs according to the specification,Testing done only by the development team,Testing that checks performance only,B,EASY
