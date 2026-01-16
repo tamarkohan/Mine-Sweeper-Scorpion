@@ -90,7 +90,8 @@ public class GameController {
 
     private void ensureQuestionManager() {
         if (questionManager == null) {
-            questionManager = new QuestionManager();
+            // FIX: Use getInstance() instead of new QuestionManager()
+            questionManager = QuestionManager.getInstance();
             questionManager.loadQuestions();
         }
     }
@@ -763,5 +764,3 @@ public class GameController {
 
 
 }
-
-

@@ -1,8 +1,11 @@
 package View;
 
 import Controller.GameController;
+import util.LanguageManager;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 /**
@@ -31,6 +34,7 @@ public class GamePanel extends JPanel {
 
     private IconButton btnRestart;
     private IconButton btnExit;
+    private IconButton btnLanguage;
     private long startTimeMillis;
     private JPanel wrap1;
     private JPanel wrap2;
@@ -39,13 +43,16 @@ public class GamePanel extends JPanel {
     private Timer gameTimer;
     private final Runnable onBackToMenu;
 
-    private JLabel toastLabel;
+    private JLabel langToastLabel;
+    private Timer langToastTimer;
+
+    // Toast colors - Green for correct/good, Red for wrong/bad
+    private static final Color COLOR_GREEN = new Color(80, 200, 120);
+    private static final Color COLOR_RED = new Color(220, 60, 60);
 
     // --- PERMANENT DIMENSIONS ---
     private static final int FIXED_BOX_WIDTH = 250;
     private static final int FIXED_BOX_HEIGHT = 65;
-
-    // INCREASED: Locked height to 240 to give more room for the lowered elements
     private static final int TOP_HEADER_HEIGHT = 240;
 
     public GamePanel(GameController controller,
@@ -116,15 +123,14 @@ public class GamePanel extends JPanel {
         playerBox1.setPreferredSize(boxDim);
         playerBox1.setMaximumSize(boxDim);
 
-        lblMinesLeft1 = new JLabel("MINES LEFT: " + controller.getTotalMines(1), SwingConstants.CENTER);
+        lblMinesLeft1 = new JLabel(getMinesLeftText(1), SwingConstants.CENTER);
         lblMinesLeft1.setForeground(Color.WHITE);
         lblMinesLeft1.setFont(new Font("Arial", Font.BOLD, 14));
         lblMinesLeft1.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // --- LOWERING LOGIC FOR PLAYER 1 ---
-        leftTopGroup.add(Box.createVerticalStrut(155)); // Increased from 130 to lower the name box
+        leftTopGroup.add(Box.createVerticalStrut(155));
         leftTopGroup.add(playerBox1);
-        leftTopGroup.add(Box.createVerticalStrut(12));  // Increased from 8 to lower mines text more
+        leftTopGroup.add(Box.createVerticalStrut(12));
         leftTopGroup.add(lblMinesLeft1);
         leftSide.add(leftTopGroup, BorderLayout.NORTH);
 
@@ -157,15 +163,14 @@ public class GamePanel extends JPanel {
         playerBox2.setPreferredSize(boxDim);
         playerBox2.setMaximumSize(boxDim);
 
-        lblMinesLeft2 = new JLabel("MINES LEFT: " + controller.getTotalMines(2), SwingConstants.CENTER);
+        lblMinesLeft2 = new JLabel(getMinesLeftText(2), SwingConstants.CENTER);
         lblMinesLeft2.setForeground(Color.WHITE);
         lblMinesLeft2.setFont(new Font("Arial", Font.BOLD, 14));
         lblMinesLeft2.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // --- LOWERING LOGIC FOR PLAYER 2 ---
-        rightTopGroup.add(Box.createVerticalStrut(155)); // Matches Player 1
+        rightTopGroup.add(Box.createVerticalStrut(155));
         rightTopGroup.add(playerBox2);
-        rightTopGroup.add(Box.createVerticalStrut(12));  // Matches Player 1
+        rightTopGroup.add(Box.createVerticalStrut(12));
         rightTopGroup.add(lblMinesLeft2);
         rightSide.add(rightTopGroup, BorderLayout.NORTH);
 
@@ -181,8 +186,6 @@ public class GamePanel extends JPanel {
         centerPanel.add(leftSide);
         centerPanel.add(rightSide);
 
-        // ... [Remaining code for Footer, buildHearts, handleMoveMade, etc. stays the same] ...
-
         // --- FOOTER ---
         JPanel footer = new JPanel(new BorderLayout());
         footer.setOpaque(false);
@@ -190,15 +193,21 @@ public class GamePanel extends JPanel {
 
         JPanel scoreLivesPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 0));
         scoreLivesPanel.setOpaque(false);
-        lblScore = new JLabel("SCORE: 0");
+
+        LanguageManager.Language lang = controller.getCurrentLanguage();
+        lblScore = new JLabel(LanguageManager.get("score", lang) + ": 0");
         lblScore.setForeground(Color.WHITE);
         lblScore.setFont(new Font("Arial", Font.BOLD, 18));
-        lblLives = new JLabel("LIVES: " + controller.getSharedLives() + "/" + controller.getMaxLives());
+
+        lblLives = new JLabel(LanguageManager.get("lives", lang) + ": " +
+                controller.getSharedLives() + "/" + controller.getMaxLives());
         lblLives.setForeground(Color.WHITE);
         lblLives.setFont(new Font("Arial", Font.BOLD, 18));
-        lblTime = new JLabel("TIME: 00:00");
+
+        lblTime = new JLabel(LanguageManager.get("time", lang) + ": 00:00");
         lblTime.setForeground(Color.WHITE);
         lblTime.setFont(new Font("Arial", Font.BOLD, 18));
+
         scoreLivesPanel.add(lblScore);
         scoreLivesPanel.add(lblLives);
         scoreLivesPanel.add(lblTime);
@@ -217,12 +226,22 @@ public class GamePanel extends JPanel {
         JPanel controlsBar = new JPanel(new BorderLayout());
         controlsBar.setOpaque(false);
         controlsBar.setBorder(BorderFactory.createEmptyBorder(0, 30, 18, 30));
+
         btnRestart = new IconButton("/ui/icons/restart.png", true);
         btnExit = new IconButton("/ui/icons/back.png", true);
+        btnLanguage = new IconButton("/ui/icons/language.png", true);
+
         btnRestart.setPreferredSize(new Dimension(40, 30));
         btnExit.setPreferredSize(new Dimension(40, 30));
-        controlsBar.add(btnRestart, BorderLayout.EAST);
+        btnLanguage.setPreferredSize(new Dimension(40, 30));
+
+        JPanel rightControls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        rightControls.setOpaque(false);
+        rightControls.add(btnLanguage);
+        rightControls.add(btnRestart);
+
         controlsBar.add(btnExit, BorderLayout.WEST);
+        controlsBar.add(rightControls, BorderLayout.EAST);
 
         btnRestart.setOnClick(() -> {
             controller.restartGame();
@@ -241,6 +260,8 @@ public class GamePanel extends JPanel {
             if (onBackToMenu != null) onBackToMenu.run();
         });
 
+        btnLanguage.setOnClick(this::handleLanguageToggle);
+
         footer.add(statusGroup, BorderLayout.CENTER);
         footer.add(controlsBar, BorderLayout.SOUTH);
         bg.add(footer, BorderLayout.SOUTH);
@@ -258,12 +279,118 @@ public class GamePanel extends JPanel {
             long elapsedMillis = System.currentTimeMillis() - startTimeMillis;
             long seconds = (elapsedMillis / 1000) % 60;
             long minutes = (elapsedMillis / 1000) / 60;
-            lblTime.setText(String.format("TIME: %02d:%02d", minutes, seconds));
+            LanguageManager.Language currentLang = controller.getCurrentLanguage();
+            lblTime.setText(LanguageManager.get("time", currentLang) +
+                    String.format(": %02d:%02d", minutes, seconds));
         });
         gameTimer.start();
     }
 
-    // [Rest of methods: updateStatus, updateTurnUI, etc. are omitted for brevity but remain unchanged]
+    private void handleLanguageToggle() {
+        GameController gc = GameController.getInstance();
+
+        // Toggle language
+        if (gc.getCurrentLanguage() == LanguageManager.Language.EN) {
+            gc.setCurrentLanguage(LanguageManager.Language.HE);
+        } else {
+            gc.setCurrentLanguage(LanguageManager.Language.EN);
+        }
+
+        // Switch questions from pre-loaded cache (instant)
+        gc.getQuestionManager().switchLanguageFromCache();
+
+        // Update all UI text
+        updateAllLanguageTexts();
+
+        // Refresh boards
+        boardPanel1.refresh();
+        boardPanel2.refresh();
+
+        // Show language toast
+        showLanguageToast();
+    }
+
+    private void updateAllLanguageTexts() {
+        LanguageManager.Language lang = controller.getCurrentLanguage();
+
+        lblMinesLeft1.setText(getMinesLeftText(1));
+        lblMinesLeft2.setText(getMinesLeftText(2));
+        lblScore.setText(LanguageManager.get("score", lang) + ": " + controller.getSharedScore());
+        lblLives.setText(LanguageManager.get("lives", lang) + ": " +
+                controller.getSharedLives() + "/" + controller.getMaxLives());
+
+        long elapsedMillis = System.currentTimeMillis() - startTimeMillis;
+        long seconds = (elapsedMillis / 1000) % 60;
+        long minutes = (elapsedMillis / 1000) / 60;
+        lblTime.setText(LanguageManager.get("time", lang) +
+                String.format(": %02d:%02d", minutes, seconds));
+
+        revalidate();
+        repaint();
+    }
+
+    private String getMinesLeftText(int boardNumber) {
+        LanguageManager.Language lang = controller.getCurrentLanguage();
+        return LanguageManager.get("mines_left", lang) + ": " + controller.getMinesLeft(boardNumber);
+    }
+
+    private void showLanguageToast() {
+        JLayeredPane lp = getRootPane().getLayeredPane();
+
+        if (langToastLabel != null && langToastLabel.getParent() != null) {
+            lp.remove(langToastLabel);
+        }
+
+        LanguageManager.Language lang = controller.getCurrentLanguage();
+        String text = (lang == LanguageManager.Language.HE) ?
+                LanguageManager.get("lang_hebrew", lang) :
+                LanguageManager.get("lang_english", lang);
+
+        JLabel label = new JLabel(text, SwingConstants.CENTER);
+        label.setOpaque(true);
+        label.setBackground(new Color(0, 0, 0, 200));
+        label.setForeground(Color.WHITE);
+        label.setFont(new Font("Arial", Font.BOLD, 14));
+        label.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(0, 255, 255), 2, true),
+                BorderFactory.createEmptyBorder(10, 20, 10, 20)
+        ));
+
+        Dimension pref = label.getPreferredSize();
+        int minWidth = 100;
+        int width = Math.max(pref.width, minWidth);
+        int height = pref.height;
+
+        Point btnLangLocation = SwingUtilities.convertPoint(
+                btnLanguage.getParent(),
+                btnLanguage.getLocation(),
+                lp
+        );
+
+        int toastX = btnLangLocation.x + (btnLanguage.getWidth() / 2) - (width / 2);
+        int toastY = btnLangLocation.y - height - 10;
+
+        toastX = Math.max(10, Math.min(toastX, lp.getWidth() - width - 10));
+        toastY = Math.max(10, toastY);
+
+        label.setBounds(toastX, toastY, width, height);
+
+        lp.add(label, JLayeredPane.POPUP_LAYER);
+        lp.repaint();
+        langToastLabel = label;
+
+        if (langToastTimer != null && langToastTimer.isRunning()) {
+            langToastTimer.stop();
+        }
+
+        langToastTimer = new Timer(1400, e -> {
+            lp.remove(label);
+            lp.repaint();
+        });
+        langToastTimer.setRepeats(false);
+        langToastTimer.start();
+    }
+
     private void buildHearts() {
         heartLabels = new ArrayList<>();
         int maxLives = controller.getMaxLives();
@@ -281,9 +408,8 @@ public class GamePanel extends JPanel {
         updateStatus();
         String outcomeMessage = controller.getAndClearLastActionMessage();
         if (outcomeMessage != null) {
-            int currentBoard = controller.getCurrentPlayerTurn();
-            Color neon = (currentBoard == 1) ? new Color(255, 60, 60) : new Color(80, 180, 255);
-            showToast(outcomeMessage, neon);
+            // Show MODAL dialog - blocks until user closes it
+            showResultDialog(outcomeMessage);
         }
 
         if (controller.isGameOver()) {
@@ -310,31 +436,163 @@ public class GamePanel extends JPanel {
         }
     }
 
-    private void showToast(String message, Color accent) {
+    /**
+     * Shows a MODAL result dialog that blocks until the user clicks X or OK.
+     * This prevents overlapping dialogs.
+     */
+    private void showResultDialog(String message) {
         if (message == null || message.isBlank()) return;
-        JLayeredPane lp = getRootPane().getLayeredPane();
-        if (toastLabel != null && toastLabel.getParent() != null) lp.remove(toastLabel);
-        JLabel label = new JLabel("<html><div style='text-align:center;'>" + message.replace("\n", "<br>") + "</div></html>", SwingConstants.CENTER);
-        label.setOpaque(true);
-        label.setBackground(new Color(0, 0, 0, 190));
-        label.setForeground(Color.WHITE);
-        label.setFont(new Font("Arial", Font.BOLD, 14));
-        label.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(accent, 2, true), BorderFactory.createEmptyBorder(10, 16, 10, 16)));
-        Dimension pref = label.getPreferredSize();
-        label.setBounds((getWidth() - pref.width) / 2, getHeight() - pref.height - 30, pref.width, pref.height);
-        lp.add(label, JLayeredPane.POPUP_LAYER);
-        lp.repaint();
-        toastLabel = label;
-        Timer t = new Timer(1400, e -> { lp.remove(label); lp.repaint(); });
-        t.setRepeats(false);
-        t.start();
+
+        LanguageManager.Language lang = controller.getCurrentLanguage();
+        boolean isHebrew = (lang == LanguageManager.Language.HE);
+
+        // Determine if this is a positive or negative outcome
+        boolean isPositive = isPositiveOutcome(message);
+        Color accentColor = isPositive ? COLOR_GREEN : COLOR_RED;
+
+        // Translate the message
+        String translatedMessage = translateToastMessage(message, lang);
+
+        // Determine title
+        String title = determineToastTitle(message, lang);
+
+        // Create and show modal dialog
+        ResultMessageDialog.show(
+                SwingUtilities.getWindowAncestor(this),
+                title,
+                translatedMessage,
+                accentColor,
+                isHebrew
+        );
+    }
+
+    /**
+     * Determines if the outcome is positive (correct/good) or negative (wrong/bad)
+     */
+    private boolean isPositiveOutcome(String message) {
+        if (message == null) return false;
+        String lower = message.toLowerCase();
+
+        if (lower.contains("correct")) return true;
+        if (lower.contains("good surprise") || lower.contains("good")) return true;
+        if (lower.contains("result: good")) return true;
+
+        if (lower.contains("wrong")) return false;
+        if (lower.contains("bad surprise") || lower.contains("bad")) return false;
+        if (lower.contains("result: bad")) return false;
+        if (lower.contains("penalty")) return false;
+
+        return true;
+    }
+
+    /**
+     * Determines the appropriate title for the dialog based on message content
+     */
+    private String determineToastTitle(String message, LanguageManager.Language lang) {
+        String lower = message.toLowerCase();
+
+        if (lower.contains("correct")) {
+            return lang == LanguageManager.Language.HE ? "נכון!" : "Correct!";
+        } else if (lower.contains("wrong")) {
+            return lang == LanguageManager.Language.HE ? "שגוי!" : "Wrong!";
+        } else if (lower.contains("good surprise") || (lower.contains("surprise") && lower.contains("good"))) {
+            return lang == LanguageManager.Language.HE ? "הפתעה טובה!" : "Good Surprise!";
+        } else if (lower.contains("bad surprise") || (lower.contains("surprise") && lower.contains("bad"))) {
+            return lang == LanguageManager.Language.HE ? "הפתעה רעה!" : "Bad Surprise!";
+        } else if (lower.contains("surprise")) {
+            return lang == LanguageManager.Language.HE ? "הפתעה!" : "Surprise!";
+        } else if (lower.contains("flag")) {
+            return lang == LanguageManager.Language.HE ? "דגל" : "Flag";
+        }
+
+        return lang == LanguageManager.Language.HE ? "תוצאה" : "Result";
+    }
+
+    /**
+     * Translates toast messages to the current language
+     */
+    private String translateToastMessage(String message, LanguageManager.Language lang) {
+        if (message == null || lang == LanguageManager.Language.EN) {
+            return message;
+        }
+
+        String result = message;
+
+        // Translate difficulty levels
+        result = result.replace("EASY", "קל");
+        result = result.replace("MEDIUM", "בינוני");
+        result = result.replace("HARD", "קשה");
+        result = result.replace("EXPERT", "מומחה");
+
+        // Translate outcome words
+        result = result.replace("Wrong!", "שגוי!");
+        result = result.replace("Wrong", "שגוי");
+        result = result.replace("Correct!", "נכון!");
+        result = result.replace("Correct", "נכון");
+
+        // Translate surprise-specific phrases
+        result = result.replace("Surprise activated!", "ההפתעה הופעלה!");
+        result = result.replace("Surprise result: GOOD", "תוצאת ההפתעה: טוב");
+        result = result.replace("Surprise result: BAD", "תוצאת ההפתעה: רע");
+        result = result.replace("Reward:", "פרס:");
+        result = result.replace("Penalty:", "עונש:");
+
+        // Translate common phrases
+        result = result.replace("reveal random 3x3", "חשיפת 3x3 אקראי");
+        result = result.replace("revealed random 3x3 area", "נחשף אזור 3x3 אקראי");
+        result = result.replace("reveal 1 mine", "חשיפת מוקש אחד");
+        result = result.replace("revealed 1 mine", "נחשף מוקש אחד");
+        result = result.replace("OR nothing", "או כלום");
+        result = result.replace("Chosen: nothing", "נבחר: כלום");
+        result = result.replace("reward", "פרס");
+        result = result.replace("Reward", "פרס");
+
+        // Translate stat labels
+        result = result.replace("Activation cost:", "עלות הפעלה:");
+        result = result.replace("Special effect:", "אפקט מיוחד:");
+        result = result.replace("Score:", "ניקוד:");
+        result = result.replace("Lives:", "חיים:");
+
+        // Translate units
+        result = result.replace("+1 life", "+1 חיים");
+        result = result.replace("-1 life", "-1 חיים");
+        result = result.replace(" pts,", " נק',");
+        result = result.replace(" pts.", " נק'.");
+        result = result.replace(" pts", " נק'");
+        result = result.replace(" life.", " חיים.");
+        result = result.replace(" life,", " חיים,");
+        result = result.replace(" life", " חיים");
+        result = result.replace(" lives", " חיים");
+
+        // Translate game terms
+        result = result.replace("game.", "משחק.");
+        result = result.replace("game)", "משחק)");
+        result = result.replace("(Easy", "(קל");
+        result = result.replace("(Medium", "(בינוני");
+        result = result.replace("(Hard", "(קשה");
+        result = result.replace("(Expert", "(מומחה");
+        result = result.replace("area", "אזור");
+        result = result.replace("mine", "מוקש");
+
+        // Translate surprise outcomes
+        result = result.replace("Good surprise!", "הפתעה טובה!");
+        result = result.replace("Bad surprise!", "הפתעה רעה!");
+        result = result.replace("GOOD", "טוב");
+        result = result.replace("BAD", "רע");
+        result = result.replace("Good", "טוב");
+        result = result.replace("Bad", "רע");
+
+        return result;
     }
 
     public void updateStatus() {
-        lblMinesLeft1.setText("MINES LEFT: " + controller.getMinesLeft(1));
-        lblMinesLeft2.setText("MINES LEFT: " + controller.getMinesLeft(2));
-        lblScore.setText("SCORE: " + controller.getSharedScore());
-        lblLives.setText("LIVES: " + controller.getSharedLives() + "/" + controller.getMaxLives());
+        lblMinesLeft1.setText(getMinesLeftText(1));
+        lblMinesLeft2.setText(getMinesLeftText(2));
+
+        LanguageManager.Language lang = controller.getCurrentLanguage();
+        lblScore.setText(LanguageManager.get("score", lang) + ": " + controller.getSharedScore());
+        lblLives.setText(LanguageManager.get("lives", lang) + ": " +
+                controller.getSharedLives() + "/" + controller.getMaxLives());
         updateHearts();
         revalidate();
         repaint();
@@ -365,7 +623,10 @@ public class GamePanel extends JPanel {
         long durationSeconds = (System.currentTimeMillis() - startTimeMillis) / 1000L;
         controller.recordFinishedGame(player1Name, player2Name, durationSeconds);
         GameController.GameSummaryDTO summary = controller.getGameSummaryDTO();
-        GameResultDialog.ResultAction action = GameResultDialog.showResultDialog(SwingUtilities.getWindowAncestor(this), summary, durationSeconds, controller.getTotalSurprisesOpened());
+        GameResultDialog.ResultAction action = GameResultDialog.showResultDialog(
+                SwingUtilities.getWindowAncestor(this), summary, durationSeconds,
+                controller.getTotalSurprisesOpened()
+        );
         if (action == GameResultDialog.ResultAction.RESTART) {
             controller.restartGame();
             startTimeMillis = System.currentTimeMillis();
@@ -402,7 +663,10 @@ public class GamePanel extends JPanel {
     }
 
     private void requestResizeBoards() {
-        if (resizeStabilizer != null && resizeStabilizer.isRunning()) { resizeStabilizer.restart(); return; }
+        if (resizeStabilizer != null && resizeStabilizer.isRunning()) {
+            resizeStabilizer.restart();
+            return;
+        }
         resizeStabilizer = new Timer(40, e -> {
             if (wrap1 == null || wrap2 == null) return;
             resizeBoardsToFit();

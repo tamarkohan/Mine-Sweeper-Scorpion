@@ -1,5 +1,8 @@
 package View;
 
+import Controller.GameController;
+import util.LanguageManager;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
@@ -21,6 +24,8 @@ public class OutcomeDialog extends JDialog {
         super(owner, title, ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+
         BackgroundPanel root = new BackgroundPanel();
         root.setLayout(new BorderLayout());
         root.setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
@@ -32,7 +37,7 @@ public class OutcomeDialog extends JDialog {
         TitleCard header = new TitleCard(title, accent);
         header.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        BodyCard body = new BodyCard(message, accent);
+        BodyCard body = new BodyCard(message, accent, lang);
         body.setAlignmentX(Component.CENTER_ALIGNMENT);
         body.setBorder(BorderFactory.createEmptyBorder(16, 0, 0, 0));
 
@@ -40,7 +45,7 @@ public class OutcomeDialog extends JDialog {
         actions.setOpaque(false);
         actions.setBorder(BorderFactory.createEmptyBorder(16, 0, 0, 0));
 
-        JButton ok = new JButton("OK");
+        JButton ok = new JButton(LanguageManager.get("ok", lang));
         styleButton(ok, accent);
         ok.addActionListener(e -> dispose());
         actions.add(ok);
@@ -148,10 +153,12 @@ public class OutcomeDialog extends JDialog {
     private static class BodyCard extends JPanel {
         private final List<String> lines;
         private final Color accent;
+        private final LanguageManager.Language lang;
 
-        BodyCard(String msg, Color accent) {
+        BodyCard(String msg, Color accent, LanguageManager.Language lang) {
             this.lines = lines(msg);
             this.accent = accent;
+            this.lang = lang;
             setOpaque(false);
             setPreferredSize(new Dimension(520, Math.max(120, 38 + this.lines.size() * 24)));
             setBorder(BorderFactory.createEmptyBorder(14, 18, 14, 18));
@@ -178,18 +185,29 @@ public class OutcomeDialog extends JDialog {
 
             // message lines
             int y = 34;
+            boolean isRtl = (lang == LanguageManager.Language.HE);
+
             for (String line : lines) {
                 boolean important =
-                        line.startsWith("Score:") ||
-                                line.startsWith("Lives:") ||
-                                line.startsWith("Activation cost:") ||
-                                line.toLowerCase().startsWith("special effect:");
+                        line.startsWith("Score:") || line.startsWith("ניקוד:") ||
+                                line.startsWith("Lives:") || line.startsWith("חיים:") ||
+                                line.startsWith("Activation cost:") || line.startsWith("עלות הפעלה:") ||
+                                line.toLowerCase().startsWith("special effect:") ||
+                                line.startsWith("אפקט מיוחד:");
 
                 g2.setFont(new Font("Arial", important ? Font.BOLD : Font.PLAIN, important ? 16 : 15));
                 g2.setColor(important ? TEXT : MUTED);
 
                 String printed = (important ? "• " : "  ") + line;
-                g2.drawString(printed, 18, y);
+
+                if (isRtl) {
+                    // Right-align for Hebrew
+                    FontMetrics fm = g2.getFontMetrics();
+                    int textWidth = fm.stringWidth(printed);
+                    g2.drawString(printed, w - 18 - textWidth, y);
+                } else {
+                    g2.drawString(printed, 18, y);
+                }
                 y += 24;
             }
 
@@ -200,51 +218,100 @@ public class OutcomeDialog extends JDialog {
     public static void showQuestionOutcomeFromMessage(Window owner, String outcomeMessage) {
         if (outcomeMessage == null) return;
 
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+
         String lower = outcomeMessage.toLowerCase();
 
-        boolean isCorrect = lower.contains("correct");
-        boolean isWrong = lower.contains("wrong");
-        boolean isSkipped = lower.contains("didn't answer") || lower.contains("did not answer") || lower.contains("skipped");
+        boolean isCorrect = lower.contains("correct") || lower.contains("נכון");
+        boolean isWrong = lower.contains("wrong") || lower.contains("שגוי");
+        boolean isSkipped = lower.contains("didn't answer") || lower.contains("did not answer")
+                || lower.contains("skipped") || lower.contains("דילגת");
 
         Color accent;
         String title;
 
         if (isCorrect) {
             accent = ACCENT_GREEN;
-            title = "CORRECT!";
+            title = LanguageManager.get("outcome_correct", lang);
         } else if (isWrong) {
             accent = ACCENT_RED;
-            title = "WRONG!";
+            title = LanguageManager.get("outcome_wrong", lang);
         } else if (isSkipped) {
             // keep cyan for skipped / neutral
             accent = new Color(65, 255, 240);
-            title = "SKIPPED";
+            title = LanguageManager.get("outcome_skipped", lang);
         } else {
             // fallback if message doesn't match
             accent = new Color(65, 255, 240);
-            title = "OUTCOME";
+            title = LanguageManager.get("outcome", lang);
         }
 
-        // optional: remove leading "Correct!/Wrong!" if your model puts it
-        String cleaned = outcomeMessage
-                .replaceFirst("(?i)^\\s*correct!\\s*\\R", "")
-                .replaceFirst("(?i)^\\s*wrong!\\s*\\R", "");
+        // Translate the outcome message
+        String translatedMessage = translateOutcomeMessage(outcomeMessage, lang);
 
-        new OutcomeDialog(owner, title, cleaned, accent).setVisible(true);
+        new OutcomeDialog(owner, title, translatedMessage, accent).setVisible(true);
     }
 
     public static void showSurpriseOutcomeFromMessage(Window owner, String outcomeMessage) {
         if (outcomeMessage == null) return;
 
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+
         String lower = outcomeMessage.toLowerCase();
-        boolean good = lower.contains("good");
-        boolean bad = lower.contains("bad");
+        boolean good = lower.contains("good") || lower.contains("טוב");
+        boolean bad = lower.contains("bad") || lower.contains("רע");
 
         Color accent = good ? ACCENT_GREEN : (bad ? ACCENT_RED : new Color(65, 255, 240));
-        String title = good ? "SURPRISE: GOOD!" : (bad ? "SURPRISE: BAD!" : "SURPRISE!");
+        String title = good ? LanguageManager.get("surprise_good", lang)
+                : (bad ? LanguageManager.get("surprise_bad", lang)
+                : LanguageManager.get("surprise", lang));
 
-        new OutcomeDialog(owner, title, outcomeMessage, accent).setVisible(true);
+        // Translate the outcome message
+        String translatedMessage = translateOutcomeMessage(outcomeMessage, lang);
+
+        new OutcomeDialog(owner, title, translatedMessage, accent).setVisible(true);
     }
 
+    /**
+     * Translates outcome message parts to the current language
+     */
+    private static String translateOutcomeMessage(String message, LanguageManager.Language lang) {
+        if (message == null || lang == LanguageManager.Language.EN) {
+            return message;
+        }
 
+        String result = message;
+
+        // Translate difficulty levels
+        result = result.replace("EASY", "קל");
+        result = result.replace("MEDIUM", "בינוני");
+        result = result.replace("HARD", "קשה");
+        result = result.replace("EXPERT", "מומחה");
+
+        // Translate outcome words
+        result = result.replace("Wrong!", "שגוי!");
+        result = result.replace("Wrong", "שגוי");
+        result = result.replace("Correct!", "נכון!");
+        result = result.replace("Correct", "נכון");
+
+        // Translate stat labels
+        result = result.replace("Activation cost:", "עלות הפעלה:");
+        result = result.replace("Score:", "ניקוד:");
+        result = result.replace("Lives:", "חיים:");
+        result = result.replace("Special effect:", "אפקט מיוחד:");
+
+        // Translate units
+        result = result.replace(" pts", " נק'");
+        result = result.replace(" life.", " חיים.");
+        result = result.replace(" life", " חיים");
+        result = result.replace(" lives", " חיים");
+
+        // Translate surprise outcomes
+        result = result.replace("Good surprise!", "הפתעה טובה!");
+        result = result.replace("Bad surprise!", "הפתעה רעה!");
+        result = result.replace("Good", "טוב");
+        result = result.replace("Bad", "רע");
+
+        return result;
+    }
 }

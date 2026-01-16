@@ -1,6 +1,8 @@
-package View;
+
+        package View;
 
 import Controller.GameController;
+import util.LanguageManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,7 +20,6 @@ public class QuestionDialog extends JDialog {
 
     private static final Color QUESTION_BORDER = new Color(65, 255, 240);
     private static final Color OPTION_BORDER = new Color(210, 220, 255);
-    private static final Color OPTION_BORDER_SELECTED = new Color(65, 255, 240);
 
     private static final Color TURQUOISE = new Color(65, 255, 240);
     private static final Color FRAME_GREY = new Color(140, 150, 160);
@@ -26,7 +27,6 @@ public class QuestionDialog extends JDialog {
     private static final Color TEXT = Color.WHITE;
     private static final Color TEXT_MUTED = new Color(225, 230, 255);
 
-    // Fields for result overlay (kept exactly as your functionality)
     private JPanel resultOverlay;
     private JLabel resultTitle;
     private JLabel resultDetails;
@@ -34,10 +34,13 @@ public class QuestionDialog extends JDialog {
     private String correctAnswerText;
 
     private QuestionDialog(Window owner, GameController.QuestionDTO question) {
-        super(owner, "Question", ModalityType.APPLICATION_MODAL);
+        super(owner, "", ModalityType.APPLICATION_MODAL);
+
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        setTitle(LanguageManager.get("question", lang));
+
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        // If user clicks X, treat as SKIPPED (do not mark wrong)
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -77,8 +80,8 @@ public class QuestionDialog extends JDialog {
         actions.setOpaque(false);
         actions.setBorder(BorderFactory.createEmptyBorder(16, 0, 0, 0));
 
-        JButton submit = new JButton("Submit");
-        JButton cancel = new JButton("Cancel");
+        JButton submit = new JButton(LanguageManager.get("submit", lang));
+        JButton cancel = new JButton(LanguageManager.get("cancel", lang));
         styleActionButton(cancel, false);
         styleActionButton(submit, true);
 
@@ -88,19 +91,18 @@ public class QuestionDialog extends JDialog {
         });
 
         submit.addActionListener(e -> {
-
             ButtonModel sel = group.getSelection();
             if (sel == null) {
+                LanguageManager.Language currentLang = GameController.getInstance().getCurrentLanguage();
                 JOptionPane.showMessageDialog(
                         this,
-                        "Please choose an answer first.",
-                        "No answer selected",
+                        LanguageManager.get("no_answer_selected", currentLang),
+                        LanguageManager.get("no_answer_title", currentLang),
                         JOptionPane.WARNING_MESSAGE
                 );
                 return;
             }
 
-            // Get selected answer text
             for (OptionButton btn : buttons) {
                 if (btn.isSelected()) {
                     selectedAnswerText = btn.text;
@@ -108,7 +110,6 @@ public class QuestionDialog extends JDialog {
                 }
             }
 
-            // Get correct answer text
             int correctIndex = normalize(question.correctOption) - 'A';
             if (correctIndex >= 0 && correctIndex < opts.size()) {
                 correctAnswerText = opts.get(correctIndex);
@@ -147,7 +148,6 @@ public class QuestionDialog extends JDialog {
         setLocationRelativeTo(owner);
     }
 
-    // (kept exactly as your class - not called currently, but preserved)
     private void showResult(boolean isCorrect) {
         if (resultOverlay == null) {
             resultOverlay = new JPanel(new GridBagLayout());
@@ -175,7 +175,8 @@ public class QuestionDialog extends JDialog {
             resultDetails.setFont(new Font("Arial", Font.PLAIN, 14));
             resultDetails.setForeground(new Color(225, 230, 255));
 
-            JButton ok = new JButton("OK");
+            LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+            JButton ok = new JButton(LanguageManager.get("ok", lang));
             styleActionButton(ok, true);
             ok.setAlignmentX(Component.CENTER_ALIGNMENT);
             ok.addActionListener(e -> dispose());
@@ -190,14 +191,16 @@ public class QuestionDialog extends JDialog {
             setGlassPane(resultOverlay);
         }
 
-        resultTitle.setText(isCorrect ? "CORRECT " : "WRONG ");
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        resultTitle.setText(isCorrect ? LanguageManager.get("correct", lang) :
+                LanguageManager.get("wrong", lang));
 
         String picked = (selectedAnswerText == null) ? "-" : selectedAnswerText;
         String correct = (correctAnswerText == null) ? "-" : correctAnswerText;
 
         resultDetails.setText("<html><div style='text-align:center;'>"
-                + "<b>Your answer:</b> " + escapeHtml(picked) + "<br>"
-                + "<b>Correct answer:</b> " + escapeHtml(correct)
+                + "<b>" + LanguageManager.get("your_answer", lang) + "</b> " + escapeHtml(picked) + "<br>"
+                + "<b>" + LanguageManager.get("correct_answer", lang) + "</b> " + escapeHtml(correct)
                 + "</div></html>");
 
         resultOverlay.setVisible(true);
@@ -367,11 +370,9 @@ public class QuestionDialog extends JDialog {
 
             boolean selected = isSelected();
 
-            // background glass
             g2.setColor(new Color(0, 0, 0, 115));
             g2.fillRoundRect(0, 0, w, h, arc, arc);
 
-            // border/frame
             if (selected) {
                 for (int i = 18; i >= 1; i--) {
                     g2.setStroke(new BasicStroke(i));
@@ -396,7 +397,6 @@ public class QuestionDialog extends JDialog {
                 g2.drawRoundRect(2, 2, w - 4, h - 4, arc, arc);
             }
 
-            // circle
             int circleR = 40;
             int circleX = rtl ? 18 : (w - 18 - circleR);
             int circleY = (h - circleR) / 2;
@@ -414,14 +414,10 @@ public class QuestionDialog extends JDialog {
             } else {
                 g2.setColor(new Color(255, 255, 255, 230));
                 g2.fillOval(circleX, circleY, circleR, circleR);
-            }
-
-            // letter inside circle
-            g2.setColor(new Color(10, 18, 55));
+            }g2.setColor(new Color(10, 18, 55));
             g2.setFont(new Font("Arial", Font.BOLD, 18));
             drawCentered(g2, String.valueOf(letter), new Rectangle(circleX, circleY, circleR, circleR));
 
-            // option text
             g2.setColor(selected ? TEXT : TEXT_MUTED);
             g2.setFont(getFont());
 
@@ -467,5 +463,4 @@ public class QuestionDialog extends JDialog {
                 y += lineHeight;
             }
         }
-    }
-}
+    }}

@@ -1,5 +1,8 @@
 package View;
 
+import Controller.GameController;
+import util.LanguageManager;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -23,8 +26,28 @@ public class ActivationConfirmDialog extends JDialog {
     private static final Color BTN_BG_H = new Color(24, 38, 88);
 
     private ActivationConfirmDialog(Window owner, String cellType) {
-        super(owner, cellType + " Cell", ModalityType.APPLICATION_MODAL);
+        super(owner, ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+
+        // Determine if it's a question or surprise cell
+        boolean isQuestion = cellType.equalsIgnoreCase("Question");
+
+        // Get translated strings
+        String titleText = isQuestion
+                ? LanguageManager.get("question_cell", lang)
+                : LanguageManager.get("surprise_cell", lang);
+
+        String headerText = isQuestion
+                ? LanguageManager.get("this_is_question_cell", lang)
+                : LanguageManager.get("this_is_surprise_cell", lang);
+
+        String questionText = LanguageManager.get("do_you_want_to_activate", lang);
+        String cancelText = LanguageManager.get("cancel", lang);
+        String activateText = LanguageManager.get("activate", lang);
+
+        setTitle(titleText);
 
         JPanel root = new GradientPanel();
         root.setBorder(BorderFactory.createEmptyBorder(16, 18, 16, 18));
@@ -37,12 +60,20 @@ public class ActivationConfirmDialog extends JDialog {
         JLabel icon = new JLabel(loadIconForType(cellType));
         icon.setPreferredSize(new Dimension(36, 36));
 
-        JLabel title = new JLabel("This is a " + cellType + " cell");
+        JLabel title = new JLabel(headerText);
         title.setForeground(TEXT);
         title.setFont(new Font("Arial", Font.BOLD, 18));
 
-        header.add(icon, BorderLayout.WEST);
-        header.add(title, BorderLayout.CENTER);
+        // Apply RTL for Hebrew
+        if (lang == LanguageManager.Language.HE) {
+            header.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+            title.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+            header.add(icon, BorderLayout.EAST);
+            header.add(title, BorderLayout.CENTER);
+        } else {
+            header.add(icon, BorderLayout.WEST);
+            header.add(title, BorderLayout.CENTER);
+        }
 
         // underline
         JPanel underline = new JPanel() {
@@ -60,20 +91,27 @@ public class ActivationConfirmDialog extends JDialog {
         underline.setPreferredSize(new Dimension(1, 6));
 
         // ===== Body (single clean line) =====
-        JLabel question = new JLabel("Do you want to activate it?");
+        JLabel question = new JLabel(questionText);
         question.setForeground(MUTED);
         question.setFont(new Font("Arial", Font.PLAIN, 14));
 
         JPanel body = new JPanel(new BorderLayout());
         body.setOpaque(false);
-        body.add(question, BorderLayout.WEST);
+
+        if (lang == LanguageManager.Language.HE) {
+            question.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+            body.add(question, BorderLayout.EAST);
+        } else {
+            body.add(question, BorderLayout.WEST);
+        }
 
         // ===== Buttons =====
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        JPanel buttons = new JPanel(new FlowLayout(
+                lang == LanguageManager.Language.HE ? FlowLayout.LEFT : FlowLayout.RIGHT, 10, 0));
         buttons.setOpaque(false);
 
-        JButton cancel = makeButton("Cancel", false);
-        JButton activate = makeButton("Activate", true);
+        JButton cancel = makeButton(cancelText, false);
+        JButton activate = makeButton(activateText, true);
 
         cancel.addActionListener(e -> {
             choice = Choice.CANCEL;
@@ -84,8 +122,14 @@ public class ActivationConfirmDialog extends JDialog {
             dispose();
         });
 
-        buttons.add(cancel);
-        buttons.add(activate);
+        // For Hebrew, reverse button order (primary on left)
+        if (lang == LanguageManager.Language.HE) {
+            buttons.add(activate);
+            buttons.add(cancel);
+        } else {
+            buttons.add(cancel);
+            buttons.add(activate);
+        }
 
         // ===== Assemble =====
         JPanel top = new JPanel(new BorderLayout(0, 8));
