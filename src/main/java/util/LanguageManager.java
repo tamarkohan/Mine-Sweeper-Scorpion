@@ -80,6 +80,52 @@ public class LanguageManager {
         add("difficulty_medium", "MEDIUM", "בינוני");
         add("difficulty_hard", "HARD", "קשה");
         add("difficulty_expert", "EXPERT", "מומחה");
+
+        // Question Management Frame
+        add("question_management", "Question Management", "ניהול שאלות");
+        add("add", "Add", "הוסף");
+        add("edit", "Edit", "ערוך");
+        add("delete", "Delete", "מחק");
+        add("save", "Save", "שמור");
+        add("apply", "Apply", "החל");
+        add("clear", "Clear", "נקה");
+        add("difficulty", "Difficulty:", "רמת קושי:");
+        add("correct_label", "Correct:", "תשובה נכונה:");
+        add("id", "ID:", "מזהה:");
+        add("all", "All", "הכל");
+        add("saved_msg", "Questions saved to CSV.", "השאלות נשמרו לקובץ CSV.");
+        add("saved_title", "Saved", "נשמר");
+
+        // Add/Edit Question Dialog
+        add("add_question", "Add Question", "הוסף שאלה");
+        add("edit_question", "Edit Question", "ערוך שאלה");
+        add("add_new_question", "Add New Question", "הוסף שאלה חדשה");
+        add("text", "Text", "טקסט");
+        add("option_a", "Option A", "אפשרות א");
+        add("option_b", "Option B", "אפשרות ב");
+        add("option_c", "Option C", "אפשרות ג");
+        add("option_d", "Option D", "אפשרות ד");
+        add("correct_option", "Correct", "נכונה");
+        add("difficulty_level", "Difficulty", "רמה");
+        add("text_empty", "Text is empty.", "הטקסט ריק.");
+        add("invalid_input", "Invalid input: ", "קלט לא תקין: ");
+        add("error", "Error", "שגיאה");
+
+        // Admin Access Dialog
+        add("admin_access", "Admin Access", "גישת מנהל");
+        add("enter_admin_password", "Enter Admin Password:", "הזן סיסמת מנהל:");
+        add("access_denied", "Access denied.", "הגישה נדחתה.");
+        add("wrong_password", "Wrong password", "סיסמה שגויה");
+
+        // Table headers for Question Management
+        add("header_id", "ID", "מזהה");
+        add("header_text", "Text", "טקסט");
+        add("header_a", "A", "א");
+        add("header_b", "B", "ב");
+        add("header_c", "C", "ג");
+        add("header_d", "D", "ד");
+        add("header_correct", "Correct", "נכונה");
+        add("header_difficulty", "Difficulty", "רמה");
     }
 
     private static void add(String key, String en, String he) {
