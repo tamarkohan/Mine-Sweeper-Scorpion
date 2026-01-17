@@ -154,6 +154,7 @@ public class GamePanel extends JPanel {
         }
     }
 
+
     private void initComponents() {
         setLayout(new BorderLayout());
         setOpaque(false);
@@ -174,8 +175,16 @@ public class GamePanel extends JPanel {
         centerPanel.setOpaque(false);
         bg.add(centerPanel, BorderLayout.CENTER);
 
+        // *** CRITICAL FIX: Dynamic header height based on difficulty ***
+        int headerHeight = switch (levelName) {
+            case "EASY" -> 200;      // Shorter header = more board space
+            case "MEDIUM" -> 220;
+            case "HARD" -> 230;
+            default -> 200;
+        };
+
         Dimension boxDim = new Dimension(FIXED_BOX_WIDTH, FIXED_BOX_HEIGHT);
-        Dimension headerDim = new Dimension(100, TOP_HEADER_HEIGHT);
+        Dimension headerDim = new Dimension(100, headerHeight);
 
         // --- Player 1 Side ---
         JPanel leftSide = new JPanel(new BorderLayout());
@@ -200,7 +209,15 @@ public class GamePanel extends JPanel {
         lblMinesLeft1.setFont(new Font("Arial", Font.BOLD, 14));
         lblMinesLeft1.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        leftTopGroup.add(Box.createVerticalStrut(155));
+        // *** FIX: Dynamic top spacing ***
+        int topSpacing = switch (levelName) {
+            case "EASY" -> 120;      // Less spacing for Easy
+            case "MEDIUM" -> 140;
+            case "HARD" -> 155;
+            default -> 120;
+        };
+
+        leftTopGroup.add(Box.createVerticalStrut(topSpacing));
         leftTopGroup.add(playerBox1);
         leftTopGroup.add(Box.createVerticalStrut(12));
         leftTopGroup.add(lblMinesLeft1);
@@ -238,7 +255,7 @@ public class GamePanel extends JPanel {
         lblMinesLeft2.setFont(new Font("Arial", Font.BOLD, 14));
         lblMinesLeft2.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        rightTopGroup.add(Box.createVerticalStrut(155));
+        rightTopGroup.add(Box.createVerticalStrut(topSpacing));
         rightTopGroup.add(playerBox2);
         rightTopGroup.add(Box.createVerticalStrut(12));
         rightTopGroup.add(lblMinesLeft2);
@@ -310,13 +327,8 @@ public class GamePanel extends JPanel {
         controlsBar.add(btnExit, BorderLayout.WEST);
         controlsBar.add(rightControls, BorderLayout.EAST);
 
-        // Restart button now shows confirmation dialog
         btnRestart.setOnClick(this::showRestartConfirmation);
-
-        // Exit button shows confirmation dialog
         btnExit.setOnClick(this::showExitConfirmation);
-
-        // --- THREADED LANGUAGE TOGGLE ---
         btnLanguage.setOnClick(this::handleLanguageSwitch);
 
         footer.add(statusGroup, BorderLayout.CENTER);
@@ -340,7 +352,6 @@ public class GamePanel extends JPanel {
         });
         gameTimer.start();
 
-        // Preload thinking icon
         new Thread(() -> new IconButton(THINKING_ICON, true)).start();
     }
 
@@ -598,16 +609,48 @@ public class GamePanel extends JPanel {
 
     private void resizeBoardsToFit() {
         if (wrap1 == null || wrap2 == null || boardPanel1 == null || boardPanel2 == null) return;
-        int availW = Math.min(wrap1.getWidth(), wrap2.getWidth()); int availH = Math.min(wrap1.getHeight(), wrap2.getHeight());
-        if (availW <= 0 || availH <= 0) return;
+
+        int availW = Math.min(wrap1.getWidth(), wrap2.getWidth());
+        int availH = Math.min(wrap1.getHeight(), wrap2.getHeight());
+
+        if (availW <= 40 || availH <= 40) return;  // Need minimum space
+
         String diff = controller.getDifficultyName();
-        int rows = switch (diff) { case "MEDIUM" -> 13; case "HARD" -> 16; default -> 9; };
+
+        // Get grid dimensions
+        int rows = switch (diff) {
+            case "MEDIUM" -> 13;
+            case "HARD" -> 16;
+            default -> 9;
+        };
         int cols = rows;
-        int cell = Math.min((availW - 20) / cols, (availH - 20) / rows);
-        int maxCell = diff.equals("EASY") ? 48 : (diff.equals("MEDIUM") ? 35 : 28);
-        cell = Math.max(18, Math.min(maxCell, cell));
-        boardPanel1.setCellSize(cell); boardPanel2.setCellSize(cell);
-    }
+
+        // *** KEY FIX: Unified cell size calculation with better proportions ***
+        // Account for glow effect padding (approximately 48px total)
+        int effectivePadding = 48;
+        int usableW = availW - effectivePadding;
+        int usableH = availH - effectivePadding;
+
+        // Calculate maximum cell size that fits
+        int cellFromWidth = usableW / cols;
+        int cellFromHeight = usableH / rows;
+        int cell = Math.min(cellFromWidth, cellFromHeight);
+
+        // *** UNIFIED LIMITS: Same range for all difficulties ***
+        int minCell = 22;  // Absolute minimum (readable)
+        int maxCell = switch (diff) {
+            case "EASY" -> 55;     // Generous max for Easy
+            case "MEDIUM" -> 42;   // Balanced for Medium
+            case "HARD" -> 36;     // Compact for Hard
+            default -> 55;
+        };
+
+        // Clamp to range
+        cell = Math.max(minCell, Math.min(maxCell, cell));
+
+        // Apply to both boards
+        boardPanel1.setCellSize(cell);
+        boardPanel2.setCellSize(cell);}
 
     private void requestResizeBoards() {
         if (resizeStabilizer != null && resizeStabilizer.isRunning()) { resizeStabilizer.restart(); return; }
