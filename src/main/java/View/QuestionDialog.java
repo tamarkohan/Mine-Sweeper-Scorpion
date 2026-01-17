@@ -10,6 +10,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
+import util.SoundManager;
 
 public class QuestionDialog extends JDialog {
 
@@ -32,6 +33,7 @@ public class QuestionDialog extends JDialog {
     private JLabel resultDetails;
     private String selectedAnswerText;
     private String correctAnswerText;
+    private OptionButton[] buttons;
 
     private QuestionDialog(Window owner, GameController.QuestionDTO question) {
         super(owner, "", ModalityType.APPLICATION_MODAL);
@@ -67,14 +69,21 @@ public class QuestionDialog extends JDialog {
         List<String> opts = question.options;
         char[] letters = new char[]{'A', 'B', 'C', 'D'};
 
-        OptionButton[] buttons = new OptionButton[4];
+        buttons = new OptionButton[4];
+
         for (int i = 0; i < 4; i++) {
             String txt = (i < opts.size()) ? opts.get(i) : "";
             OptionButton ob = new OptionButton(letters[i], txt);
+
+            //  click sound when choosing an answer
+            ob.addActionListener(e -> SoundManager.click());
+
             group.add(ob);
             buttons[i] = ob;
             grid.add(ob);
         }
+
+
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         actions.setOpaque(false);
@@ -86,11 +95,14 @@ public class QuestionDialog extends JDialog {
         styleActionButton(submit, true);
 
         cancel.addActionListener(e -> {
+            SoundManager.click();
             result = GameController.QuestionAnswerResult.SKIPPED;
             dispose();
         });
 
+
         submit.addActionListener(e -> {
+            SoundManager.click();
             ButtonModel sel = group.getSelection();
             if (sel == null) {
                 LanguageManager.Language currentLang = GameController.getInstance().getCurrentLanguage();
@@ -121,7 +133,8 @@ public class QuestionDialog extends JDialog {
             boolean isCorrect = (selectedChar == correctChar);
             result = isCorrect ? GameController.QuestionAnswerResult.CORRECT
                     : GameController.QuestionAnswerResult.WRONG;
-
+            if (isCorrect) util.SoundManager.correctAnswer();
+            else util.SoundManager.wrongAnswer();
             dispose();
         });
 

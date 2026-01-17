@@ -99,7 +99,12 @@ public class StartPanel extends JPanel {
         bg.add(btnStart);
 
         btnBack = new IconButton("/ui/icons/back.png");
-        btnBack.setOnClick(() -> listener.onBackToMenu());
+        btnBack.setOnClick(() -> {
+            Window w = SwingUtilities.getWindowAncestor(this);
+            if (util.ExitConfirmHelper.confirmExit(w)) {
+                listener.onBackToMenu();
+            }
+        });
         bg.add(btnBack);
 
         // --- BUTTON WITH THREADED TOGGLE ---

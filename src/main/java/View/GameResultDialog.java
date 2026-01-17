@@ -2,6 +2,7 @@ package View;
 
 import Controller.GameController;
 import util.LanguageManager;
+import util.SoundManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,6 +36,10 @@ public class GameResultDialog extends JDialog {
         LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
         boolean isHe = (lang == LanguageManager.Language.HE);
         boolean isWin = summary.isWin;
+        SwingUtilities.invokeLater(() -> {
+            if (isWin) SoundManager.winGame();
+            else SoundManager.loseGame();
+        });
 
         // 1. Determine Title Text
         String titleText;

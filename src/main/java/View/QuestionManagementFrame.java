@@ -45,7 +45,6 @@ public class QuestionManagementFrame extends JFrame {
     private final JButton btnAdd;
     private final JButton btnEdit;
     private final JButton btnDelete;
-    private final JButton btnSave;
 
     private final IconButton btnLanguage;
     private final JLabel toastLabel;
@@ -79,21 +78,33 @@ public class QuestionManagementFrame extends JFrame {
         getRootPane().getActionMap().put("closeWindow", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dispose();
-                if (onExitToMenu != null) onExitToMenu.run();
+                if (util.ExitConfirmHelper.confirmExit(QuestionManagementFrame.this)) {
+                    dispose();
+                    if (onExitToMenu != null) onExitToMenu.run();
+                }
             }
         });
+
 
         // Setup Table Model
         String[] cols = {"ID", "Text", "A", "B", "C", "D", "Correct", "Difficulty"};
         model = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
+
+            @Override
+            public Class<?> getColumnClass(int column) {
+                if (column == 0) return Integer.class; // ID
+                return String.class;
+            }
         };
+
+
 
         table = createStyledTable(model);
         sorter = new TableRowSorter<>(model);
         table.setRowSorter(sorter);
+        sorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
 
         // Custom Sorters
         sorter.setComparator(0, (a, b) -> Integer.compare(parseIntSafe(a), parseIntSafe(b)));
@@ -111,15 +122,17 @@ public class QuestionManagementFrame extends JFrame {
         btnAdd = createStyledButton("Add");
         btnEdit = createStyledButton("Edit");
         btnDelete = createStyledButton("Delete");
-        btnSave = createStyledButton("Save");
 
         IconButton btnExit = new IconButton("/ui/icons/back.png");
         btnExit.setPreferredSize(new Dimension(46, 46));
         btnExit.setSafePadPx(2);
         btnExit.setOnClick(() -> {
-            dispose();
-            if (onExitToMenu != null) onExitToMenu.run();
+            if (util.ExitConfirmHelper.confirmExit(this)) {
+                dispose();
+                if (onExitToMenu != null) onExitToMenu.run();
+            }
         });
+
 
         btnLanguage = new IconButton("/ui/icons/language.png", true);
         btnLanguage.setPreferredSize(new Dimension(46, 46));
@@ -152,7 +165,7 @@ public class QuestionManagementFrame extends JFrame {
                         JOptionPane.WARNING_MESSAGE);
             }
         });
-        btnSave.addActionListener(e -> saveQuestions());
+
 
         // Layout - Button Panel
         JPanel btnPanel = new JPanel(new BorderLayout());
@@ -163,7 +176,7 @@ public class QuestionManagementFrame extends JFrame {
         left.setOpaque(false); left.add(btnExit);
 
         JPanel center = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        center.setOpaque(false); center.add(btnAdd); center.add(btnEdit); center.add(btnDelete); center.add(btnSave);
+        center.setOpaque(false); center.add(btnAdd); center.add(btnEdit); center.add(btnDelete);
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         right.setOpaque(false); right.add(btnLanguage);
@@ -600,7 +613,6 @@ public class QuestionManagementFrame extends JFrame {
         btnAdd.setText(isHe ? "הוסף" : "Add");
         btnEdit.setText(isHe ? "ערוך" : "Edit");
         btnDelete.setText(isHe ? "מחק" : "Delete");
-        btnSave.setText(isHe ? "שמור" : "Save");
 
         diffLabel.setText(isHe ? "רמת קושי:" : "Difficulty:");
         corrLabel.setText(isHe ? "תשובה נכונה:" : "Correct:");
@@ -751,12 +763,13 @@ public class QuestionManagementFrame extends JFrame {
             // Store correct answer as letter A-D
             char correctLetter = Character.toUpperCase(q.getCorrectOption());
             model.addRow(new Object[]{
-                    q.getId(),
+                    Integer.valueOf(q.getId()),
                     q.getText(),
                     o.get(0), o.get(1), o.get(2), o.get(3),
                     String.valueOf(correctLetter),
                     translateDifficulty(q.getDifficultyLevel(), isHe)
             });
+
         }
         applyFilters();
     }

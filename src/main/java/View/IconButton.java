@@ -51,7 +51,10 @@ public class IconButton extends JComponent {
                 boolean inside = contains(e.getPoint());
                 pressed = false;
                 repaint();
-                if (inside && onClick != null) onClick.run();
+                if (inside) {
+                    util.SoundManager.click();
+                    if (onClick != null) onClick.run();
+                }
             }
         });
     }

@@ -2,6 +2,8 @@ package View;
 
 import Controller.GameController;
 import util.LanguageManager;
+import util.SoundManager;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -107,6 +109,7 @@ public class GamePanel extends JPanel {
         String title = isHebrew ? "יציאה מהמשחק" : "Exit Game";
         String message = isHebrew ? "האם אתה בטוח שברצונך לצאת?\nההתקדמות במשחק תאבד."
                 : "Are you sure you want to exit?\nGame progress will be lost.";
+        SoundManager.exitDialog();
 
         boolean confirmed = ConfirmDialog.show(
                 SwingUtilities.getWindowAncestor(this),
@@ -130,7 +133,7 @@ public class GamePanel extends JPanel {
         String title = isHebrew ? "התחלה מחדש" : "Restart Game";
         String message = isHebrew ? "האם אתה בטוח שברצונך להתחיל מחדש?\nההתקדמות הנוכחית תאבד."
                 : "Are you sure you want to restart?\nCurrent progress will be lost.";
-
+        SoundManager.exitDialog();
         boolean confirmed = ConfirmDialog.show(
                 SwingUtilities.getWindowAncestor(this),
                 title,
@@ -471,14 +474,40 @@ public class GamePanel extends JPanel {
 
     private void showResultDialog(String message) {
         if (message == null || message.isBlank()) return;
+
+        // --- PLAY SOUND FIRST (surprise uses same sounds as answers) ---
+        String lower = message.toLowerCase();
+
+        // Surprise result
+        if (lower.contains("good surprise") || (lower.contains("surprise") && lower.contains("good")) || lower.contains("result: good")) {
+            SoundManager.correctAnswer();   // GOOD surprise = correct sound
+        } else if (lower.contains("bad surprise") || (lower.contains("surprise") && lower.contains("bad")) || lower.contains("result: bad")) {
+            SoundManager.wrongAnswer();     // BAD surprise = wrong sound
+        }
+        // (Optional) If you also want correct/wrong question messages to play here too:
+        else if (lower.contains("correct")) {
+            SoundManager.correctAnswer();
+        } else if (lower.contains("wrong")) {
+            SoundManager.wrongAnswer();
+        }
+
+        // --- EXISTING CODE ---
         LanguageManager.Language lang = controller.getCurrentLanguage();
         boolean isHebrew = (lang == LanguageManager.Language.HE);
         boolean isPositive = isPositiveOutcome(message);
         Color accentColor = isPositive ? COLOR_GREEN : COLOR_RED;
         String translatedMessage = translateToastMessage(message, lang);
         String title = determineToastTitle(message, lang);
-        ResultMessageDialog.show(SwingUtilities.getWindowAncestor(this), title, translatedMessage, accentColor, isHebrew);
+
+        ResultMessageDialog.show(
+                SwingUtilities.getWindowAncestor(this),
+                title,
+                translatedMessage,
+                accentColor,
+                isHebrew
+        );
     }
+
 
     private boolean isPositiveOutcome(String message) {
         if (message == null) return false;
