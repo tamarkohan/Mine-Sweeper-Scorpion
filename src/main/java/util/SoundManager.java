@@ -25,6 +25,10 @@ public final class SoundManager {
     private static final float LOSE_VOLUME_DB = -5.0f;
     private static Clip specialCellDialogClip;
     private static final float SPECIAL_DIALOG_VOLUME_DB = -7.0f;
+    private static Clip exitDialogClip;
+    private static final float EXIT_DIALOG_VOLUME_DB = -7.0f;
+    private static Clip cellClickClip;
+    private static final float CELL_CLICK_VOLUME_DB = -18.0f; // quiet
 
     private SoundManager() {
     }
@@ -36,20 +40,26 @@ public final class SoundManager {
         clickClip = loadClip("/audio/ui_click.wav");
         setVolume(clickClip, CLICK_VOLUME_DB);
 
+        cellClickClip = loadClip("/audio/ui_click.wav");   // <-- NEW
+        setVolume(cellClickClip, CELL_CLICK_VOLUME_DB);    // <-- NEW
+
         correctClip = loadClip("/audio/correct_answer.wav");
         wrongClip = loadClip("/audio/wrong_answer.wav");
-
         setVolume(correctClip, CORRECT_VOLUME_DB);
         setVolume(wrongClip, WRONG_VOLUME_DB);
+
         winClip  = loadClip("/audio/win_game.wav");
         loseClip = loadClip("/audio/lose_game.wav");
-
         setVolume(winClip, WIN_VOLUME_DB);
         setVolume(loseClip, LOSE_VOLUME_DB);
+
         specialCellDialogClip = loadClip("/audio/special_cell_dialog.wav");
         setVolume(specialCellDialogClip, SPECIAL_DIALOG_VOLUME_DB);
 
+        exitDialogClip = loadClip("/audio/exit_dialog.wav");
+        setVolume(exitDialogClip, EXIT_DIALOG_VOLUME_DB);
     }
+
 
 
     /**
@@ -167,5 +177,16 @@ public final class SoundManager {
         if (muted) return;
         play(specialCellDialogClip);
     }
+    public static void exitDialog() {
+        if (muted) return;
+        play(exitDialogClip);
+    }
+
+    public static void cellClick() {
+        if (muted) return;
+        play(cellClickClip);
+    }
+
+
 
 }

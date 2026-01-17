@@ -78,10 +78,13 @@ public class QuestionManagementFrame extends JFrame {
         getRootPane().getActionMap().put("closeWindow", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dispose();
-                if (onExitToMenu != null) onExitToMenu.run();
+                if (util.ExitConfirmHelper.confirmExit(QuestionManagementFrame.this)) {
+                    dispose();
+                    if (onExitToMenu != null) onExitToMenu.run();
+                }
             }
         });
+
 
         // Setup Table Model
         String[] cols = {"ID", "Text", "A", "B", "C", "D", "Correct", "Difficulty"};
@@ -124,9 +127,12 @@ public class QuestionManagementFrame extends JFrame {
         btnExit.setPreferredSize(new Dimension(46, 46));
         btnExit.setSafePadPx(2);
         btnExit.setOnClick(() -> {
-            dispose();
-            if (onExitToMenu != null) onExitToMenu.run();
+            if (util.ExitConfirmHelper.confirmExit(this)) {
+                dispose();
+                if (onExitToMenu != null) onExitToMenu.run();
+            }
         });
+
 
         btnLanguage = new IconButton("/ui/icons/language.png", true);
         btnLanguage.setPreferredSize(new Dimension(46, 46));

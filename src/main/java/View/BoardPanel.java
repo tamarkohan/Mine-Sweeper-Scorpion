@@ -121,7 +121,7 @@ public class BoardPanel extends JPanel {
         if (controller.getCurrentPlayerTurn() != boardNumber) return;
         if (waiting) return;
         boolean special = controller.isQuestionOrSurprise(boardNumber, r, c);
-        if (!special) SoundManager.click();
+        if (!special) SoundManager.cellClick();
         boolean endedTurn = false;
         boolean stateChanged = false;
 

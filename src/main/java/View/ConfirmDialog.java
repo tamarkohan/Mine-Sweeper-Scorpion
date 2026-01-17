@@ -2,6 +2,7 @@ package View;
 
 import Controller.GameController;
 import util.LanguageManager;
+import util.SoundManager;
 
 import javax.swing.*;
 
@@ -86,15 +87,18 @@ public class ConfirmDialog extends JDialog {
 
         // Cancel action
         no.addActionListener(e -> {
+            SoundManager.click();
             accepted = false;
             dispose();
         });
 
-        // Confirm action
+// Confirm action
         yes.addActionListener(e -> {
+            SoundManager.click();
             accepted = true;
             dispose();
         });
+
 
         // In Hebrew, "No" should come first (right side visually)
         if (isHebrew) {
@@ -115,10 +119,15 @@ public class ConfirmDialog extends JDialog {
 
         // ESC key closes dialog (as "No")
         getRootPane().registerKeyboardAction(
-                e -> dispose(),
+                e -> {
+                    SoundManager.click();
+                    accepted = false;
+                    dispose();
+                },
                 KeyStroke.getKeyStroke("ESCAPE"),
                 JComponent.WHEN_IN_FOCUSED_WINDOW
         );
+
 
         // Default button is "No" for safety
         getRootPane().setDefaultButton(no);

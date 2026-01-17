@@ -109,6 +109,7 @@ public class GamePanel extends JPanel {
         String title = isHebrew ? "יציאה מהמשחק" : "Exit Game";
         String message = isHebrew ? "האם אתה בטוח שברצונך לצאת?\nההתקדמות במשחק תאבד."
                 : "Are you sure you want to exit?\nGame progress will be lost.";
+        SoundManager.exitDialog();
 
         boolean confirmed = ConfirmDialog.show(
                 SwingUtilities.getWindowAncestor(this),
@@ -132,7 +133,7 @@ public class GamePanel extends JPanel {
         String title = isHebrew ? "התחלה מחדש" : "Restart Game";
         String message = isHebrew ? "האם אתה בטוח שברצונך להתחיל מחדש?\nההתקדמות הנוכחית תאבד."
                 : "Are you sure you want to restart?\nCurrent progress will be lost.";
-
+        SoundManager.exitDialog();
         boolean confirmed = ConfirmDialog.show(
                 SwingUtilities.getWindowAncestor(this),
                 title,

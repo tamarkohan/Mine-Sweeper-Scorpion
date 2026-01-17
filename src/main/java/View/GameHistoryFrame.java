@@ -60,10 +60,13 @@ public class GameHistoryFrame extends JFrame {
         getRootPane().getActionMap().put("EXIT", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dispose();
-                if (onExitToMenu != null) onExitToMenu.run();
+                if (util.ExitConfirmHelper.confirmExit(GameHistoryFrame.this)) {
+                    dispose();
+                    if (onExitToMenu != null) onExitToMenu.run();
+                }
             }
         });
+
 
         gamesModel = new DefaultTableModel(0, 9) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
@@ -138,9 +141,12 @@ public class GameHistoryFrame extends JFrame {
         exitBtn.setPreferredSize(new Dimension(46, 46));
         exitBtn.setSafePadPx(2);
         exitBtn.setOnClick(() -> {
-            dispose();
-            if (onExitToMenu != null) onExitToMenu.run();
+            if (util.ExitConfirmHelper.confirmExit(this)) {
+                dispose();
+                if (onExitToMenu != null) onExitToMenu.run();
+            }
         });
+
 
         btnLanguage = new IconButton("/ui/icons/language.png", true);
         btnLanguage.setPreferredSize(new Dimension(46, 46));
