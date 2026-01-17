@@ -21,11 +21,10 @@ public class MainFrame extends JFrame
 
     private MainMenuPanel mainMenuPanel;
     private StartPanel startPanel;
-    private GamePanel gamePanel;   // created when starting a game
+    private GamePanel gamePanel;
 
-    // Styling constants
     private static final Color BG_COLOR = Color.BLACK;
-    private static final Color ACCENT_COLOR = new Color(0, 255, 255); // Cyan neon
+    private static final Color ACCENT_COLOR = new Color(0, 255, 255);
 
     public MainFrame() {
         super("Scorpion Minesweeper");
@@ -38,7 +37,6 @@ public class MainFrame extends JFrame
     }
 
     private void createAndShowGUI() {
-        // Set window icon
         try {
             URL iconUrl = getClass().getResource("/ui/icons/img_1.png");
             if (iconUrl != null) {
@@ -51,7 +49,6 @@ public class MainFrame extends JFrame
             System.err.println("Could not load icon: " + e.getMessage());
         }
 
-        // ===== create screens (cards) =====
         mainMenuPanel = new MainMenuPanel(this);
         startPanel = new StartPanel(this);
 
@@ -64,13 +61,10 @@ public class MainFrame extends JFrame
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setResizable(true);
 
-        // Show first screen
         cardLayout.show(cardPanel, "MENU");
 
-        // Attach global sound toggle overlay (shows on all cards)
         SoundToggleOverlay.attach(this);
 
-        // Window close cleanup
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
@@ -80,7 +74,6 @@ public class MainFrame extends JFrame
 
         setVisible(true);
 
-        // Start global background music
         SoundManager.playLoop("/audio/bg_music.wav");
     }
 
@@ -115,7 +108,8 @@ public class MainFrame extends JFrame
                 player2Name,
                 () -> {
                     controller.endGame();
-                    // Go to START panel (level/name selection) instead of MENU
+                    // Refresh StartPanel with current language before showing
+                    startPanel.refreshLanguage();
                     cardLayout.show(cardPanel, "START");
                 }
         );
@@ -123,9 +117,12 @@ public class MainFrame extends JFrame
         cardPanel.add(gamePanel, "GAME");
         cardLayout.show(cardPanel, "GAME");
     }
+
     @Override
     public void onBackToMenu() {
         startPanel.resetFields();
+        // Refresh MainMenuPanel with current language before showing
+        mainMenuPanel.refreshLanguage();
         cardLayout.show(cardPanel, "MENU");
     }
 
@@ -135,12 +132,18 @@ public class MainFrame extends JFrame
 
     @Override
     public void onStartGameClicked() {
+        // Refresh StartPanel with current language before showing
+        startPanel.refreshLanguage();
         cardLayout.show(cardPanel, "START");
     }
 
     @Override
     public void onHistoryClicked() {
-        GameHistoryFrame historyFrame = new GameHistoryFrame(controller, this::showMainMenu);
+        GameHistoryFrame historyFrame = new GameHistoryFrame(controller, () -> {
+            // When returning from history, refresh main menu language
+            mainMenuPanel.refreshLanguage();
+            showMainMenu();
+        });
         historyFrame.setVisible(true);
     }
 
@@ -156,10 +159,9 @@ public class MainFrame extends JFrame
 
     @Override
     public void onLanguageToggle() {
-        // The panels now handle the switching in background threads.
-        // We just need to update other panels that might be listening.
+        // When language changes in MainMenu, also update StartPanel
         if (startPanel != null) {
-            startPanel.resetFields();
+            startPanel.refreshLanguage();
         }
         revalidate();
         repaint();
@@ -186,7 +188,6 @@ public class MainFrame extends JFrame
                 BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
 
-        // Title
         String titleText = isHe ? "הוראות משחק" : "HOW TO PLAY";
         JLabel titleLabel = new JLabel(titleText, SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 22));
@@ -194,14 +195,12 @@ public class MainFrame extends JFrame
         titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         contentPanel.add(titleLabel, BorderLayout.NORTH);
 
-        // Use JTextPane for better RTL support
         JTextPane textPane = new JTextPane();
         textPane.setContentType("text/html");
         textPane.setEditable(false);
         textPane.setOpaque(false);
         textPane.setBackground(Color.BLACK);
 
-        // Set up HTML editor kit with custom styles
         HTMLEditorKit kit = new HTMLEditorKit();
         StyleSheet styleSheet = kit.getStyleSheet();
         styleSheet.addRule("body { color: white; font-family: Arial; font-size: 12px; background-color: black; }");
@@ -210,7 +209,6 @@ public class MainFrame extends JFrame
 
         String htmlContent;
         if (isHe) {
-            // HEBREW CONTENT (RTL)
             textPane.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
             htmlContent = "<html><body dir='rtl' style='text-align: right;'>" +
                     "<p><b>שני שחקנים, לכל אחד לוח משלו.</b><br>" +
@@ -230,7 +228,6 @@ public class MainFrame extends JFrame
                     "חיים שנותרו מומרים לניקוד בונוס בסוף.</p>" +
                     "</body></html>";
         } else {
-            // ENGLISH CONTENT (LTR)
             textPane.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
             htmlContent = "<html><body>" +
                     "<p><b>Two players, each has a board.</b><br>" +
@@ -254,7 +251,6 @@ public class MainFrame extends JFrame
         textPane.setText(htmlContent);
         textPane.setCaretPosition(0);
 
-        // Wrap in a panel with padding
         JPanel textWrapper = new JPanel(new BorderLayout());
         textWrapper.setOpaque(false);
         textWrapper.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
@@ -262,7 +258,6 @@ public class MainFrame extends JFrame
 
         contentPanel.add(textWrapper, BorderLayout.CENTER);
 
-        // Button
         String btnText = isHe ? "אישור" : "OK";
         JButton closeBtn = createStyledButton(btnText);
         closeBtn.addActionListener(e -> dialog.dispose());
@@ -290,6 +285,10 @@ public class MainFrame extends JFrame
                 BorderFactory.createLineBorder(ACCENT_COLOR, 2),
                 BorderFactory.createEmptyBorder(30, 20, 20, 20)
         ));
+
+        if (isHe) {
+            content.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        }
 
         String labelText = isHe ? "הזן סיסמת מנהל:" : "Enter Admin Password:";
         JLabel lbl = new JLabel(labelText, SwingConstants.CENTER);
@@ -319,8 +318,13 @@ public class MainFrame extends JFrame
         JButton btnOk = createStyledButton(okText);
         JButton btnCancel = createStyledButton(cancelText);
 
-        btnPanel.add(btnOk);
-        btnPanel.add(btnCancel);
+        if (isHe) {
+            btnPanel.add(btnCancel);
+            btnPanel.add(btnOk);
+        } else {
+            btnPanel.add(btnOk);
+            btnPanel.add(btnCancel);
+        }
 
         content.add(lbl, BorderLayout.NORTH);
         content.add(pwdPanel, BorderLayout.CENTER);
@@ -336,7 +340,11 @@ public class MainFrame extends JFrame
             String input = new String(pwd.getPassword());
             if ("ADMIN".equals(input)) {
                 dialog.dispose();
-                QuestionManagementFrame frame = new QuestionManagementFrame(controller.getQuestionManager());
+                QuestionManagementFrame frame = new QuestionManagementFrame(controller.getQuestionManager(), () -> {
+                    // When returning from question management, refresh main menu language
+                    mainMenuPanel.refreshLanguage();
+                    showMainMenu();
+                });
                 frame.setVisible(true);
             } else {
                 String errMsg = isHe ? "הגישה נדחתה." : "Access denied.";
@@ -377,6 +385,8 @@ public class MainFrame extends JFrame
     }
 
     public void showMainMenu() {
+        // Refresh language before showing
+        mainMenuPanel.refreshLanguage();
         cardLayout.show(cardPanel, "MENU");
     }
 

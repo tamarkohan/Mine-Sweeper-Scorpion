@@ -198,4 +198,15 @@ public class MainMenuPanel extends JPanel {
             toastLabel.setBounds(langX + (langBtnSize - lblW) / 2, langY - lblH - 10, lblW, lblH);
         }
     }
+    // Add this method to MainMenuPanel.java
+
+    /**
+     * Refreshes the UI to match the current language setting.
+     * Called when returning from other frames that may have changed the language.
+     */
+    public void refreshLanguage() {
+        refreshButtonIcons();
+        revalidate();
+        repaint();
+    }
 }

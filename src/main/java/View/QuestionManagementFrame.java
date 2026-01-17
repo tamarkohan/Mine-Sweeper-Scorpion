@@ -36,6 +36,7 @@ public class QuestionManagementFrame extends JFrame {
     private JLabel diffLabel;
     private JLabel corrLabel;
     private JLabel idLabel;
+    private JLabel lblSortHint;
     private JButton applyBtn;
     private JButton clearBtn;
     private JPanel filterPanel;
@@ -54,6 +55,7 @@ public class QuestionManagementFrame extends JFrame {
     // Colors & Styles
     private static final Color TEXT_COLOR = Color.WHITE;
     private static final Color ACCENT_COLOR = new Color(0, 255, 255);
+    private static final Color HINT_COLOR = new Color(180, 180, 180);
     private static final Color TABLE_HEADER_BG = new Color(30, 30, 30);
     private static final Color TABLE_ROW_BG = new Color(20, 20, 20);
     private static final Color TABLE_SELECTION_BG = new Color(60, 60, 80);
@@ -95,7 +97,12 @@ public class QuestionManagementFrame extends JFrame {
 
         // Custom Sorters
         sorter.setComparator(0, (a, b) -> Integer.compare(parseIntSafe(a), parseIntSafe(b)));
-        sorter.setComparator(6, (a, b) -> Integer.compare(parseIntSafe(a), parseIntSafe(b)));
+        // Column 6 (Correct) contains letters A-D, compare as strings
+        sorter.setComparator(6, (a, b) -> {
+            String sa = a == null ? "" : a.toString();
+            String sb = b == null ? "" : b.toString();
+            return sa.compareTo(sb);
+        });
 
         filterPanel = createFilterPanel();
         tableScroll = createStyledScrollPane(table);
@@ -122,11 +129,28 @@ public class QuestionManagementFrame extends JFrame {
         btnAdd.addActionListener(e -> addQuestion());
         btnEdit.addActionListener(e -> {
             int selectedRow = table.getSelectedRow();
-            if (selectedRow >= 0) editQuestion(table.convertRowIndexToModel(selectedRow));
+            if (selectedRow >= 0) {
+                editQuestion(table.convertRowIndexToModel(selectedRow));
+            } else {
+                // Show message if no row selected
+                boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
+                JOptionPane.showMessageDialog(this,
+                        isHe ? "אנא בחר שאלה לעריכה" : "Please select a question to edit",
+                        isHe ? "לא נבחרה שאלה" : "No Selection",
+                        JOptionPane.WARNING_MESSAGE);
+            }
         });
         btnDelete.addActionListener(e -> {
             int selectedRow = table.getSelectedRow();
-            if (selectedRow >= 0) deleteQuestion(table.convertRowIndexToModel(selectedRow));
+            if (selectedRow >= 0) {
+                deleteQuestion(table.convertRowIndexToModel(selectedRow));
+            } else {
+                boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
+                JOptionPane.showMessageDialog(this,
+                        isHe ? "אנא בחר שאלה למחיקה" : "Please select a question to delete",
+                        isHe ? "לא נבחרה שאלה" : "No Selection",
+                        JOptionPane.WARNING_MESSAGE);
+            }
         });
         btnSave.addActionListener(e -> saveQuestions());
 
@@ -148,6 +172,16 @@ public class QuestionManagementFrame extends JFrame {
         btnPanel.add(center, BorderLayout.CENTER);
         btnPanel.add(right, BorderLayout.EAST);
 
+        // Sort hint label
+        lblSortHint = new JLabel();
+        lblSortHint.setForeground(HINT_COLOR);
+        lblSortHint.setFont(new Font("Arial", Font.ITALIC, 12));
+
+        // Hint panel (centered)
+        JPanel hintPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        hintPanel.setOpaque(false);
+        hintPanel.add(lblSortHint);
+
         // Layout - Main Content
         BackgroundPanel content = new BackgroundPanel("/ui/menu/question_management_bg.png");
         content.setLayout(new BorderLayout());
@@ -157,7 +191,15 @@ public class QuestionManagementFrame extends JFrame {
         centerWrapper.setOpaque(false);
         centerWrapper.setBorder(BorderFactory.createEmptyBorder(0, 30, 0, 30));
 
-        centerWrapper.add(filterPanel, BorderLayout.NORTH);
+        // Create a panel to hold filters and hint
+        JPanel topSection = new JPanel();
+        topSection.setLayout(new BoxLayout(topSection, BoxLayout.Y_AXIS));
+        topSection.setOpaque(false);
+        topSection.add(filterPanel);
+        topSection.add(Box.createVerticalStrut(5));
+        topSection.add(hintPanel);
+
+        centerWrapper.add(topSection, BorderLayout.NORTH);
         centerWrapper.add(tableScroll, BorderLayout.CENTER);
 
         content.add(centerWrapper, BorderLayout.CENTER);
@@ -192,7 +234,6 @@ public class QuestionManagementFrame extends JFrame {
 
     private void addQuestion() {
         int nextId = manager.getNextId();
-        // Uses standard add logic
         NeonQuestionDialog dialog = new NeonQuestionDialog(this, null, nextId);
         dialog.setVisible(true);
         if (dialog.getResult() != null) {
@@ -206,6 +247,14 @@ public class QuestionManagementFrame extends JFrame {
     private void editQuestion(int row) {
         if (row < 0) return;
         Question existing = buildQuestionFromRow(row);
+        if (existing == null) {
+            boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
+            JOptionPane.showMessageDialog(this,
+                    isHe ? "לא ניתן לטעון את השאלה" : "Could not load question",
+                    isHe ? "שגיאה" : "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         NeonQuestionDialog dialog = new NeonQuestionDialog(this, existing, -1);
         dialog.setVisible(true);
         if (dialog.getResult() != null) {
@@ -218,7 +267,19 @@ public class QuestionManagementFrame extends JFrame {
 
     private void deleteQuestion(int row) {
         if (row < 0) return;
-        int id = (int) model.getValueAt(row, 0);
+
+        boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
+
+        // Confirmation dialog
+        int confirm = JOptionPane.showConfirmDialog(this,
+                isHe ? "האם אתה בטוח שברצונך למחוק שאלה זו?" : "Are you sure you want to delete this question?",
+                isHe ? "אישור מחיקה" : "Confirm Delete",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        int id = Integer.parseInt(model.getValueAt(row, 0).toString());
         manager.deleteQuestion(id);
         manager.saveQuestions();
         manager.loadQuestions();
@@ -256,10 +317,17 @@ public class QuestionManagementFrame extends JFrame {
             super(owner, existing == null ? "Add Question" : "Edit Question", true);
             setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
+            // Remove Java icon - set to parent's icon or transparent
+            if (owner != null && owner.getIconImage() != null) {
+                setIconImage(owner.getIconImage());
+            } else {
+                setIconImage(new java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_ARGB));
+            }
+
             isHebrew = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
 
             setTitle(existing == null
-                    ? (isHebrew ? "הוסף שאלה חדשה" : "Add Question")
+                    ? (isHebrew ? "הוסף שאלה חדשה" : "Add New Question")
                     : (isHebrew ? "ערוך שאלה" : "Edit Question"));
 
             if (isHebrew) {
@@ -307,6 +375,7 @@ public class QuestionManagementFrame extends JFrame {
             gc.weightx = 1;
 
             if (existing != null) {
+                // EDITING - ID is not editable
                 idField.setText(String.valueOf(existing.getId()));
                 idField.setEditable(false);
                 textField.setText(existing.getText());
@@ -314,37 +383,50 @@ public class QuestionManagementFrame extends JFrame {
                 List<String> exOpts = new ArrayList<>(existing.getOptions());
                 while (exOpts.size() < 4) exOpts.add("");
 
-                aField.setText(exOpts.get(0)); bField.setText(exOpts.get(1));
-                cField.setText(exOpts.get(2)); dField.setText(exOpts.get(3));
+                aField.setText(exOpts.get(0));
+                bField.setText(exOpts.get(1));
+                cField.setText(exOpts.get(2));
+                dField.setText(exOpts.get(3));
 
                 char correctChar = Character.toUpperCase(existing.getCorrectOption());
                 int correctIndex = correctChar - 'A';
-                if (correctIndex >= 0 && correctIndex < 4) correctCombo.setSelectedIndex(correctIndex);
+                if (correctIndex >= 0 && correctIndex < 4) {
+                    correctCombo.setSelectedIndex(correctIndex);
+                }
 
                 String diff = existing.getDifficultyLevel().toUpperCase();
                 int diffIndex = switch (diff) {
-                    case "EASY" -> 0; case "MEDIUM" -> 1; case "HARD" -> 2; case "EXPERT" -> 3; default -> 0;
+                    case "EASY" -> 0;
+                    case "MEDIUM" -> 1;
+                    case "HARD" -> 2;
+                    case "EXPERT" -> 3;
+                    default -> 0;
                 };
                 diffCombo.setSelectedIndex(diffIndex);
             } else {
+                // ADDING - ID is auto-generated and not editable
                 idField.setText(String.valueOf(autoId));
                 idField.setEditable(false);
                 correctCombo.setSelectedIndex(0);
                 diffCombo.setSelectedIndex(0);
             }
 
-            styleNeonField(idField); styleNeonField(textField);
-            styleNeonField(aField); styleNeonField(bField);
-            styleNeonField(cField); styleNeonField(dField);
-            styleNeonCombo(correctCombo); styleNeonCombo(diffCombo);
+            styleNeonField(idField);
+            styleNeonField(textField);
+            styleNeonField(aField);
+            styleNeonField(bField);
+            styleNeonField(cField);
+            styleNeonField(dField);
+            styleNeonCombo(correctCombo);
+            styleNeonCombo(diffCombo);
 
             String lblId = isHebrew ? "מזהה" : "ID";
-            String lblText = isHebrew ? "טקסט" : "Text";
-            String lblOptA = isHebrew ? "אפשרות א" : "Option A";
-            String lblOptB = isHebrew ? "אפשרות ב" : "Option B";
-            String lblOptC = isHebrew ? "אפשרות ג" : "Option C";
-            String lblOptD = isHebrew ? "אפשרות ד" : "Option D";
-            String lblCorrect = isHebrew ? "נכונה" : "Correct";
+            String lblText = isHebrew ? "טקסט השאלה" : "Question Text";
+            String lblOptA = isHebrew ? "תשובה א" : "Option A";
+            String lblOptB = isHebrew ? "תשובה ב" : "Option B";
+            String lblOptC = isHebrew ? "תשובה ג" : "Option C";
+            String lblOptD = isHebrew ? "תשובה ד" : "Option D";
+            String lblCorrect = isHebrew ? "תשובה נכונה" : "Correct Answer";
             String lblDiff = isHebrew ? "רמת קושי" : "Difficulty";
 
             addRow(card, gc, 0, lblId, idField);
@@ -362,15 +444,17 @@ public class QuestionManagementFrame extends JFrame {
             buttons.setBackground(DIALOG_BG);
 
             JButton btnCancel = createStyledButton(isHebrew ? "ביטול" : "Cancel");
-            JButton btnSave = createStyledButton(isHebrew ? "שמור" : "Save");
+            JButton btnSaveDialog = createStyledButton(isHebrew ? "שמור" : "Save");
 
             btnCancel.addActionListener(e -> dispose());
-            btnSave.addActionListener(e -> onSave(existing));
+            btnSaveDialog.addActionListener(e -> onSave());
 
             if (isHebrew) {
-                buttons.add(btnSave); buttons.add(btnCancel);
+                buttons.add(btnSaveDialog);
+                buttons.add(btnCancel);
             } else {
-                buttons.add(btnCancel); buttons.add(btnSave);
+                buttons.add(btnCancel);
+                buttons.add(btnSaveDialog);
             }
             root.add(buttons, BorderLayout.SOUTH);
 
@@ -388,7 +472,7 @@ public class QuestionManagementFrame extends JFrame {
             f.setCaretColor(ACCENT_COLOR);
             f.setFont(new Font("Segoe UI", Font.PLAIN, 14));
             f.setBorder(neonBorder(ACCENT_COLOR));
-            if(isHebrew) f.setHorizontalAlignment(JTextField.RIGHT);
+            if (isHebrew) f.setHorizontalAlignment(JTextField.RIGHT);
             else f.setHorizontalAlignment(JTextField.LEFT);
             if (!f.isEditable()) f.setForeground(Color.GRAY);
         }
@@ -399,10 +483,10 @@ public class QuestionManagementFrame extends JFrame {
 
             if (isHebrew) {
                 l.setHorizontalAlignment(SwingConstants.RIGHT);
-                gc.gridx = 0; gc.gridy = row; gc.weightx = 0; gc.anchor = GridBagConstraints.EAST;
-                card.add(l, gc);
-                gc.gridx = 1; gc.gridy = row; gc.weightx = 1; gc.anchor = GridBagConstraints.WEST;
+                gc.gridx = 1; gc.gridy = row; gc.weightx = 1; gc.anchor = GridBagConstraints.EAST;
                 card.add(input, gc);
+                gc.gridx = 0; gc.gridy = row; gc.weightx = 0; gc.anchor = GridBagConstraints.WEST;
+                card.add(l, gc);
             } else {
                 gc.gridx = 0; gc.gridy = row; gc.weightx = 0; gc.anchor = GridBagConstraints.WEST;
                 card.add(l, gc);
@@ -411,22 +495,40 @@ public class QuestionManagementFrame extends JFrame {
             }
         }
 
-        private void onSave(Question existing) {
+        private void onSave() {
             try {
                 int id = Integer.parseInt(idField.getText().trim());
                 String text = textField.getText().trim();
-                if (text.isEmpty()) throw new IllegalArgumentException(isHebrew ? "הטקסט ריק." : "Text is empty.");
+
+                if (text.isEmpty()) {
+                    throw new IllegalArgumentException(isHebrew ? "טקסט השאלה ריק." : "Question text is empty.");
+                }
 
                 List<String> opts = new ArrayList<>();
-                opts.add(aField.getText().trim()); opts.add(bField.getText().trim());
-                opts.add(cField.getText().trim()); opts.add(dField.getText().trim());
+                opts.add(aField.getText().trim());
+                opts.add(bField.getText().trim());
+                opts.add(cField.getText().trim());
+                opts.add(dField.getText().trim());
+
+                // Validate all options are filled
+                for (int i = 0; i < opts.size(); i++) {
+                    if (opts.get(i).isEmpty()) {
+                        char optLetter = (char) ('A' + i);
+                        throw new IllegalArgumentException(
+                                isHebrew ? "תשובה " + (char)('א' + i) + " ריקה." : "Option " + optLetter + " is empty.");
+                    }
+                }
 
                 int correctIndex = correctCombo.getSelectedIndex();
                 char correct = (char) ('A' + correctIndex);
 
                 int diffIndex = diffCombo.getSelectedIndex();
                 String diff = switch (diffIndex) {
-                    case 0 -> "EASY"; case 1 -> "MEDIUM"; case 2 -> "HARD"; case 3 -> "EXPERT"; default -> "EASY";
+                    case 0 -> "EASY";
+                    case 1 -> "MEDIUM";
+                    case 2 -> "HARD";
+                    case 3 -> "EXPERT";
+                    default -> "EASY";
                 };
 
                 result = new Question(id, text, opts, correct, diff);
@@ -506,6 +608,9 @@ public class QuestionManagementFrame extends JFrame {
         applyBtn.setText(isHe ? "החל" : "Apply");
         clearBtn.setText(isHe ? "נקה" : "Clear");
 
+        // Sort hint text
+        lblSortHint.setText(isHe ? "טיפ: ניתן ללחוץ על כותרות העמודות כדי למיין" : "Tip: Click on column headers to sort");
+
         String[] headers = isHe
                 ? new String[]{"מזהה", "טקסט", "א", "ב", "ג", "ד", "נכונה", "רמה"}
                 : new String[]{"ID", "Text", "A", "B", "C", "D", "Correct", "Difficulty"};
@@ -529,10 +634,10 @@ public class QuestionManagementFrame extends JFrame {
         layout.setAlignment(isHe ? FlowLayout.RIGHT : FlowLayout.LEFT);
 
         if (isHe) {
-            filterPanel.add(diffLabel); filterPanel.add(difficultyFilter);
-            filterPanel.add(corrLabel); filterPanel.add(correctAnswerFilter);
-            filterPanel.add(idLabel); filterPanel.add(idFilter);
-            filterPanel.add(applyBtn); filterPanel.add(clearBtn);
+            filterPanel.add(clearBtn); filterPanel.add(applyBtn);
+            filterPanel.add(idFilter); filterPanel.add(idLabel);
+            filterPanel.add(correctAnswerFilter); filterPanel.add(corrLabel);
+            filterPanel.add(difficultyFilter); filterPanel.add(diffLabel);
         } else {
             filterPanel.add(diffLabel); filterPanel.add(difficultyFilter);
             filterPanel.add(corrLabel); filterPanel.add(correctAnswerFilter);
@@ -556,9 +661,13 @@ public class QuestionManagementFrame extends JFrame {
             difficultyFilter.addItem("All"); difficultyFilter.addItem("EASY");
             difficultyFilter.addItem("MEDIUM"); difficultyFilter.addItem("HARD"); difficultyFilter.addItem("EXPERT");
         }
+
+        // Use letters A-D to match table display
         correctAnswerFilter.addItem(isHe ? "הכל" : "All");
-        correctAnswerFilter.addItem("1"); correctAnswerFilter.addItem("2");
-        correctAnswerFilter.addItem("3"); correctAnswerFilter.addItem("4");
+        correctAnswerFilter.addItem("A");
+        correctAnswerFilter.addItem("B");
+        correctAnswerFilter.addItem("C");
+        correctAnswerFilter.addItem("D");
 
         if (diffIdx >= 0 && diffIdx < difficultyFilter.getItemCount()) difficultyFilter.setSelectedIndex(diffIdx);
         else difficultyFilter.setSelectedIndex(0);
@@ -628,11 +737,6 @@ public class QuestionManagementFrame extends JFrame {
         l.setForeground(TEXT_COLOR); l.setFont(new Font("Segoe UI", Font.BOLD, 14));
     }
 
-    private void styleNeonField(JTextField f) {
-        f.setBackground(DIALOG_PANEL); f.setForeground(TEXT_COLOR); f.setCaretColor(ACCENT_COLOR);
-        f.setFont(new Font("Segoe UI", Font.PLAIN, 14)); f.setBorder(neonBorder(ACCENT_COLOR));
-    }
-
     private void styleNeonCombo(JComboBox<?> c) {
         c.setBackground(DIALOG_PANEL); c.setForeground(TEXT_COLOR);
         c.setFont(new Font("Segoe UI", Font.PLAIN, 14)); c.setBorder(neonBorder(ACCENT_COLOR));
@@ -644,8 +748,15 @@ public class QuestionManagementFrame extends JFrame {
         for (Question q : manager.getAllQuestions()) {
             List<String> o = new ArrayList<>(q.getOptions());
             while (o.size() < 4) o.add("");
-            model.addRow(new Object[]{q.getId(), q.getText(), o.get(0), o.get(1), o.get(2), o.get(3),
-                    (char) ('A' + (q.getCorrectOption() - 'A')), translateDifficulty(q.getDifficultyLevel(), isHe)});
+            // Store correct answer as letter A-D
+            char correctLetter = Character.toUpperCase(q.getCorrectOption());
+            model.addRow(new Object[]{
+                    q.getId(),
+                    q.getText(),
+                    o.get(0), o.get(1), o.get(2), o.get(3),
+                    String.valueOf(correctLetter),
+                    translateDifficulty(q.getDifficultyLevel(), isHe)
+            });
         }
         applyFilters();
     }
@@ -666,14 +777,32 @@ public class QuestionManagementFrame extends JFrame {
     }
 
     private Question buildQuestionFromRow(int row) {
-        int id = Integer.parseInt(model.getValueAt(row, 0).toString());
-        String text = model.getValueAt(row, 1).toString();
-        String a = model.getValueAt(row, 2).toString(); String b = model.getValueAt(row, 3).toString();
-        String c = model.getValueAt(row, 4).toString(); String d = model.getValueAt(row, 5).toString();
-        char correct = numberToChar(Integer.parseInt(model.getValueAt(row, 6).toString()));
-        String diff = translateDifficultyToEnglish(model.getValueAt(row, 7).toString());
-        List<String> opts = new ArrayList<>(); opts.add(a); opts.add(b); opts.add(c); opts.add(d);
-        return new Question(id, text, opts, correct, diff);
+        try {
+            int id = Integer.parseInt(model.getValueAt(row, 0).toString());
+            String text = model.getValueAt(row, 1).toString();
+            String a = model.getValueAt(row, 2).toString();
+            String b = model.getValueAt(row, 3).toString();
+            String c = model.getValueAt(row, 4).toString();
+            String d = model.getValueAt(row, 5).toString();
+
+            // Correct column contains letters A-D
+            String correctStr = model.getValueAt(row, 6).toString().trim().toUpperCase();
+            char correct = 'A';
+            if (!correctStr.isEmpty()) {
+                char firstChar = correctStr.charAt(0);
+                if (firstChar >= 'A' && firstChar <= 'D') {
+                    correct = firstChar;
+                }
+            }
+
+            String diff = translateDifficultyToEnglish(model.getValueAt(row, 7).toString());
+            List<String> opts = new ArrayList<>();
+            opts.add(a); opts.add(b); opts.add(c); opts.add(d);
+            return new Question(id, text, opts, correct, diff);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private JPanel createFilterPanel() {
@@ -683,7 +812,8 @@ public class QuestionManagementFrame extends JFrame {
         difficultyFilter = new JComboBox<>(new String[]{"All", "EASY", "MEDIUM", "HARD", "EXPERT"});
         styleCombo(difficultyFilter);
         corrLabel = new JLabel("Correct:"); corrLabel.setForeground(TEXT_COLOR);
-        correctAnswerFilter = new JComboBox<>(new String[]{"All", "1", "2", "3", "4"});
+        // Use letters A-D to match table
+        correctAnswerFilter = new JComboBox<>(new String[]{"All", "A", "B", "C", "D"});
         styleCombo(correctAnswerFilter);
         idLabel = new JLabel("ID:"); idLabel.setForeground(TEXT_COLOR);
         idFilter = new JTextField(8); idFilter.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -717,14 +847,17 @@ public class QuestionManagementFrame extends JFrame {
 
         String diffFilter = mapDifficultyToFilter(diff);
         if (diffFilter != null && !"All".equalsIgnoreCase(diffFilter) && !"הכל".equals(diffFilter)) {
-            boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
-            String pattern = isHe ? diffFilter : diffFilter;
-            filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(pattern) + "$", 7));
+            filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(diffFilter) + "$", 7));
         }
-        String corrFilter = mapCorrectToFilter(corr);
-        if (corrFilter != null && !"All".equalsIgnoreCase(corrFilter) && !"הכל".equals(corrFilter))
-            filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(corrFilter) + "$", 6));
-        if (!idText.isEmpty()) filters.add(RowFilter.regexFilter(java.util.regex.Pattern.quote(idText), 0));
+
+        // Correct filter now uses letters A-D
+        if (corr != null && !"All".equalsIgnoreCase(corr) && !"הכל".equals(corr)) {
+            filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(corr) + "$", 6));
+        }
+
+        if (!idText.isEmpty()) {
+            filters.add(RowFilter.regexFilter(java.util.regex.Pattern.quote(idText), 0));
+        }
 
         if (filters.isEmpty()) sorter.setRowFilter(null);
         else sorter.setRowFilter(RowFilter.andFilter(filters));
@@ -743,17 +876,7 @@ public class QuestionManagementFrame extends JFrame {
         };
     }
 
-    private String mapCorrectToFilter(String value) {
-        if (value == null) return "All";
-        if ("הכל".equals(value) || "All".equals(value)) return "All";
-        return value;
-    }
-
     private static int parseIntSafe(Object o) {
         try { return Integer.parseInt(o.toString()); } catch (Exception e) { return Integer.MIN_VALUE; }
-    }
-
-    private char numberToChar(int number) {
-        return switch (number) { case 1 -> 'A'; case 2 -> 'B'; case 3 -> 'C'; case 4 -> 'D'; default -> 'A'; };
     }
 }

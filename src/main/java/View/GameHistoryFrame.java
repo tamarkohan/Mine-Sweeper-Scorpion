@@ -29,6 +29,7 @@ public class GameHistoryFrame extends JFrame {
     private JComboBox<String> resultFilter;
     private JTextField searchBox;
     private JLabel lblSearch, lblDiff, lblResult;
+    private JLabel lblSortHint;
     private JButton searchBtn;
 
     private JPanel topBar;
@@ -43,6 +44,7 @@ public class GameHistoryFrame extends JFrame {
 
     private static final Color TEXT_COLOR = Color.WHITE;
     private static final Color ACCENT_COLOR = new Color(0, 255, 255);
+    private static final Color HINT_COLOR = new Color(180, 180, 180);
     private static final Color TABLE_HEADER_BG = new Color(30, 30, 30, 255);
     private static final Color TABLE_SELECTION_BG = new Color(60, 60, 80, 200);
 
@@ -98,6 +100,11 @@ public class GameHistoryFrame extends JFrame {
         difficultyFilter = createCombo();
         resultFilter = createCombo();
 
+        // Sort hint label
+        lblSortHint = new JLabel();
+        lblSortHint.setForeground(HINT_COLOR);
+        lblSortHint.setFont(new Font("Arial", Font.ITALIC, 12));
+
         filtersPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         filtersPanel.setOpaque(false);
         filtersPanel.add(lblDiff);
@@ -109,8 +116,15 @@ public class GameHistoryFrame extends JFrame {
         tables.setOpaque(false);
         tables.setLayout(new BoxLayout(tables, BoxLayout.Y_AXIS));
 
+        // Hint panel (centered)
+        JPanel hintPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        hintPanel.setOpaque(false);
+        hintPanel.add(lblSortHint);
+
         tables.add(Box.createVerticalStrut(20));
         tables.add(filtersPanel);
+        tables.add(Box.createVerticalStrut(5));
+        tables.add(hintPanel);
         tables.add(Box.createVerticalStrut(10));
         tables.add(gamesScroll);
         tables.add(Box.createVerticalStrut(20));
@@ -225,6 +239,9 @@ public class GameHistoryFrame extends JFrame {
         lblDiff.setText(isHe ? "רמת קושי:" : "Difficulty:");
         lblResult.setText(isHe ? "תוצאה:" : "Result:");
         searchBtn.setText(isHe ? "חפש" : "Search");
+
+        // Sort hint text - use text instead of emoji
+        lblSortHint.setText(isHe ? "טיפ: ניתן ללחוץ על כותרות העמודות כדי למיין" : "Tip: Click on column headers to sort");
 
         FlowLayout topBarLayout = (FlowLayout) topBar.getLayout();
         topBarLayout.setAlignment(isHe ? FlowLayout.RIGHT : FlowLayout.LEFT);

@@ -294,4 +294,16 @@ public class StartPanel extends JPanel {
     public void resetFields() {
         p1Field.setText(""); p2Field.setText(""); tEasy.setSelected(true); updateLevelInfo("EASY"); updateUIText();
     }
+    // Add this method to StartPanel.java
+
+    /**
+     * Refreshes the UI to match the current language setting.
+     * Called when returning from other frames that may have changed the language.
+     */
+    public void refreshLanguage() {
+        updateUIText();
+        updateLevelInfo(currentDifficulty);
+        revalidate();
+        repaint();
+    }
 }
