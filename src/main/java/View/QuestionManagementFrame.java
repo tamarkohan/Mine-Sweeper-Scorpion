@@ -32,10 +32,8 @@ public class QuestionManagementFrame extends JFrame {
     // Filter controls
     private JComboBox<String> difficultyFilter;
     private JComboBox<String> correctAnswerFilter;
-    private JTextField idFilter;
     private JLabel diffLabel;
     private JLabel corrLabel;
-    private JLabel idLabel;
     private JLabel lblSortHint;
     private JButton applyBtn;
     private JButton clearBtn;
@@ -616,7 +614,6 @@ public class QuestionManagementFrame extends JFrame {
 
         diffLabel.setText(isHe ? "רמת קושי:" : "Difficulty:");
         corrLabel.setText(isHe ? "תשובה נכונה:" : "Correct:");
-        idLabel.setText(isHe ? "מזהה:" : "ID:");
         applyBtn.setText(isHe ? "החל" : "Apply");
         clearBtn.setText(isHe ? "נקה" : "Clear");
 
@@ -647,13 +644,11 @@ public class QuestionManagementFrame extends JFrame {
 
         if (isHe) {
             filterPanel.add(clearBtn); filterPanel.add(applyBtn);
-            filterPanel.add(idFilter); filterPanel.add(idLabel);
             filterPanel.add(correctAnswerFilter); filterPanel.add(corrLabel);
             filterPanel.add(difficultyFilter); filterPanel.add(diffLabel);
         } else {
             filterPanel.add(diffLabel); filterPanel.add(difficultyFilter);
             filterPanel.add(corrLabel); filterPanel.add(correctAnswerFilter);
-            filterPanel.add(idLabel); filterPanel.add(idFilter);
             filterPanel.add(applyBtn); filterPanel.add(clearBtn);
         }
         filterPanel.revalidate(); filterPanel.repaint();
@@ -821,30 +816,39 @@ public class QuestionManagementFrame extends JFrame {
     private JPanel createFilterPanel() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 6));
         p.setOpaque(false);
-        diffLabel = new JLabel("Difficulty:"); diffLabel.setForeground(TEXT_COLOR);
+
+        diffLabel = new JLabel("Difficulty:");
+        diffLabel.setForeground(TEXT_COLOR);
+
         difficultyFilter = new JComboBox<>(new String[]{"All", "EASY", "MEDIUM", "HARD", "EXPERT"});
         styleCombo(difficultyFilter);
-        corrLabel = new JLabel("Correct:"); corrLabel.setForeground(TEXT_COLOR);
-        // Use letters A-D to match table
+
+        corrLabel = new JLabel("Correct:");
+        corrLabel.setForeground(TEXT_COLOR);
+
         correctAnswerFilter = new JComboBox<>(new String[]{"All", "A", "B", "C", "D"});
         styleCombo(correctAnswerFilter);
-        idLabel = new JLabel("ID:"); idLabel.setForeground(TEXT_COLOR);
-        idFilter = new JTextField(8); idFilter.setFont(new Font("Arial", Font.PLAIN, 14));
-        applyBtn = createStyledButton("Apply"); clearBtn = createStyledButton("Clear");
+
+        applyBtn = createStyledButton("Apply");
+        clearBtn = createStyledButton("Clear");
 
         applyBtn.addActionListener(e -> applyFilters());
         clearBtn.addActionListener(e -> {
-            difficultyFilter.setSelectedIndex(0); correctAnswerFilter.setSelectedIndex(0);
-            idFilter.setText(""); applyFilters();
+            difficultyFilter.setSelectedIndex(0);
+            correctAnswerFilter.setSelectedIndex(0);
+            applyFilters();
         });
-        idFilter.addActionListener(e -> applyFilters());
+
         difficultyFilter.addActionListener(e -> applyFilters());
         correctAnswerFilter.addActionListener(e -> applyFilters());
 
-        p.add(diffLabel); p.add(difficultyFilter); p.add(corrLabel); p.add(correctAnswerFilter);
-        p.add(idLabel); p.add(idFilter); p.add(applyBtn); p.add(clearBtn);
+        p.add(diffLabel); p.add(difficultyFilter);
+        p.add(corrLabel); p.add(correctAnswerFilter);
+        p.add(applyBtn);  p.add(clearBtn);
+
         return p;
     }
+
 
     private void styleCombo(JComboBox<String> box) {
         box.setBackground(Color.WHITE); box.setForeground(Color.BLACK);
@@ -853,9 +857,10 @@ public class QuestionManagementFrame extends JFrame {
 
     private void applyFilters() {
         if (sorter == null) return;
+
         String diff = (String) difficultyFilter.getSelectedItem();
         String corr = (String) correctAnswerFilter.getSelectedItem();
-        String idText = idFilter.getText().trim();
+
         List<RowFilter<Object, Object>> filters = new ArrayList<>();
 
         String diffFilter = mapDifficultyToFilter(diff);
@@ -863,18 +868,14 @@ public class QuestionManagementFrame extends JFrame {
             filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(diffFilter) + "$", 7));
         }
 
-        // Correct filter now uses letters A-D
         if (corr != null && !"All".equalsIgnoreCase(corr) && !"הכל".equals(corr)) {
             filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(corr) + "$", 6));
-        }
-
-        if (!idText.isEmpty()) {
-            filters.add(RowFilter.regexFilter(java.util.regex.Pattern.quote(idText), 0));
         }
 
         if (filters.isEmpty()) sorter.setRowFilter(null);
         else sorter.setRowFilter(RowFilter.andFilter(filters));
     }
+
 
     private String mapDifficultyToFilter(String value) {
         if (value == null) return "All";
