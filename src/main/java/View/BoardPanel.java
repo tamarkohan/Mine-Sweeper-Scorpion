@@ -6,6 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import util.SoundManager;
 
 public class BoardPanel extends JPanel {
 
@@ -119,7 +120,7 @@ public class BoardPanel extends JPanel {
         if (!controller.isGameRunning()) return;
         if (controller.getCurrentPlayerTurn() != boardNumber) return;
         if (waiting) return;
-
+        SoundManager.click();
         boolean endedTurn = false;
         boolean stateChanged = false;
 
@@ -180,6 +181,8 @@ public class BoardPanel extends JPanel {
         int rows = controller.getBoardRows(boardNumber);
         int cols = controller.getBoardCols(boardNumber);
         boolean gameIsRunning = controller.isGameRunning();
+        boolean playMineSfx = false;
+
         java.util.Set<Point> newlyRevealed = null;
 
         if (pendingEffect != null && prevRevealed != null) {
@@ -204,6 +207,11 @@ public class BoardPanel extends JPanel {
                 JButton btn = buttons[r][c];
                 GameController.CellViewData data = controller.getCellViewData(boardNumber, r, c);
                 boolean revealed = controller.isCellRevealed(boardNumber, r, c);
+                boolean wasRevealedBefore = prevRevealed != null && prevRevealed[r][c];
+                if (revealed && !wasRevealedBefore && "M".equals(data.text)) {
+                    playMineSfx = true;
+                }
+
 
                 if (boardNumber == 1) {
                     btn.setBackground(revealed ? new Color(255, 215, 215) : new Color(255, 165, 165));
@@ -257,6 +265,9 @@ public class BoardPanel extends JPanel {
                     btn.setBorder(BorderFactory.createLineBorder(new Color(neon.getRed(), neon.getGreen(), neon.getBlue(), 130 + Math.round(120 * pulse)), 2 + Math.round(4 * pulse)));
                 }
             }
+        }
+        if (playMineSfx) {
+            SoundManager.wrongAnswer();
         }
 
         for (int rr = 0; rr < rows; rr++) {
