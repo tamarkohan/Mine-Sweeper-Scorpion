@@ -2,6 +2,7 @@ package View;
 
 import Controller.GameController;
 import util.LanguageManager;
+import util.SoundManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -151,9 +152,14 @@ public class ActivationConfirmDialog extends JDialog {
 
     public static boolean show(Window owner, String cellType) {
         ActivationConfirmDialog dlg = new ActivationConfirmDialog(owner, cellType);
+
+        //  play when the dialog is about to appear
+        SoundManager.specialCellDialog();
+
         dlg.setVisible(true);
         return dlg.choice == Choice.ACTIVATE;
     }
+
 
     private JButton makeButton(String text, boolean primary) {
         JButton b = new JButton(text);

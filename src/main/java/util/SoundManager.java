@@ -23,6 +23,8 @@ public final class SoundManager {
 
     private static final float WIN_VOLUME_DB = -5.0f;
     private static final float LOSE_VOLUME_DB = -5.0f;
+    private static Clip specialCellDialogClip;
+    private static final float SPECIAL_DIALOG_VOLUME_DB = -7.0f;
 
     private SoundManager() {
     }
@@ -44,6 +46,8 @@ public final class SoundManager {
 
         setVolume(winClip, WIN_VOLUME_DB);
         setVolume(loseClip, LOSE_VOLUME_DB);
+        specialCellDialogClip = loadClip("/audio/special_cell_dialog.wav");
+        setVolume(specialCellDialogClip, SPECIAL_DIALOG_VOLUME_DB);
 
     }
 
@@ -158,6 +162,10 @@ public final class SoundManager {
     public static void loseGame() {
         if (muted) return;
         play(loseClip);
+    }
+    public static void specialCellDialog() {
+        if (muted) return;
+        play(specialCellDialogClip);
     }
 
 }
