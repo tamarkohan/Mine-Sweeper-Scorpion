@@ -4,6 +4,7 @@ import Controller.GameController;
 import util.LanguageManager;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 /**
@@ -39,7 +40,7 @@ public class GamePanel extends JPanel {
     private JPanel centerPanel;
     private Timer resizeStabilizer;
     private Timer gameTimer;
-    private final Runnable onBackToMenu;
+    private final Runnable onBackToStart;
 
     private JLabel langToastLabel;
     private Timer langToastTimer;
@@ -47,6 +48,8 @@ public class GamePanel extends JPanel {
     // Toast colors
     private static final Color COLOR_GREEN = new Color(80, 200, 120);
     private static final Color COLOR_RED = new Color(220, 60, 60);
+    private static final Color COLOR_YELLOW = new Color(255, 200, 80);
+    private static final Color COLOR_CYAN = new Color(80, 200, 255);
 
     // Dimensions
     private static final int FIXED_BOX_WIDTH = 250;
@@ -57,11 +60,11 @@ public class GamePanel extends JPanel {
     private static final String THINKING_ICON = "/ui/icons/thinking.png";
 
     public GamePanel(GameController controller,
-                     String player1Name, String player2Name, Runnable onBackToMenu) {
+                     String player1Name, String player2Name, Runnable onBackToStart) {
         this.controller = controller;
         this.player1Name = player1Name;
         this.player2Name = player2Name;
-        this.onBackToMenu = onBackToMenu;
+        this.onBackToStart = onBackToStart;
         this.startTimeMillis = System.currentTimeMillis();
 
         controller.registerQuestionPresenter(q -> {
@@ -77,8 +80,75 @@ public class GamePanel extends JPanel {
         });
 
         initComponents();
+        setupEscapeKey();
         updateStatus();
         updateTurnUI();
+    }
+
+    private void setupEscapeKey() {
+        // Register ESC key to trigger exit confirmation
+        InputMap inputMap = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = getActionMap();
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "exitGame");
+        actionMap.put("exitGame", new AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                showExitConfirmation();
+            }
+        });
+    }
+    //Toast colors (add COLOR_CYAN if not present)
+
+    private void showExitConfirmation() {
+        LanguageManager.Language lang = controller.getCurrentLanguage();
+        boolean isHebrew = (lang == LanguageManager.Language.HE);
+
+        String title = isHebrew ? "יציאה מהמשחק" : "Exit Game";
+        String message = isHebrew ? "האם אתה בטוח שברצונך לצאת?\nההתקדמות במשחק תאבד."
+                : "Are you sure you want to exit?\nGame progress will be lost.";
+
+        boolean confirmed = ConfirmDialog.show(
+                SwingUtilities.getWindowAncestor(this),
+                title,
+                message,
+                COLOR_YELLOW,
+                isHebrew
+        );
+
+        if (confirmed) {
+            if (gameTimer != null) gameTimer.stop();
+            controller.endGame();
+            if (onBackToStart != null) onBackToStart.run();
+        }
+    }
+
+    private void showRestartConfirmation() {
+        LanguageManager.Language lang = controller.getCurrentLanguage();
+        boolean isHebrew = (lang == LanguageManager.Language.HE);
+
+        String title = isHebrew ? "התחלה מחדש" : "Restart Game";
+        String message = isHebrew ? "האם אתה בטוח שברצונך להתחיל מחדש?\nההתקדמות הנוכחית תאבד."
+                : "Are you sure you want to restart?\nCurrent progress will be lost.";
+
+        boolean confirmed = ConfirmDialog.show(
+                SwingUtilities.getWindowAncestor(this),
+                title,
+                message,
+                COLOR_CYAN,
+                isHebrew
+        );
+
+        if (confirmed) {
+            controller.restartGame();
+            startTimeMillis = System.currentTimeMillis();
+            if (gameTimer != null) gameTimer.restart();
+            updateStatus();
+            updateTurnUI();
+            boardPanel1.refresh();
+            boardPanel2.refresh();
+            requestResizeBoards();
+        }
     }
 
     private void initComponents() {
@@ -237,20 +307,11 @@ public class GamePanel extends JPanel {
         controlsBar.add(btnExit, BorderLayout.WEST);
         controlsBar.add(rightControls, BorderLayout.EAST);
 
-        btnRestart.setOnClick(() -> {
-            controller.restartGame();
-            startTimeMillis = System.currentTimeMillis();
-            if (gameTimer != null) gameTimer.restart();
-            updateStatus(); updateTurnUI();
-            boardPanel1.refresh(); boardPanel2.refresh();
-            requestResizeBoards();
-        });
+        // Restart button now shows confirmation dialog
+        btnRestart.setOnClick(this::showRestartConfirmation);
 
-        btnExit.setOnClick(() -> {
-            if (gameTimer != null) gameTimer.stop();
-            controller.endGame();
-            if (onBackToMenu != null) onBackToMenu.run();
-        });
+        // Exit button shows confirmation dialog
+        btnExit.setOnClick(this::showExitConfirmation);
 
         // --- THREADED LANGUAGE TOGGLE ---
         btnLanguage.setOnClick(this::handleLanguageSwitch);
@@ -502,7 +563,7 @@ public class GamePanel extends JPanel {
             controller.restartGame(); startTimeMillis = System.currentTimeMillis(); if (gameTimer != null) gameTimer.restart();
             updateStatus(); updateTurnUI(); boardPanel1.refresh(); boardPanel2.refresh(); requestResizeBoards();
         } else if (action == GameResultDialog.ResultAction.EXIT) {
-            controller.endGame(); if (onBackToMenu != null) onBackToMenu.run();
+            controller.endGame(); if (onBackToStart != null) onBackToStart.run();
         }
     }
 

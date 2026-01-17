@@ -115,15 +115,14 @@ public class MainFrame extends JFrame
                 player2Name,
                 () -> {
                     controller.endGame();
-                    startPanel.resetFields();
-                    cardLayout.show(cardPanel, "MENU");
+                    // Go to START panel (level/name selection) instead of MENU
+                    cardLayout.show(cardPanel, "START");
                 }
         );
 
         cardPanel.add(gamePanel, "GAME");
         cardLayout.show(cardPanel, "GAME");
     }
-
     @Override
     public void onBackToMenu() {
         startPanel.resetFields();
