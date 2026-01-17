@@ -25,6 +25,9 @@ public class IconToggleButton extends JToggleButton {
         setBorderPainted(false);
         setOpaque(false);
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        addActionListener(e -> util.SoundManager.click());
+
     }
 
     private void loadImage(String path) {

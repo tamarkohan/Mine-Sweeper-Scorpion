@@ -28,7 +28,7 @@ public class MainFrame extends JFrame
 
     public MainFrame() {
         super("Scorpion Minesweeper");
-
+        SoundManager.init();
         this.controller = GameController.getInstance();
         this.cardLayout = new CardLayout();
         this.cardPanel = new JPanel(cardLayout);

@@ -3,80 +3,118 @@ package util;
 import javax.sound.sampled.*;
 import java.net.URL;
 
-public class SoundManager {
+public final class SoundManager {
 
-    private static Clip clip;
+    private static Clip bgClip;
+    private static Clip clickClip;
+
     private static boolean muted = false;
     private static String currentTrack;
 
-    private static final float DEFAULT_VOLUME_DB = -18.0f; // calm background volume
+    private static final float BG_VOLUME_DB = -18.0f;
+    private static final float CLICK_VOLUME_DB = -8.0f;
 
-    /** Play background music in a loop (only once) */
+    private SoundManager() {
+    }
+
+    /**
+     * Call once when app starts
+     */
+    public static void init() {
+        clickClip = loadClip("/audio/ui_click.wav");
+        setVolume(clickClip, CLICK_VOLUME_DB);
+    }
+
+    /**
+     * Play UI click
+     */
+    public static void click() {
+        if (muted) return;
+        play(clickClip);
+    }
+
+    /**
+     * Background music loop
+     */
     public static void playLoop(String resourcePath) {
         try {
-            // If same track already playing → do nothing
-            if (clip != null && clip.isRunning() && resourcePath.equals(currentTrack)) {
-                return;
-            }
+            if (bgClip != null && bgClip.isRunning() && resourcePath.equals(currentTrack)) return;
 
-            stop(); // stop previous track
+            stopBackground();
             currentTrack = resourcePath;
 
-            URL url = SoundManager.class.getResource(resourcePath);
-            if (url == null) {
-                System.err.println("Sound not found: " + resourcePath);
-                return;
-            }
+            bgClip = loadClip(resourcePath);
+            if (bgClip == null) return;
 
-            AudioInputStream ais = AudioSystem.getAudioInputStream(url);
-            clip = AudioSystem.getClip();
-            clip.open(ais);
-
-            setVolume(DEFAULT_VOLUME_DB);
+            setVolume(bgClip, BG_VOLUME_DB);
 
             if (!muted) {
-                clip.loop(Clip.LOOP_CONTINUOUSLY);
-                clip.start();
+                bgClip.loop(Clip.LOOP_CONTINUOUSLY);
+                bgClip.start();
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    /** Stop music completely */
-    public static void stop() {
-        if (clip != null) {
-            clip.stop();
-            clip.close();
-            clip = null;
+    public static void stopBackground() {
+        if (bgClip != null) {
+            bgClip.stop();
+            bgClip.close();
+            bgClip = null;
         }
     }
 
-    /** Toggle mute ON / OFF */
     public static void toggleMute() {
         muted = !muted;
 
-        if (clip == null) return;
-
-        if (muted) {
-            clip.stop();
-        } else {
-            clip.loop(Clip.LOOP_CONTINUOUSLY);
-            clip.start();
+        if (bgClip != null) {
+            if (muted) bgClip.stop();
+            else {
+                bgClip.loop(Clip.LOOP_CONTINUOUSLY);
+                bgClip.start();
+            }
         }
     }
 
-    /** Is sound muted? */
     public static boolean isMuted() {
         return muted;
     }
 
-    /** Adjust volume safely */
-    private static void setVolume(float db) {
-        if (clip != null && clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
-            FloatControl gain = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-            gain.setValue(db);
+    // ---- helpers ----
+
+    private static Clip loadClip(String resourcePath) {
+        try {
+            URL url = SoundManager.class.getResource(resourcePath);
+            System.out.println("Loading sound: " + resourcePath + " -> " + url); // debug
+            if (url == null) {
+                System.err.println("Sound not found: " + resourcePath);
+                return null;
+            }
+            AudioInputStream ais = AudioSystem.getAudioInputStream(url);
+            Clip c = AudioSystem.getClip();
+            c.open(ais);
+            return c;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
+    }
+
+    private static void play(Clip c) {
+        if (c == null) return;
+        if (c.isRunning()) c.stop();
+        c.setFramePosition(0);
+        c.start();
+    }
+
+    private static void setVolume(Clip c, float db) {
+        if (c != null && c.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
+            ((FloatControl) c.getControl(FloatControl.Type.MASTER_GAIN)).setValue(db);
+        }
+    }
+
+    public static void stop() {
+        stopBackground();
     }
 }
