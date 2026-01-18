@@ -14,12 +14,14 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import util.SoundManager;
 
 public class QuestionManagementFrame extends JFrame {
 
@@ -35,7 +37,6 @@ public class QuestionManagementFrame extends JFrame {
     private JLabel diffLabel;
     private JLabel corrLabel;
     private JLabel lblSortHint;
-    private JButton applyBtn;
     private JButton clearBtn;
     private JPanel filterPanel;
 
@@ -88,7 +89,9 @@ public class QuestionManagementFrame extends JFrame {
         String[] cols = {"ID", "Text", "A", "B", "C", "D", "Correct", "Difficulty"};
         model = new DefaultTableModel(cols, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
 
             @Override
             public Class<?> getColumnClass(int column) {
@@ -98,8 +101,9 @@ public class QuestionManagementFrame extends JFrame {
         };
 
 
-
         table = createStyledTable(model);
+        attachHeaderClickSound(table);
+
         sorter = new TableRowSorter<>(model);
         table.setRowSorter(sorter);
         sorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
@@ -120,6 +124,9 @@ public class QuestionManagementFrame extends JFrame {
         btnAdd = createStyledButton("Add");
         btnEdit = createStyledButton("Edit");
         btnDelete = createStyledButton("Delete");
+        attachClickSound(btnAdd);
+        attachClickSound(btnEdit);
+        attachClickSound(btnDelete);
 
         IconButton btnExit = new IconButton("/ui/icons/back.png");
         btnExit.setPreferredSize(new Dimension(46, 46));
@@ -171,13 +178,18 @@ public class QuestionManagementFrame extends JFrame {
         btnPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        left.setOpaque(false); left.add(btnExit);
+        left.setOpaque(false);
+        left.add(btnExit);
 
         JPanel center = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        center.setOpaque(false); center.add(btnAdd); center.add(btnEdit); center.add(btnDelete);
+        center.setOpaque(false);
+        center.add(btnAdd);
+        center.add(btnEdit);
+        center.add(btnDelete);
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        right.setOpaque(false); right.add(btnLanguage);
+        right.setOpaque(false);
+        right.add(btnLanguage);
 
         btnPanel.add(left, BorderLayout.WEST);
         btnPanel.add(center, BorderLayout.CENTER);
@@ -342,11 +354,23 @@ public class QuestionManagementFrame extends JFrame {
                     : (isHebrew ? "ערוך שאלה" : "Edit Question"));
 
             if (isHebrew) {
-                correctCombo.addItem("א"); correctCombo.addItem("ב"); correctCombo.addItem("ג"); correctCombo.addItem("ד");
-                diffCombo.addItem("קל"); diffCombo.addItem("בינוני"); diffCombo.addItem("קשה"); diffCombo.addItem("מומחה");
+                correctCombo.addItem("א");
+                correctCombo.addItem("ב");
+                correctCombo.addItem("ג");
+                correctCombo.addItem("ד");
+                diffCombo.addItem("קל");
+                diffCombo.addItem("בינוני");
+                diffCombo.addItem("קשה");
+                diffCombo.addItem("מומחה");
             } else {
-                correctCombo.addItem("A"); correctCombo.addItem("B"); correctCombo.addItem("C"); correctCombo.addItem("D");
-                diffCombo.addItem("EASY"); diffCombo.addItem("MEDIUM"); diffCombo.addItem("HARD"); diffCombo.addItem("EXPERT");
+                correctCombo.addItem("A");
+                correctCombo.addItem("B");
+                correctCombo.addItem("C");
+                correctCombo.addItem("D");
+                diffCombo.addItem("EASY");
+                diffCombo.addItem("MEDIUM");
+                diffCombo.addItem("HARD");
+                diffCombo.addItem("EXPERT");
             }
 
             int fieldW = 360;
@@ -431,6 +455,17 @@ public class QuestionManagementFrame extends JFrame {
             styleNeonCombo(correctCombo);
             styleNeonCombo(diffCombo);
 
+            attachComboOpenClickSound(correctCombo);
+            attachComboOpenClickSound(diffCombo);
+
+
+            attachTypingSound(textField);
+            attachTypingSound(aField);
+            attachTypingSound(bField);
+            attachTypingSound(cField);
+            attachTypingSound(dField);
+// idField is not editable, so no need
+
             String lblId = isHebrew ? "מזהה" : "ID";
             String lblText = isHebrew ? "טקסט השאלה" : "Question Text";
             String lblOptA = isHebrew ? "תשובה א" : "Option A";
@@ -456,6 +491,8 @@ public class QuestionManagementFrame extends JFrame {
 
             JButton btnCancel = createStyledButton(isHebrew ? "ביטול" : "Cancel");
             JButton btnSaveDialog = createStyledButton(isHebrew ? "שמור" : "Save");
+            attachClickSound(btnCancel);
+            attachClickSound(btnSaveDialog);
 
             btnCancel.addActionListener(e -> dispose());
             btnSaveDialog.addActionListener(e -> onSave());
@@ -494,14 +531,26 @@ public class QuestionManagementFrame extends JFrame {
 
             if (isHebrew) {
                 l.setHorizontalAlignment(SwingConstants.RIGHT);
-                gc.gridx = 1; gc.gridy = row; gc.weightx = 1; gc.anchor = GridBagConstraints.EAST;
+                gc.gridx = 1;
+                gc.gridy = row;
+                gc.weightx = 1;
+                gc.anchor = GridBagConstraints.EAST;
                 card.add(input, gc);
-                gc.gridx = 0; gc.gridy = row; gc.weightx = 0; gc.anchor = GridBagConstraints.WEST;
+                gc.gridx = 0;
+                gc.gridy = row;
+                gc.weightx = 0;
+                gc.anchor = GridBagConstraints.WEST;
                 card.add(l, gc);
             } else {
-                gc.gridx = 0; gc.gridy = row; gc.weightx = 0; gc.anchor = GridBagConstraints.WEST;
+                gc.gridx = 0;
+                gc.gridy = row;
+                gc.weightx = 0;
+                gc.anchor = GridBagConstraints.WEST;
                 card.add(l, gc);
-                gc.gridx = 1; gc.gridy = row; gc.weightx = 1; gc.anchor = GridBagConstraints.EAST;
+                gc.gridx = 1;
+                gc.gridy = row;
+                gc.weightx = 1;
+                gc.anchor = GridBagConstraints.EAST;
                 card.add(input, gc);
             }
         }
@@ -526,7 +575,7 @@ public class QuestionManagementFrame extends JFrame {
                     if (opts.get(i).isEmpty()) {
                         char optLetter = (char) ('A' + i);
                         throw new IllegalArgumentException(
-                                isHebrew ? "תשובה " + (char)('א' + i) + " ריקה." : "Option " + optLetter + " is empty.");
+                                isHebrew ? "תשובה " + (char) ('א' + i) + " ריקה." : "Option " + optLetter + " is empty.");
                     }
                 }
 
@@ -551,7 +600,9 @@ public class QuestionManagementFrame extends JFrame {
             }
         }
 
-        public Question getResult() { return result; }
+        public Question getResult() {
+            return result;
+        }
     }
 
     // ================= HELPER CLASS =================
@@ -593,7 +644,9 @@ public class QuestionManagementFrame extends JFrame {
                     gc.setCurrentLanguage(LanguageManager.Language.EN);
                 gc.getQuestionManager().switchLanguageFromCache();
                 Thread.sleep(300);
-            } catch (Exception e) { e.printStackTrace(); }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             SwingUtilities.invokeLater(() -> {
                 updateUIText();
                 updateFilterComboItems();
@@ -614,7 +667,6 @@ public class QuestionManagementFrame extends JFrame {
 
         diffLabel.setText(isHe ? "רמת קושי:" : "Difficulty:");
         corrLabel.setText(isHe ? "תשובה נכונה:" : "Correct:");
-        applyBtn.setText(isHe ? "החל" : "Apply");
         clearBtn.setText(isHe ? "נקה" : "Clear");
 
         // Sort hint text
@@ -643,16 +695,23 @@ public class QuestionManagementFrame extends JFrame {
         layout.setAlignment(isHe ? FlowLayout.RIGHT : FlowLayout.LEFT);
 
         if (isHe) {
-            filterPanel.add(clearBtn); filterPanel.add(applyBtn);
-            filterPanel.add(correctAnswerFilter); filterPanel.add(corrLabel);
-            filterPanel.add(difficultyFilter); filterPanel.add(diffLabel);
+            filterPanel.add(clearBtn);
+            filterPanel.add(correctAnswerFilter);
+            filterPanel.add(corrLabel);
+            filterPanel.add(difficultyFilter);
+            filterPanel.add(diffLabel);
         } else {
-            filterPanel.add(diffLabel); filterPanel.add(difficultyFilter);
-            filterPanel.add(corrLabel); filterPanel.add(correctAnswerFilter);
-            filterPanel.add(applyBtn); filterPanel.add(clearBtn);
+            filterPanel.add(diffLabel);
+            filterPanel.add(difficultyFilter);
+            filterPanel.add(corrLabel);
+            filterPanel.add(correctAnswerFilter);
+            filterPanel.add(clearBtn);
         }
-        filterPanel.revalidate(); filterPanel.repaint();
+
+        filterPanel.revalidate();
+        filterPanel.repaint();
     }
+
 
     private void updateFilterComboItems() {
         int diffIdx = difficultyFilter.getSelectedIndex();
@@ -662,11 +721,17 @@ public class QuestionManagementFrame extends JFrame {
 
         boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
         if (isHe) {
-            difficultyFilter.addItem("הכל"); difficultyFilter.addItem("קל");
-            difficultyFilter.addItem("בינוני"); difficultyFilter.addItem("קשה"); difficultyFilter.addItem("מומחה");
+            difficultyFilter.addItem("הכל");
+            difficultyFilter.addItem("קל");
+            difficultyFilter.addItem("בינוני");
+            difficultyFilter.addItem("קשה");
+            difficultyFilter.addItem("מומחה");
         } else {
-            difficultyFilter.addItem("All"); difficultyFilter.addItem("EASY");
-            difficultyFilter.addItem("MEDIUM"); difficultyFilter.addItem("HARD"); difficultyFilter.addItem("EXPERT");
+            difficultyFilter.addItem("All");
+            difficultyFilter.addItem("EASY");
+            difficultyFilter.addItem("MEDIUM");
+            difficultyFilter.addItem("HARD");
+            difficultyFilter.addItem("EXPERT");
         }
 
         // Use letters A-D to match table display
@@ -686,7 +751,8 @@ public class QuestionManagementFrame extends JFrame {
         boolean isHe = GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE;
         toastLabel.setText(isHe ? "עברית" : "English");
         Dimension size = toastLabel.getPreferredSize();
-        int w = size.width + 30; int h = 30;
+        int w = size.width + 30;
+        int h = 30;
         Point btnLoc = SwingUtilities.convertPoint(btnLanguage.getParent(), btnLanguage.getLocation(), getLayeredPane());
         toastLabel.setBounds(btnLoc.x + (btnLanguage.getWidth() - w) / 2, btnLoc.y - h - 10, w, h);
         toastLabel.setVisible(true);
@@ -707,8 +773,13 @@ public class QuestionManagementFrame extends JFrame {
             public Component getTableCellRendererComponent(JTable table, Object v, boolean isSel, boolean hasFoc, int r, int c) {
                 JLabel l = (JLabel) super.getTableCellRendererComponent(table, v, isSel, hasFoc, r, c);
                 l.setHorizontalAlignment(CENTER);
-                if (isSel) { l.setBackground(TABLE_SELECTION_BG); l.setForeground(TEXT_COLOR); }
-                else { l.setBackground(TABLE_ROW_BG); l.setForeground(TEXT_COLOR); }
+                if (isSel) {
+                    l.setBackground(TABLE_SELECTION_BG);
+                    l.setForeground(TEXT_COLOR);
+                } else {
+                    l.setBackground(TABLE_ROW_BG);
+                    l.setForeground(TEXT_COLOR);
+                }
                 return l;
             }
         });
@@ -717,20 +788,27 @@ public class QuestionManagementFrame extends JFrame {
 
     private JScrollPane createStyledScrollPane(JComponent view) {
         JScrollPane scroll = new JScrollPane(view);
-        scroll.setOpaque(false); scroll.getViewport().setOpaque(false);
+        scroll.setOpaque(false);
+        scroll.getViewport().setOpaque(false);
         scroll.setBorder(BorderFactory.createEmptyBorder());
         return scroll;
     }
 
     private JButton createStyledButton(String text) {
         JButton btn = new JButton(text);
-        btn.setBackground(new Color(40, 40, 40)); btn.setForeground(ACCENT_COLOR);
+        btn.setBackground(new Color(40, 40, 40));
+        btn.setForeground(ACCENT_COLOR);
         btn.setFont(new Font("Arial", Font.BOLD, 14));
         btn.setFocusPainted(false);
         btn.setBorder(BorderFactory.createCompoundBorder(new LineBorder(ACCENT_COLOR), new EmptyBorder(5, 15, 5, 15)));
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) { btn.setBackground(new Color(60, 60, 60)); }
-            public void mouseExited(java.awt.event.MouseEvent evt) { btn.setBackground(new Color(40, 40, 40)); }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn.setBackground(new Color(60, 60, 60));
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn.setBackground(new Color(40, 40, 40));
+            }
         });
         return btn;
     }
@@ -741,12 +819,15 @@ public class QuestionManagementFrame extends JFrame {
     }
 
     private void styleNeonLabel(JLabel l) {
-        l.setForeground(TEXT_COLOR); l.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        l.setForeground(TEXT_COLOR);
+        l.setFont(new Font("Segoe UI", Font.BOLD, 14));
     }
 
     private void styleNeonCombo(JComboBox<?> c) {
-        c.setBackground(DIALOG_PANEL); c.setForeground(TEXT_COLOR);
-        c.setFont(new Font("Segoe UI", Font.PLAIN, 14)); c.setBorder(neonBorder(ACCENT_COLOR));
+        c.setBackground(DIALOG_PANEL);
+        c.setForeground(TEXT_COLOR);
+        c.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        c.setBorder(neonBorder(ACCENT_COLOR));
     }
 
     private void loadTable() {
@@ -773,14 +854,22 @@ public class QuestionManagementFrame extends JFrame {
         if (diff == null) return "";
         if (!toHebrew) return diff;
         return switch (diff.toUpperCase()) {
-            case "EASY" -> "קל"; case "MEDIUM" -> "בינוני"; case "HARD" -> "קשה"; case "EXPERT" -> "מומחה"; default -> diff;
+            case "EASY" -> "קל";
+            case "MEDIUM" -> "בינוני";
+            case "HARD" -> "קשה";
+            case "EXPERT" -> "מומחה";
+            default -> diff;
         };
     }
 
     private String translateDifficultyToEnglish(String diff) {
         if (diff == null) return "EASY";
         return switch (diff) {
-            case "קל" -> "EASY"; case "בינוני" -> "MEDIUM"; case "קשה" -> "HARD"; case "מומחה" -> "EXPERT"; default -> diff.toUpperCase();
+            case "קל" -> "EASY";
+            case "בינוני" -> "MEDIUM";
+            case "קשה" -> "HARD";
+            case "מומחה" -> "EXPERT";
+            default -> diff.toUpperCase();
         };
     }
 
@@ -805,7 +894,10 @@ public class QuestionManagementFrame extends JFrame {
 
             String diff = translateDifficultyToEnglish(model.getValueAt(row, 7).toString());
             List<String> opts = new ArrayList<>();
-            opts.add(a); opts.add(b); opts.add(c); opts.add(d);
+            opts.add(a);
+            opts.add(b);
+            opts.add(c);
+            opts.add(d);
             return new Question(id, text, opts, correct, diff);
         } catch (Exception e) {
             e.printStackTrace();
@@ -822,17 +914,18 @@ public class QuestionManagementFrame extends JFrame {
 
         difficultyFilter = new JComboBox<>(new String[]{"All", "EASY", "MEDIUM", "HARD", "EXPERT"});
         styleCombo(difficultyFilter);
+        attachComboClickSound(difficultyFilter);
 
         corrLabel = new JLabel("Correct:");
         corrLabel.setForeground(TEXT_COLOR);
 
         correctAnswerFilter = new JComboBox<>(new String[]{"All", "A", "B", "C", "D"});
         styleCombo(correctAnswerFilter);
+        attachComboClickSound(correctAnswerFilter);
 
-        applyBtn = createStyledButton("Apply");
         clearBtn = createStyledButton("Clear");
+        attachClickSound(clearBtn);
 
-        applyBtn.addActionListener(e -> applyFilters());
         clearBtn.addActionListener(e -> {
             difficultyFilter.setSelectedIndex(0);
             correctAnswerFilter.setSelectedIndex(0);
@@ -842,17 +935,22 @@ public class QuestionManagementFrame extends JFrame {
         difficultyFilter.addActionListener(e -> applyFilters());
         correctAnswerFilter.addActionListener(e -> applyFilters());
 
-        p.add(diffLabel); p.add(difficultyFilter);
-        p.add(corrLabel); p.add(correctAnswerFilter);
-        p.add(applyBtn);  p.add(clearBtn);
+        p.add(diffLabel);
+        p.add(difficultyFilter);
+        p.add(corrLabel);
+        p.add(correctAnswerFilter);
+        p.add(clearBtn);
 
         return p;
     }
 
 
+
     private void styleCombo(JComboBox<String> box) {
-        box.setBackground(Color.WHITE); box.setForeground(Color.BLACK);
-        box.setFont(new Font("Arial", Font.PLAIN, 14)); box.setFocusable(false);
+        box.setBackground(Color.WHITE);
+        box.setForeground(Color.BLACK);
+        box.setFont(new Font("Arial", Font.PLAIN, 14));
+        box.setFocusable(false);
     }
 
     private void applyFilters() {
@@ -891,6 +989,77 @@ public class QuestionManagementFrame extends JFrame {
     }
 
     private static int parseIntSafe(Object o) {
-        try { return Integer.parseInt(o.toString()); } catch (Exception e) { return Integer.MIN_VALUE; }
+        try {
+            return Integer.parseInt(o.toString());
+        } catch (Exception e) {
+            return Integer.MIN_VALUE;
+        }
     }
+    // --- Sounds helpers ---
+    private void attachClickSound(AbstractButton btn) {
+        btn.addActionListener(e -> SoundManager.click());
+    }
+
+
+    private void attachComboClickSound(JComboBox<?> combo) {
+        final boolean[] initialized = {false};
+        combo.addActionListener(e -> {
+            if (!initialized[0]) { initialized[0] = true; return; } // skip init fire
+            SoundManager.click();
+        });
+    }
+
+
+    private void attachTypingSound(JTextField field) {
+        final int cooldownMs = 35;
+        final long[] last = {0L};
+
+        field.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            private void ping() {
+                long now = System.currentTimeMillis();
+                if (now - last[0] >= cooldownMs) {
+                    SoundManager.typeKey();
+                    last[0] = now;
+                }
+            }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { ping(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { ping(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { ping(); }
+        });
+    }
+
+    private void attachHeaderClickSound(JTable table) {
+        JTableHeader header = table.getTableHeader();
+        header.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                SoundManager.click();
+            }
+        });
+    }
+    private void attachComboOpenClickSound(JComboBox<?> combo) {
+        // 1) Click anywhere on the combo
+        combo.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                SoundManager.click();
+            }
+        });
+
+        // 2) Click on the arrow button (Metal/Basic UI)
+        java.awt.Component[] comps = combo.getComponents();
+        for (java.awt.Component c : comps) {
+            if (c instanceof AbstractButton b) {
+                b.addMouseListener(new java.awt.event.MouseAdapter() {
+                    @Override
+                    public void mousePressed(java.awt.event.MouseEvent e) {
+                        SoundManager.click();
+                    }
+                });
+            }
+        }
+    }
+
+
+
 }
