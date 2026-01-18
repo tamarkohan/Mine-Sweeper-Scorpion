@@ -16,8 +16,8 @@ public final class SoundManager {
     private static Clip correctClip;
     private static Clip wrongClip;
 
-    private static final float CORRECT_VOLUME_DB = -6.0f;
-    private static final float WRONG_VOLUME_DB = -6.0f;
+    private static final float CORRECT_VOLUME_DB = -8.0f;
+    private static final float WRONG_VOLUME_DB = -8.0f;
     private static Clip winClip;
     private static Clip loseClip;
 

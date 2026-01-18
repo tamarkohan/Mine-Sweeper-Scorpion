@@ -260,7 +260,11 @@ public class MainFrame extends JFrame
 
         String btnText = isHe ? "אישור" : "OK";
         JButton closeBtn = createStyledButton(btnText);
-        closeBtn.addActionListener(e -> dialog.dispose());
+        closeBtn.addActionListener(e -> {
+            SoundManager.click();   // play click sound
+            dialog.dispose();       // close
+        });
+
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         btnPanel.setOpaque(false);
