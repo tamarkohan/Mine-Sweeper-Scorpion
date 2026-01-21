@@ -33,6 +33,9 @@ public class QuestionManager {
     private final List<Question> cacheHe = new ArrayList<>();
     private boolean isCacheLoaded = false;
 
+
+    private util.TranslatorService translator; // lazy
+
     /**
      * Loads the questions for the current language.
      */
@@ -80,13 +83,29 @@ public class QuestionManager {
     }
 
     private void loadListFromFile(String fileName, List<Question> targetList) {
-        File file = new File("src/main/resources/" + fileName);
-        if (file.exists()) {
-            loadFromStream(targetList, () -> new FileInputStream(file));
-        } else {
-            loadFromStream(targetList, () -> getClass().getResourceAsStream("/" + fileName));
+
+        // 1) First try writable external location (works when running JAR)
+        File external = fileName.equals("questions_he.csv")
+                ? util.AppPaths.questionsHeFile()
+                : util.AppPaths.questionsEnFile();
+
+        if (external.exists()) {
+            loadFromStream(targetList, () -> new FileInputStream(external));
+            return;
         }
+
+        // 2) Dev mode fallback (IntelliJ resources folder)
+        File devFile = new File("src/main/resources/" + fileName);
+        if (devFile.exists()) {
+            loadFromStream(targetList, () -> new FileInputStream(devFile));
+            return;
+        }
+
+        // 3) Packaged resources fallback
+        loadFromStream(targetList, () -> getClass().getResourceAsStream("/" + fileName));
     }
+
+
 
     private interface InputStreamSupplier { InputStream get() throws Exception; }
 
@@ -174,35 +193,31 @@ public class QuestionManager {
     }
 
     public void deleteQuestion(int id) {
-        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
-        List<Question> targetCache = (lang == LanguageManager.Language.HE) ? cacheHe : cacheEn;
+        ensureCacheLoaded();
 
-        targetCache.removeIf(q -> q.getId() == id);
+        cacheEn.removeIf(q -> q.getId() == id);
+        cacheHe.removeIf(q -> q.getId() == id);
         allQuestions.removeIf(q -> q.getId() == id);
 
-        saveQuestions();
+        saveBothLanguages();
     }
+
 
     /**
      * --- SINGLE FILE SAVE ---
      * Saves only the file corresponding to the current language.
      */
     public void saveQuestions() {
-        if (!persistenceEnabled) return; // For tests
-
-        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
-
-        if (lang == LanguageManager.Language.HE) {
-            saveListToFile(cacheHe, "questions_he.csv");
-        } else {
-            saveListToFile(cacheEn, "questions.csv");
-        }
+        saveBothLanguages();
     }
 
-    private void saveListToFile(List<Question> list, String fileName) {
-        File file = new File("src/main/resources/" + fileName);
 
-        // Sort by ID before saving
+    private void saveListToFile(List<Question> list, String fileName) {
+
+        File file = fileName.equals("questions_he.csv")
+                ? util.AppPaths.questionsHeFile()
+                : util.AppPaths.questionsEnFile();
+
         list.sort(Comparator.comparingInt(Question::getId));
 
         try (PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
@@ -214,6 +229,7 @@ public class QuestionManager {
             e.printStackTrace();
         }
     }
+
 
     public Question getRandomUnusedQuestionAnyLevel() {
         if (allQuestions.isEmpty()) return null;
@@ -237,12 +253,11 @@ public class QuestionManager {
      */
     public int getNextId() {
         ensureCacheLoaded();
-        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
-        List<Question> source = (lang == LanguageManager.Language.HE) ? cacheHe : cacheEn;
-
-        int maxId = source.stream().mapToInt(Question::getId).max().orElse(0);
-        return maxId + 1;
+        int maxEn = cacheEn.stream().mapToInt(Question::getId).max().orElse(0);
+        int maxHe = cacheHe.stream().mapToInt(Question::getId).max().orElse(0);
+        return Math.max(maxEn, maxHe) + 1;
     }
+
 
     // --- Helper for Unit Tests ---
     public void clearQuestionsForTesting() {
@@ -251,4 +266,48 @@ public class QuestionManager {
         cacheEn.clear();
         cacheHe.clear();
     }
+
+    private util.TranslatorService getTranslator() {
+        if (translator == null) translator = util.TranslatorService.fromEnvOrResource();
+        return translator;
+    }
+
+
+    public void saveBothLanguages() {
+        if (!persistenceEnabled) return;
+        saveListToFile(cacheEn, "questions.csv");
+        saveListToFile(cacheHe, "questions_he.csv");
+    }
+
+    public void addOrReplaceQuestionBilingual(Question input) throws Exception {
+        ensureCacheLoaded();
+
+        boolean heb = util.BilingualQuestionUtil.questionLooksHebrew(input);
+
+        Question qEn;
+        Question qHe;
+
+        if (heb) {
+            qHe = input;
+            qEn = util.BilingualQuestionUtil.translateQuestion(getTranslator(), input, "he", "en");
+        } else {
+            qEn = input;
+            qHe = util.BilingualQuestionUtil.translateQuestion(getTranslator(), input, "en", "he");
+        }
+
+        cacheEn.removeIf(q -> q.getId() == input.getId());
+        cacheHe.removeIf(q -> q.getId() == input.getId());
+
+        cacheEn.add(qEn);
+        cacheHe.add(qHe);
+
+        // refresh visible list based on current language
+        loadQuestions();
+
+        // save both files
+        saveBothLanguages();
+    }
+
+
+
 }
