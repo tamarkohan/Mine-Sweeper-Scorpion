@@ -261,11 +261,20 @@ public class QuestionManagementFrame extends JFrame {
         NeonQuestionDialog dialog = new NeonQuestionDialog(this, null, nextId);
         dialog.setVisible(true);
         if (dialog.getResult() != null) {
-            manager.addOrReplaceQuestion(dialog.getResult());
-            manager.saveQuestions();
-            manager.loadQuestions();
-            loadTable();
+            try {
+                manager.addOrReplaceQuestionBilingual(dialog.getResult());
+                manager.loadQuestions();
+                loadTable();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
+                JOptionPane.showMessageDialog(this,
+                        isHe ? "תרגום נכשל. בדקי מפתח Azure/אינטרנט." : "Translation failed. Check Azure key / internet.",
+                        isHe ? "שגיאה" : "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         }
+
     }
 
     private void editQuestion(int row) {
@@ -282,11 +291,20 @@ public class QuestionManagementFrame extends JFrame {
         NeonQuestionDialog dialog = new NeonQuestionDialog(this, existing, -1);
         dialog.setVisible(true);
         if (dialog.getResult() != null) {
-            manager.addOrReplaceQuestion(dialog.getResult());
-            manager.saveQuestions();
-            manager.loadQuestions();
-            loadTable();
+            try {
+                manager.addOrReplaceQuestionBilingual(dialog.getResult());
+                manager.loadQuestions();
+                loadTable();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
+                JOptionPane.showMessageDialog(this,
+                        isHe ? "תרגום נכשל. בדקי מפתח Azure/אינטרנט." : "Translation failed. Check Azure key / internet.",
+                        isHe ? "שגיאה" : "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         }
+
     }
 
     private void deleteQuestion(int row) {
