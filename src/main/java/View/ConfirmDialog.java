@@ -15,7 +15,7 @@ import java.awt.*;
  * - Ask the user to confirm or cancel an action
  * - Block interaction with the main window until a decision is made
  * - Return the user's choice as a boolean result
- * - Supports Hebrew and English with proper RTL handling
+ * - Supports Hebrew, Arabic (RTL) and English, Russian, Spanish (LTR)
  */
 public class ConfirmDialog extends JDialog {
 
@@ -37,7 +37,7 @@ public class ConfirmDialog extends JDialog {
      * Private constructor.
      * Use the static show(...) methods to display this dialog.
      */
-    private ConfirmDialog(Window owner, String titleText, String bodyText, Color accentColor, boolean isHebrew) {
+    private ConfirmDialog(Window owner, String titleText, String bodyText, Color accentColor, boolean isRTL) {
         super(owner, titleText, ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setUndecorated(true);
@@ -59,14 +59,14 @@ public class ConfirmDialog extends JDialog {
         card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Body text (supports multiline via HTML)
-        String alignment = isHebrew ? "right" : "center";
-        String direction = isHebrew ? "rtl" : "ltr";
+        String alignment = isRTL ? "right" : "center";
+        String direction = isRTL ? "rtl" : "ltr";
         JLabel body = new JLabel("<html><div style='text-align:" + alignment + "; direction:" + direction + ";'>" + bodyText.replace("\n", "<br>") + "</div></html>");
         body.setForeground(MUTED);
         body.setFont(new Font("Arial", Font.BOLD, 16));
         body.setAlignmentX(Component.CENTER_ALIGNMENT);
         body.setBorder(BorderFactory.createEmptyBorder(14, 10, 10, 10));
-        if (isHebrew) {
+        if (isRTL) {
             body.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         }
 
@@ -75,8 +75,9 @@ public class ConfirmDialog extends JDialog {
         actions.setOpaque(false);
         actions.setBorder(BorderFactory.createEmptyBorder(16, 0, 0, 0));
 
-        String yesText = isHebrew ? "כן" : "Yes";
-        String noText = isHebrew ? "לא" : "No";
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        String yesText = LanguageManager.get("yes", lang);
+        String noText = LanguageManager.get("no", lang);
 
         JButton yes = new JButton(yesText);
         JButton no = new JButton(noText);
@@ -92,16 +93,15 @@ public class ConfirmDialog extends JDialog {
             dispose();
         });
 
-// Confirm action
+        // Confirm action
         yes.addActionListener(e -> {
             SoundManager.click();
             accepted = true;
             dispose();
         });
 
-
-        // In Hebrew, "No" should come first (right side visually)
-        if (isHebrew) {
+        // In RTL languages, "No" should come first (right side visually)
+        if (isRTL) {
             actions.add(no);
             actions.add(yes);
         } else {
@@ -138,12 +138,12 @@ public class ConfirmDialog extends JDialog {
     }
 
     /**
-     * Displays the dialog with custom accent color and language support.
+     * Displays the dialog with custom accent color and RTL support.
      *
      * @return true if the user confirmed, false otherwise
      */
-    public static boolean show(Window owner, String titleText, String bodyText, Color accentColor, boolean isHebrew) {
-        ConfirmDialog dlg = new ConfirmDialog(owner, titleText, bodyText, accentColor, isHebrew);
+    public static boolean show(Window owner, String titleText, String bodyText, Color accentColor, boolean isRTL) {
+        ConfirmDialog dlg = new ConfirmDialog(owner, titleText, bodyText, accentColor, isRTL);
         dlg.setVisible(true);
         return dlg.accepted;
     }
@@ -155,9 +155,10 @@ public class ConfirmDialog extends JDialog {
      * @return true if the user confirmed, false otherwise
      */
     public static boolean show(Window owner, String titleText, String bodyText) {
-        boolean isHebrew = GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE;
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        boolean isRTL = LanguageManager.isRTL(lang);
         Color defaultAccent = new Color(65, 255, 240); // Cyan
-        return show(owner, titleText, bodyText, defaultAccent, isHebrew);
+        return show(owner, titleText, bodyText, defaultAccent, isRTL);
     }
 
     /**
@@ -273,12 +274,13 @@ public class ConfirmDialog extends JDialog {
         }
     }
 
-    public static void showInfo(Window owner, String titleText, String bodyText, Color accentColor, boolean isHebrew) {
-        ConfirmDialog dlg = new ConfirmDialog(owner, titleText, bodyText, accentColor, isHebrew);
-        dlg.convertToInfoMode(isHebrew); // <-- change buttons to OK only
+    public static void showInfo(Window owner, String titleText, String bodyText, Color accentColor, boolean isRTL) {
+        ConfirmDialog dlg = new ConfirmDialog(owner, titleText, bodyText, accentColor, isRTL);
+        dlg.convertToInfoMode(isRTL); // <-- change buttons to OK only
         dlg.setVisible(true);
     }
-    private void convertToInfoMode(boolean isHebrew) {
+
+    private void convertToInfoMode(boolean isRTL) {
 
         // contentPane is already the BackgroundPanel root
         Container root = getContentPane();
@@ -296,7 +298,8 @@ public class ConfirmDialog extends JDialog {
 
         actions.removeAll();
 
-        String okText = isHebrew ? "אישור" : "OK";
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        String okText = LanguageManager.get("ok", lang);
         JButton ok = new JButton(okText);
         styleButton(ok, true, accentColor);
 
@@ -327,6 +330,4 @@ public class ConfirmDialog extends JDialog {
         actions.revalidate();
         actions.repaint();
     }
-
-
 }

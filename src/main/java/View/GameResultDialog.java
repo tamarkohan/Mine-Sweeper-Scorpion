@@ -24,7 +24,7 @@ public class GameResultDialog extends JDialog {
     private static final Color TEXT_COLOR = Color.WHITE;
     private static final Color STAT_LABEL_COLOR = new Color(180, 190, 210);
 
-    // Fonts (Arial supports Hebrew characters properly)
+    // Fonts (Arial supports Hebrew, Arabic, Russian characters properly)
     private static final Font TITLE_FONT = new Font("Arial", Font.BOLD, 32);
     private static final Font STAT_FONT = new Font("Arial", Font.PLAIN, 16);
     private static final Font VALUE_FONT = new Font("Arial", Font.BOLD, 16);
@@ -34,21 +34,18 @@ public class GameResultDialog extends JDialog {
         super(owner, "", ModalityType.APPLICATION_MODAL);
 
         LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
-        boolean isHe = (lang == LanguageManager.Language.HE);
+        boolean isRTL = LanguageManager.isRTL(lang);
         boolean isWin = summary.isWin;
+
         SwingUtilities.invokeLater(() -> {
             if (isWin) SoundManager.winGame();
             else SoundManager.loseGame();
         });
 
         // 1. Determine Title Text
-        String titleText;
-        if (isWin) {
-            titleText = isHe ? "ניצחון!" : "VICTORY!";
-        } else {
-            // UPDATED HERE:
-            titleText = isHe ? "הפסד" : "GAME OVER";
-        }
+        String titleText = isWin
+                ? LanguageManager.get("you_won", lang)
+                : LanguageManager.get("game_over", lang);
         setTitle(titleText);
 
         // 2. Setup Main Container
@@ -72,24 +69,24 @@ public class GameResultDialog extends JDialog {
         JPanel statsPanel = new JPanel(new GridLayout(0, 2, 15, 8));
         statsPanel.setOpaque(false);
 
-        // Define Labels
-        String txtScore = isHe ? "ניקוד סופי:" : "Final Score:";
-        String txtTime = isHe ? "זמן משחק:" : "Time:";
-        String txtLives = isHe ? "חיים שנותרו:" : "Lives Left:";
-        String txtSurprises = isHe ? "הפתעות שנפתחו:" : "Surprises:";
-        String txtQuestions = isHe ? "תשובות נכונות:" : "Correct Answers:";
+        // Define Labels using LanguageManager
+        String txtScore = LanguageManager.get("stat_score", lang);
+        String txtTime = LanguageManager.get("time", lang) + ":";
+        String txtLives = LanguageManager.get("stat_lives", lang);
+        String txtSurprises = LanguageManager.get("stat_surprises", lang);
+        String txtQuestions = LanguageManager.get("stat_correct", lang);
 
         // Add Stats Rows
-        addStatRow(statsPanel, txtScore, String.valueOf(summary.sharedScore), isHe);
-        addStatRow(statsPanel, txtLives, String.valueOf(summary.sharedLives), isHe);
+        addStatRow(statsPanel, txtScore, String.valueOf(summary.sharedScore), isRTL);
+        addStatRow(statsPanel, txtLives, String.valueOf(summary.sharedLives), isRTL);
 
         long mins = durationSeconds / 60;
         long secs = durationSeconds % 60;
         String timeStr = String.format("%02d:%02d", mins, secs);
-        addStatRow(statsPanel, txtTime, timeStr, isHe);
+        addStatRow(statsPanel, txtTime, timeStr, isRTL);
 
-        addStatRow(statsPanel, txtSurprises, String.valueOf(surprisesOpened), isHe);
-        addStatRow(statsPanel, txtQuestions, summary.correctAnswers + " / " + summary.totalQuestions, isHe);
+        addStatRow(statsPanel, txtSurprises, String.valueOf(surprisesOpened), isRTL);
+        addStatRow(statsPanel, txtQuestions, summary.correctAnswers + " / " + summary.totalQuestions, isRTL);
 
         // Wrapper to center the grid
         JPanel statsWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -103,8 +100,8 @@ public class GameResultDialog extends JDialog {
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
         btnPanel.setOpaque(false);
 
-        String txtRestart = isHe ? "משחק חוזר" : "Play Again";
-        String txtExit = isHe ? "יציאה לתפריט" : "Main Menu";
+        String txtRestart = LanguageManager.get("restart", lang);
+        String txtExit = LanguageManager.get("exit", lang);
 
         JButton btnRestart = createStyledButton(txtRestart, WIN_COLOR);
         JButton btnExit = createStyledButton(txtExit, new Color(200, 200, 200));
@@ -144,7 +141,7 @@ public class GameResultDialog extends JDialog {
         });
     }
 
-    private void addStatRow(JPanel panel, String label, String value, boolean isHe) {
+    private void addStatRow(JPanel panel, String label, String value, boolean isRTL) {
         JLabel l = new JLabel(label);
         l.setFont(STAT_FONT);
         l.setForeground(STAT_LABEL_COLOR);
@@ -153,7 +150,7 @@ public class GameResultDialog extends JDialog {
         v.setFont(VALUE_FONT);
         v.setForeground(TEXT_COLOR);
 
-        if (isHe) {
+        if (isRTL) {
             l.setHorizontalAlignment(SwingConstants.RIGHT);
             v.setHorizontalAlignment(SwingConstants.LEFT);
             panel.add(v);

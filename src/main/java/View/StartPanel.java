@@ -79,13 +79,11 @@ public class StartPanel extends JPanel {
         applyCharacterLimit(p1Field.textField, 15);
         applyCharacterLimit(p2Field.textField, 15);
 
-// typing sound per letter
         addTypingSound(p1Field.textField);
         addTypingSound(p2Field.textField);
 
         bg.add(p1Field);
         bg.add(p2Field);
-
 
         tEasy = new IconToggleButton("/ui/start/easy_btn.png", colorEasy);
         tMed = new IconToggleButton("/ui/start/medium_btn.png", colorMed);
@@ -117,7 +115,6 @@ public class StartPanel extends JPanel {
         });
         bg.add(btnBack);
 
-        // --- BUTTON WITH THREADED TOGGLE ---
         btnLanguage = new IconButton("/ui/menu/lang_btn.png", true);
         btnLanguage.setOnClick(this::handleLanguageSwitch);
         bg.add(btnLanguage);
@@ -145,7 +142,6 @@ public class StartPanel extends JPanel {
         });
         SwingUtilities.invokeLater(this::layoutByRatio);
 
-        // Preload thinking icon
         new Thread(() -> new IconButton(THINKING_ICON, true)).start();
     }
 
@@ -155,7 +151,7 @@ public class StartPanel extends JPanel {
 
         new Thread(() -> {
             try {
-                toggleLanguageLogic();
+                cycleLanguage();
                 GameController.getInstance().getQuestionManager().switchLanguageFromCache();
                 Thread.sleep(300);
             } catch (Exception e) {
@@ -178,36 +174,54 @@ public class StartPanel extends JPanel {
         AbstractDocument doc = (AbstractDocument) textField.getDocument();
         doc.setDocumentFilter(new DocumentFilter() {
             @Override
-            public void replace(DocumentFilter.FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
                 int currentLength = fb.getDocument().getLength();
                 int overLimit = (currentLength + text.length()) - length - limit;
                 if (overLimit > 0) text = text.substring(0, text.length() - overLimit);
                 if (text.length() > 0) super.replace(fb, offset, length, text, attrs);
             }
             @Override
-            public void insertString(DocumentFilter.FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
                 replace(fb, offset, 0, string, attr);
             }
         });
     }
 
     private void updateUIText() {
-        boolean isHe = GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE;
-        if (isHe) {
-            lblLevel.setText("רמת קושי:"); lblPlayer1.setText("שחקן 1"); lblPlayer2.setText("שחקן 2");
-        } else {
-            lblLevel.setText("LEVEL:"); lblPlayer1.setText("PLAYER 1"); lblPlayer2.setText("PLAYER 2");
-        }
-        updateButtonImages(isHe);
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        lblLevel.setText(LanguageManager.get("level", lang));
+        lblPlayer1.setText(LanguageManager.get("player1", lang));
+        lblPlayer2.setText(LanguageManager.get("player2", lang));
+        updateButtonImages(lang);
     }
 
-    private void updateButtonImages(boolean isHe) {
-        String startPath = isHe ? "/ui/start/hebrewStartGameBtn.png" : "/ui/start/start_btn.png";
-        String easyPath = isHe ? "/ui/start/hebrewEasyBtn.png" : "/ui/start/easy_btn.png";
-        String medPath  = isHe ? "/ui/start/hebrewMediumBtn.png" : "/ui/start/medium_btn.png";
-        String hardPath = isHe ? "/ui/start/hebrewHardBtn.png" : "/ui/start/hard_btn.png";
+    private void updateButtonImages(LanguageManager.Language lang) {
+        String langPrefix = switch (lang) {
+            case EN -> "";
+            case HE -> "hebrew";
+            case AR -> "arabic";
+            case RU -> "russian";
+            case ES -> "spanish";
+        };
+
+        String startPath, easyPath, medPath, hardPath;
+
+        if (lang == LanguageManager.Language.EN) {
+            startPath = "/ui/start/start_btn.png";
+            easyPath = "/ui/start/easy_btn.png";
+            medPath = "/ui/start/medium_btn.png";
+            hardPath = "/ui/start/hard_btn.png";
+        } else {
+            startPath = "/ui/start/" + langPrefix + "StartGameBtn.png";
+            easyPath = "/ui/start/" + langPrefix + "EasyBtn.png";
+            medPath = "/ui/start/" + langPrefix + "MediumBtn.png";
+            hardPath = "/ui/start/" + langPrefix + "HardBtn.png";
+        }
+
         btnStart.setIconPath(startPath);
-        tEasy.setIconPath(easyPath); tMed.setIconPath(medPath); tHard.setIconPath(hardPath);
+        tEasy.setIconPath(easyPath);
+        tMed.setIconPath(medPath);
+        tHard.setIconPath(hardPath);
         repaint();
     }
 
@@ -222,18 +236,29 @@ public class StartPanel extends JPanel {
             case "HARD" -> { sizeStr = "16x16"; lives = 6; mines = 44; questions = 11; surprises = 4; activeColor = colorHard; }
             default -> { sizeStr = "9x9"; lives = 10; mines = 10; questions = 6; surprises = 2; activeColor = colorEasy; }
         }
+
         LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
-        boolean isHe = (lang == LanguageManager.Language.HE);
+        boolean isRTL = LanguageManager.isRTL(lang);
+
         String hexColor = String.format("#%02x%02x%02x", activeColor.getRed(), activeColor.getGreen(), activeColor.getBlue());
+
+        String sharedLivesText = LanguageManager.get("shared_lives", lang);
+        String boardText = LanguageManager.get("board", lang);
+        String minesText = LanguageManager.get("mines_per_player", lang);
+        String questionsText = LanguageManager.get("questions_count", lang);
+        String surprisesText = LanguageManager.get("surprises_count", lang);
+
         String infoHtml;
-        if (isHe) {
+        if (isRTL) {
             infoHtml = "<html><div style='text-align: center; direction: rtl; color: " + hexColor + "; font-family: Arial; font-size: 13px;'>" +
-                    "<b>" + lives + " חיים משותפים" + "</b><br>" + "<b>" + "לוח " + sizeStr + "</b><br>" +
-                    "<b>" + mines + " מוקשים לשחקן" + "</b><br>" + "<span style='font-size: 10px;'>" + surprises + " הפתעות | " + questions + " שאלות" + "</span></div></html>";
+                    "<b>" + lives + " " + sharedLivesText + "</b><br>" +
+                    "<b>" + boardText + " " + sizeStr + "</b><br>" +
+                    "<b>" + mines + " " + minesText + "</b><br>" +
+                    "<span style='font-size: 10px;'>" + surprises + " " + surprisesText + " | " + questions + " " + questionsText + "</span></div></html>";
         } else {
-            String line1 = "Board " + sizeStr + " | " + lives + " Shared Lives";
-            String line2 = mines + " Mines to play";
-            String line3 = questions + " Questions | " + surprises + " Surprises";
+            String line1 = boardText + " " + sizeStr + " | " + lives + " " + sharedLivesText;
+            String line2 = mines + " " + minesText;
+            String line3 = questions + " " + questionsText + " | " + surprises + " " + surprisesText;
             infoHtml = "<html><div style='text-align: center; color: " + hexColor + "; font-family: Arial; font-size: 13px;'>" +
                     "<b>" + line1 + "</b><br>" + "<b>" + line2 + "</b><br>" + "<span style='font-size: 10px;'>" + line3 + "</span></div></html>";
         }
@@ -278,18 +303,16 @@ public class StartPanel extends JPanel {
         c.setBounds((int) (x * W), (int) (y * H), (int) (w * W), (int) (h * H));
     }
 
-    private void toggleLanguageLogic() {
+    private void cycleLanguage() {
         GameController gc = GameController.getInstance();
-        if (gc.getCurrentLanguage() == LanguageManager.Language.EN) {
-            gc.setCurrentLanguage(LanguageManager.Language.HE);
-        } else {
-            gc.setCurrentLanguage(LanguageManager.Language.EN);
-        }
+        LanguageManager.Language current = gc.getCurrentLanguage();
+        LanguageManager.Language next = LanguageManager.getNextLanguage(current);
+        gc.setCurrentLanguage(next);
     }
 
     private void showLanguageToast() {
-        boolean isHe = GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE;
-        toastLabel.setText(isHe ? "עברית" : "English");
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        toastLabel.setText(LanguageManager.getDisplayName(lang));
         Dimension prefSize = toastLabel.getPreferredSize();
         int lblW = prefSize.width + 20; int lblH = 30;
         toastLabel.setSize(lblW, lblH);
@@ -301,20 +324,23 @@ public class StartPanel extends JPanel {
     }
 
     private void handleStart() {
-        String p1 = p1Field.getText().trim(); String p2 = p2Field.getText().trim();
-        if (p1.isEmpty() || p2.isEmpty()) { JOptionPane.showMessageDialog(this, "Please enter names for both players.", "Missing Names", JOptionPane.WARNING_MESSAGE); return; }
+        String p1 = p1Field.getText().trim();
+        String p2 = p2Field.getText().trim();
+
+        if (p1.isEmpty() || p2.isEmpty()) {
+            LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+            String msg = LanguageManager.get("missing_names", lang);
+            String title = LanguageManager.get("missing_names_title", lang);
+            JOptionPane.showMessageDialog(this, msg, title, JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         listener.onStartGame(p1, p2, currentDifficulty);
     }
 
     public void resetFields() {
         p1Field.setText(""); p2Field.setText(""); tEasy.setSelected(true); updateLevelInfo("EASY"); updateUIText();
     }
-    // Add this method to StartPanel.java
 
-    /**
-     * Refreshes the UI to match the current language setting.
-     * Called when returning from other frames that may have changed the language.
-     */
     public void refreshLanguage() {
         updateUIText();
         updateLevelInfo(currentDifficulty);
@@ -322,23 +348,18 @@ public class StartPanel extends JPanel {
         repaint();
     }
 
-
     private void addTypingSound(JTextField tf) {
         tf.getDocument().addDocumentListener(new DocumentListener() {
-
             private long last = 0;
-
             private void ping() {
                 long now = System.currentTimeMillis();
-                if (now - last < 50) return; // throttle (ms)
+                if (now - last < 50) return;
                 last = now;
                 SoundManager.typeKey();
             }
-
             @Override public void insertUpdate(DocumentEvent e) { ping(); }
-            @Override public void removeUpdate(DocumentEvent e) { } // no sound on delete
+            @Override public void removeUpdate(DocumentEvent e) { }
             @Override public void changedUpdate(DocumentEvent e) { }
         });
     }
-
 }

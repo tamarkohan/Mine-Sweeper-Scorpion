@@ -31,6 +31,7 @@ public class ActivationConfirmDialog extends JDialog {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        boolean isRTL = LanguageManager.isRTL(lang);
 
         // Determine if it's a question or surprise cell
         boolean isQuestion = cellType.equalsIgnoreCase("Question");
@@ -65,8 +66,8 @@ public class ActivationConfirmDialog extends JDialog {
         title.setForeground(TEXT);
         title.setFont(new Font("Arial", Font.BOLD, 18));
 
-        // Apply RTL for Hebrew
-        if (lang == LanguageManager.Language.HE) {
+        // Apply RTL for Hebrew and Arabic
+        if (isRTL) {
             header.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
             title.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
             header.add(icon, BorderLayout.EAST);
@@ -99,7 +100,7 @@ public class ActivationConfirmDialog extends JDialog {
         JPanel body = new JPanel(new BorderLayout());
         body.setOpaque(false);
 
-        if (lang == LanguageManager.Language.HE) {
+        if (isRTL) {
             question.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
             body.add(question, BorderLayout.EAST);
         } else {
@@ -108,7 +109,7 @@ public class ActivationConfirmDialog extends JDialog {
 
         // ===== Buttons =====
         JPanel buttons = new JPanel(new FlowLayout(
-                lang == LanguageManager.Language.HE ? FlowLayout.LEFT : FlowLayout.RIGHT, 10, 0));
+                isRTL ? FlowLayout.LEFT : FlowLayout.RIGHT, 10, 0));
         buttons.setOpaque(false);
 
         JButton cancel = makeButton(cancelText, false);
@@ -123,8 +124,8 @@ public class ActivationConfirmDialog extends JDialog {
             dispose();
         });
 
-        // For Hebrew, reverse button order (primary on left)
-        if (lang == LanguageManager.Language.HE) {
+        // For RTL languages, reverse button order (primary on left)
+        if (isRTL) {
             buttons.add(activate);
             buttons.add(cancel);
         } else {

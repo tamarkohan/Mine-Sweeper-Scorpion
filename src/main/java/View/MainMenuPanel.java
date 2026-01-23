@@ -42,7 +42,7 @@ public class MainMenuPanel extends JPanel {
 
         // -- LANGUAGE BUTTON --
         btnLanguage = new IconButton("/ui/menu/lang_btn.png", true);
-        btnLanguage.setOnClick(this::handleLanguageSwitch); // Use new threaded method
+        btnLanguage.setOnClick(this::handleLanguageSwitch);
         bg.add(btnLanguage);
 
         // -- NOTIFICATION LABEL --
@@ -71,14 +71,26 @@ public class MainMenuPanel extends JPanel {
             String[] preloadPaths = {
                     "/ui/menu/hebrewNewGame.png", "/ui/menu/hebrewHistoryGames.png",
                     "/ui/menu/hebrewHowToPlay.png", "/ui/menu/hebrewQuestionManager.png",
-                    THINKING_ICON // Preload thinking icon
+                    // Arabic icons (you'll need to create these)
+                    "/ui/menu/arabicNewGame.png", "/ui/menu/arabicHistoryGames.png",
+                    "/ui/menu/arabicHowToPlay.png", "/ui/menu/arabicQuestionManager.png",
+                    // Russian icons (you'll need to create these)
+                    "/ui/menu/russianNewGame.png", "/ui/menu/russianHistoryGames.png",
+                    "/ui/menu/russianHowToPlay.png", "/ui/menu/russianQuestionManager.png",
+                    // Spanish icons (you'll need to create these)
+                    "/ui/menu/spanishNewGame.png", "/ui/menu/spanishHistoryGames.png",
+                    "/ui/menu/spanishHowToPlay.png", "/ui/menu/spanishQuestionManager.png",
+                    THINKING_ICON
             };
-            for (String p : preloadPaths) new IconButton(p, true);
+            for (String p : preloadPaths) {
+                try { new IconButton(p, true); } catch (Exception ignored) {}
+            }
         }).start();
     }
 
     /**
      * Handles the threading logic for language switching
+     * Now cycles through all languages: EN -> HE -> AR -> RU -> ES -> EN ...
      */
     private void handleLanguageSwitch() {
         // 1. Show thinking icon immediately
@@ -88,8 +100,8 @@ public class MainMenuPanel extends JPanel {
         // 2. Background Thread
         new Thread(() -> {
             try {
-                // A. Switch Language Logic
-                toggleLanguageLogic();
+                // A. Cycle to next language
+                cycleLanguage();
 
                 // B. Heavy Load
                 GameController.getInstance().getQuestionManager().switchLanguageFromCache();
@@ -114,8 +126,8 @@ public class MainMenuPanel extends JPanel {
     }
 
     private void showLanguageToast() {
-        boolean isHe = GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE;
-        toastLabel.setText(isHe ? "עברית" : "English");
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        toastLabel.setText(LanguageManager.getDisplayName(lang));
         toastLabel.setSize(toastLabel.getPreferredSize().width + 20, 30);
         doLayout();
         toastLabel.setVisible(true);
@@ -149,23 +161,46 @@ public class MainMenuPanel extends JPanel {
     }
 
     private String getIconPath(String action) {
-        boolean isHe = GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE;
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+
+        // Get language prefix for icon paths
+        String langPrefix = switch (lang) {
+            case EN -> "";  // English uses default names
+            case HE -> "hebrew";
+            case AR -> "arabic";
+            case RU -> "russian";
+            case ES -> "spanish";
+        };
+
+        // If English, use original path names
+        if (lang == LanguageManager.Language.EN) {
+            return switch (action) {
+                case "START" -> "/ui/menu/start_new_game_btn.png";
+                case "HISTORY" -> "/ui/menu/view_game_history_btn.png";
+                case "HOWTO" -> "/ui/menu/how_to_play_btn.png";
+                case "ADMIN" -> "/ui/menu/question_manager_btn.png";
+                default -> "";
+            };
+        }
+
+        // For other languages, use the naming pattern
         return switch (action) {
-            case "START" -> isHe ? "/ui/menu/hebrewNewGame.png" : "/ui/menu/start_new_game_btn.png";
-            case "HISTORY" -> isHe ? "/ui/menu/hebrewHistoryGames.png" : "/ui/menu/view_game_history_btn.png";
-            case "HOWTO" -> isHe ? "/ui/menu/hebrewHowToPlay.png" : "/ui/menu/how_to_play_btn.png";
-            case "ADMIN" -> isHe ? "/ui/menu/hebrewQuestionManager.png" : "/ui/menu/question_manager_btn.png";
+            case "START" -> "/ui/menu/" + langPrefix + "NewGame.png";
+            case "HISTORY" -> "/ui/menu/" + langPrefix + "HistoryGames.png";
+            case "HOWTO" -> "/ui/menu/" + langPrefix + "HowToPlay.png";
+            case "ADMIN" -> "/ui/menu/" + langPrefix + "QuestionManager.png";
             default -> "";
         };
     }
 
-    private void toggleLanguageLogic() {
+    /**
+     * Cycles to the next language in the rotation
+     */
+    private void cycleLanguage() {
         GameController gc = GameController.getInstance();
-        if (gc.getCurrentLanguage() == LanguageManager.Language.EN) {
-            gc.setCurrentLanguage(LanguageManager.Language.HE);
-        } else {
-            gc.setCurrentLanguage(LanguageManager.Language.EN);
-        }
+        LanguageManager.Language current = gc.getCurrentLanguage();
+        LanguageManager.Language next = LanguageManager.getNextLanguage(current);
+        gc.setCurrentLanguage(next);
     }
 
     @Override
@@ -198,7 +233,6 @@ public class MainMenuPanel extends JPanel {
             toastLabel.setBounds(langX + (langBtnSize - lblW) / 2, langY - lblH - 10, lblW, lblH);
         }
     }
-    // Add this method to MainMenuPanel.java
 
     /**
      * Refreshes the UI to match the current language setting.
