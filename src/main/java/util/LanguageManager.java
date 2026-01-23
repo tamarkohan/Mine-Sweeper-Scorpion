@@ -13,6 +13,7 @@ public class LanguageManager {
 
     public enum Language { EN, HE, AR, RU, ES }
 
+
     private static final Map<String, Map<Language, String>> translations = new HashMap<>();
 
     static {
@@ -69,20 +70,30 @@ public class LanguageManager {
         add("outcome_wrong", "WRONG!", "שגוי!", "خطأ!", "НЕПРАВИЛЬНО!", "¡INCORRECTO!");
         add("outcome_skipped", "SKIPPED", "דילגת", "تم التخطي", "ПРОПУЩЕНО", "OMITIDO");
         add("outcome", "OUTCOME", "תוצאה", "النتيجة", "РЕЗУЛЬТАТ", "RESULTADO");
+        add("result", "Result", "תוצאה", "النتيجة", "Результат", "Resultado");
 
         // Outcome Dialog - Surprise Results
-        add("surprise_good", "SURPRISE: GOOD!", "הפתעה: טוב!", "مفاجأة: جيد!", "СЮРПРИЗ: ХОРОШО!", "¡SORPRESA: BUENA!");
-        add("surprise_bad", "SURPRISE: BAD!", "הפתעה: רע!", "مفاجأة: سيء!", "СЮРПРИЗ: ПЛОХО!", "¡SORPRESA: MALA!");
+        add("surprise_good", "Good Surprise!", "הפתעה טובה!", "مفاجأة جيدة!", "Хороший сюрприз!", "¡Buena sorpresa!");
+        add("surprise_bad", "Bad Surprise!", "הפתעה רעה!", "مفاجأة سيئة!", "Плохой сюрприз!", "¡Mala sorpresa!");
         add("surprise", "SURPRISE!", "הפתעה!", "مفاجأة!", "СЮРПРИЗ!", "¡SORPRESA!");
 
-        // Outcome message parts
+        // Outcome message parts (for translation in dialogs)
         add("wrong_prefix", "Wrong", "שגוי", "خطأ", "Неправильно", "Incorrecto");
         add("correct_prefix", "Correct", "נכון", "صحيح", "Правильно", "Correcto");
-        add("activation_cost", "Activation cost", "עלות הפעלה", "تكلفة التفعيل", "Стоимость активации", "Costo de activación");
-        add("score_label", "Score", "ניקוד", "النقاط", "Счёт", "Puntos");
-        add("lives_label", "Lives", "חיים", "الأرواح", "Жизни", "Vidas");
-        add("pts", "pts", "נק'", "نقاط", "очк.", "pts");
+        add("activation_cost", "Activation cost:", "עלות הפעלה:", "تكلفة التفعيل:", "Стоимость активации:", "Costo de activación:");
+        add("score_label", "Score:", "ניקוד:", "النقاط:", "Счёт:", "Puntos:");
+        add("lives_label", "Lives:", "חיים:", "الأرواح:", "Жизни:", "Vidas:");
+        add("pts", "pts", "נק'", "نقطة", "очк.", "pts");
         add("life", "life", "חיים", "حياة", "жизнь", "vida");
+        add("special_effect", "Special effect:", "אפקט מיוחד:", "تأثير خاص:", "Спецэффект:", "Efecto especial:");
+        add("good_surprise_msg", "Good surprise!", "הפתעה טובה!", "مفاجأة جيدة!", "Хороший сюрприз!", "¡Buena sorpresa!");
+        add("bad_surprise_msg", "Bad surprise!", "הפתעה רעה!", "مفاجأة سيئة!", "Плохой сюрприз!", "¡Mala sorpresa!");
+        add("surprise_activated", "The surprise was activated!", "ההפתעה הופעלה!", "تم تفعيل المفاجأة!", "Сюрприз активирован!", "¡La sorpresa fue activada!");
+        add("surprise_result", "Surprise result:", "תוצאת ההפתעה:", "نتيجة المفاجأة:", "Результат сюрприза:", "Resultado de la sorpresa:");
+        add("good", "Good", "טוב", "جيد", "Хорошо", "Bueno");
+        add("bad", "Bad", "רע", "سيء", "Плохо", "Malo");
+        add("didnt_answer", "You didn't answer the question.", "לא ענית על השאלה.", "لم تجب على السؤال.", "Вы не ответили на вопрос.", "No respondiste la pregunta.");
+        add("activation_cost_deducted", "Activation cost was deducted.", "עלות ההפעלה נוכתה.", "تم خصم تكلفة التفعيل.", "Стоимость активации списана.", "Se dedujo el costo de activación.");
 
         // Difficulty levels
         add("difficulty_easy", "EASY", "קל", "سهل", "ЛЕГКО", "FÁCIL");
@@ -136,13 +147,25 @@ public class LanguageManager {
         add("header_correct", "Correct", "נכונה", "الصحيحة", "Правильный", "Correcta");
         add("header_difficulty", "Difficulty", "רמה", "المستوى", "Уровень", "Nivel");
 
-        // Exit Confirmation
+        // Exit/Restart Confirmation (ONLY for in-game, not for menus)
         add("exit_title", "Exit", "יציאה", "خروج", "Выход", "Salir");
         add("exit_confirm_msg", "Are you sure you want to exit?\nProgress will be lost.",
                 "האם אתה בטוח שברצונך לצאת?\nההתקדמות תאבד.",
                 "هل أنت متأكد أنك تريد الخروج؟\nسيتم فقدان التقدم.",
                 "Вы уверены, что хотите выйти?\nПрогресс будет потерян.",
                 "¿Estás seguro de que quieres salir?\nSe perderá el progreso.");
+        add("exit_game", "Exit Game", "יציאה מהמשחק", "الخروج من اللعبة", "Выйти из игры", "Salir del juego");
+        add("exit_game_confirm", "Are you sure you want to exit?\nGame progress will be lost.",
+                "האם אתה בטוח שברצונך לצאת?\nהתקדמות המשחק תאבד.",
+                "هل أنت متأكد أنك تريد الخروج؟\nسيتم فقدان تقدم اللعبة.",
+                "Вы уверены, что хотите выйти?\nПрогресс игры будет потерян.",
+                "¿Estás seguro de que quieres salir?\nSe perderá el progreso del juego.");
+        add("restart_game", "Restart Game", "התחל מחדש", "إعادة اللعبة", "Перезапустить игру", "Reiniciar juego");
+        add("restart_confirm", "Are you sure you want to restart?\nCurrent progress will be lost.",
+                "האם אתה בטוח שברצונך להתחיל מחדש?\nההתקדמות הנוכחית תאבד.",
+                "هل أنت متأكد أنك تريد إعادة اللعبة؟\nسيتم فقدان التقدم الحالي.",
+                "Вы уверены, что хотите начать заново?\nТекущий прогресс будет потерян.",
+                "¿Estás seguro de que quieres reiniciar?\nSe perderá el progreso actual.");
 
         // StartPanel specific
         add("player1", "PLAYER 1", "שחקן 1", "اللاعب 1", "ИГРОК 1", "JUGADOR 1");
@@ -165,8 +188,23 @@ public class LanguageManager {
         add("no_history", "No game history yet.", "אין היסטוריית משחקים עדיין.", "لا يوجد سجل ألعاب بعد.", "История игр пока пуста.", "Aún no hay historial de juegos.");
         add("back", "Back", "חזור", "رجوع", "Назад", "Volver");
 
-        // How to Play
-        add("how_to_play", "How to Play", "איך לשחק", "كيفية اللعب", "Как играть", "Cómo jugar");
+        // How to Play - Full translation
+        add("how_to_play", "HOW TO PLAY", "איך לשחק", "كيفية اللعب", "КАК ИГРАТЬ", "CÓMO JUGAR");
+        add("how_to_play_intro", "Two players, each has a board.", "שני שחקנים, לכל אחד לוח.", "لاعبان، لكل منهما لوحة.", "Два игрока, у каждого своё поле.", "Dos jugadores, cada uno tiene un tablero.");
+        add("how_to_play_shared", "You share lives and score.", "אתם חולקים חיים וניקוד.", "تتشاركون في الأرواح والنقاط.", "Вы делите жизни и очки.", "Comparten vidas y puntuación.");
+        add("how_to_play_turn_title", "Your turn:", "התור שלך:", "دورك:", "Ваш ход:", "Tu turno:");
+        add("how_to_play_left_click", "Left click = reveal a cell.", "לחיצה שמאלית = חשוף תא.", "النقر الأيسر = كشف خلية.", "Левый клик = открыть клетку.", "Clic izquierdo = revelar celda.");
+        add("how_to_play_right_click", "Right click = flag a cell you think is a mine.", "לחיצה ימנית = סמן תא שאתה חושב שהוא מוקש.", "النقر الأيمن = وضع علامة على خلية تعتقد أنها لغم.", "Правый клик = отметить клетку как мину.", "Clic derecho = marcar celda como mina.");
+        add("how_to_play_turn_switch", "After your move, the turn switches.", "אחרי המהלך שלך, התור עובר.", "بعد حركتك، ينتقل الدور.", "После хода очередь переходит.", "Después de tu movimiento, el turno cambia.");
+        add("how_to_play_cell_types", "Cell types:", "סוגי תאים:", "أنواع الخلايا:", "Типы клеток:", "Tipos de celdas:");
+        add("how_to_play_mine", "Mine – losing a life if revealed.", "מוקש – מאבדים חיים אם נחשף.", "لغم – تفقد حياة إذا كُشف.", "Мина – теряете жизнь при открытии.", "Mina – pierdes una vida si se revela.");
+        add("how_to_play_number", "Number – tells how many mines around.", "מספר – מראה כמה מוקשים סביב.", "رقم – يخبرك بعدد الألغام المحيطة.", "Число – показывает количество мин вокруг.", "Número – indica cuántas minas hay alrededor.");
+        add("how_to_play_question", "Question (Q) – after reveal, you can pay points and answer a quiz (correct gives bonus, wrong can hurt).", "שאלה (Q) – אחרי חשיפה, אפשר לשלם נקודות ולענות על חידון (נכון נותן בונוס, שגוי יכול להזיק).", "سؤال (Q) – بعد الكشف، يمكنك دفع نقاط والإجابة على سؤال (الصحيح يعطي مكافأة، الخطأ يمكن أن يضر).", "Вопрос (Q) – после открытия можно заплатить очки и ответить на вопрос (правильный даёт бонус, неправильный может навредить).", "Pregunta (Q) – después de revelar, puedes pagar puntos y responder un quiz (correcto da bonus, incorrecto puede dañar).");
+        add("how_to_play_surprise", "Surprise (S) – after reveal, you can pay points for random good/bad effect.", "הפתעה (S) – אחרי חשיפה, אפשר לשלם נקודות לאפקט טוב/רע אקראי.", "مفاجأة (S) – بعد الكشف، يمكنك دفع نقاط للحصول على تأثير عشوائي جيد/سيء.", "Сюрприз (S) – после открытия можно заплатить очки за случайный эффект.", "Sorpresa (S) – después de revelar, puedes pagar puntos por efecto aleatorio bueno/malo.");
+        add("how_to_play_win_lose", "Win / Lose:", "ניצחון / הפסד:", "الفوز / الخسارة:", "Победа / Поражение:", "Ganar / Perder:");
+        add("how_to_play_win", "Win = all safe cells cleared.", "ניצחון = כל התאים הבטוחים נחשפו.", "الفوز = تم كشف جميع الخلايا الآمنة.", "Победа = все безопасные клетки открыты.", "Ganar = todas las celdas seguras reveladas.");
+        add("how_to_play_lose", "Lose = shared lives reach 0.", "הפסד = החיים המשותפים הגיעו ל-0.", "الخسارة = الأرواح المشتركة تصل إلى 0.", "Поражение = общие жизни достигли 0.", "Perder = las vidas compartidas llegan a 0.");
+        add("how_to_play_bonus", "Remaining lives turn into extra score at the end.", "חיים שנותרו הופכים לניקוד נוסף בסוף.", "الأرواح المتبقية تتحول إلى نقاط إضافية في النهاية.", "Оставшиеся жизни превращаются в очки в конце.", "Las vidas restantes se convierten en puntos extra al final.");
     }
 
     private static void add(String key, String en, String he, String ar, String ru, String es) {
@@ -220,5 +258,19 @@ public class LanguageManager {
         Language[] all = Language.values();
         int idx = current.ordinal();
         return all[(idx + 1) % all.length];
+    }
+
+    /**
+     * Get font size multiplier for Arabic (needs bigger text)
+     */
+    public static float getFontSizeMultiplier(Language lang) {
+        return (lang == Language.AR) ? 1.25f : 1.0f;
+    }
+
+    /**
+     * Get adjusted font size for current language
+     */
+    public static int getAdjustedFontSize(int baseSize, Language lang) {
+        return Math.round(baseSize * getFontSizeMultiplier(lang));
     }
 }

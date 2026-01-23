@@ -108,10 +108,8 @@ public class StartPanel extends JPanel {
 
         btnBack = new IconButton("/ui/icons/back.png");
         btnBack.setOnClick(() -> {
-            Window w = SwingUtilities.getWindowAncestor(this);
-            if (util.ExitConfirmHelper.confirmExit(w)) {
-                listener.onBackToMenu();
-            }
+            // Direct return to menu without confirmation
+            listener.onBackToMenu();
         });
         bg.add(btnBack);
 
