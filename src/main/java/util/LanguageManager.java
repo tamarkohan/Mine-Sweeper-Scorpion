@@ -47,36 +47,31 @@ public class LanguageManager {
         add("correct_answer", "Correct answer:", "התשובה הנכונה:", "الإجابة الصحيحة:", "Правильный ответ:", "Respuesta correcta:");
         add("ok", "OK", "אישור", "موافق", "ОК", "OK");
 
-        // Language Display Names (in their native form)
+        // Language Display Names
         add("lang_english", "English", "English", "English", "English", "English");
         add("lang_hebrew", "עברית", "עברית", "עברית", "עברית", "עברית");
         add("lang_arabic", "العربية", "العربية", "العربية", "العربية", "العربية");
         add("lang_russian", "Русский", "Русский", "Русский", "Русский", "Русский");
         add("lang_spanish", "Español", "Español", "Español", "Español", "Español");
 
-        // ActivationConfirmDialog - Question Cell
+        // ActivationConfirmDialog
         add("question_cell", "Question Cell", "תא שאלה", "خلية سؤال", "Ячейка вопроса", "Celda de pregunta");
         add("this_is_question_cell", "This is a Question cell", "זהו תא שאלה", "هذه خلية سؤال", "Это ячейка вопроса", "Esta es una celda de pregunta");
         add("do_you_want_to_activate", "Do you want to activate it?", "האם ברצונך להפעיל אותו?", "هل تريد تفعيلها؟", "Хотите активировать?", "¿Quieres activarla?");
         add("activate", "Activate", "הפעל", "تفعيل", "Активировать", "Activar");
-
-        // ActivationConfirmDialog - Surprise Cell
         add("surprise_cell", "Surprise Cell", "תא הפתעה", "خلية مفاجأة", "Ячейка сюрприза", "Celda de sorpresa");
         add("this_is_surprise_cell", "This is a Surprise cell", "זהו תא הפתעה", "هذه خلية مفاجأة", "Это ячейка сюрприза", "Esta es una celda de sorpresa");
 
-        // Outcome Dialog - Question Results
+        // Outcome Dialog
         add("outcome_correct", "CORRECT!", "נכון!", "صحيح!", "ПРАВИЛЬНО!", "¡CORRECTO!");
         add("outcome_wrong", "WRONG!", "שגוי!", "خطأ!", "НЕПРАВИЛЬНО!", "¡INCORRECTO!");
         add("outcome_skipped", "SKIPPED", "דילגת", "تم التخطي", "ПРОПУЩЕНО", "OMITIDO");
         add("outcome", "OUTCOME", "תוצאה", "النتيجة", "РЕЗУЛЬТАТ", "RESULTADO");
         add("result", "Result", "תוצאה", "النتيجة", "Результат", "Resultado");
-
-        // Outcome Dialog - Surprise Results
         add("surprise_good", "Good Surprise!", "הפתעה טובה!", "مفاجأة جيدة!", "Хороший сюрприз!", "¡Buena sorpresa!");
         add("surprise_bad", "Bad Surprise!", "הפתעה רעה!", "مفاجأة سيئة!", "Плохой сюрприз!", "¡Mala sorpresa!");
         add("surprise", "SURPRISE!", "הפתעה!", "مفاجأة!", "СЮРПРИЗ!", "¡SORPRESA!");
 
-        // Outcome message parts (for translation in dialogs)
         add("wrong_prefix", "Wrong", "שגוי", "خطأ", "Неправильно", "Incorrecto");
         add("correct_prefix", "Correct", "נכון", "صحيح", "Правильно", "Correcto");
         add("activation_cost", "Activation cost:", "עלות הפעלה:", "تكلفة التفعيل:", "Стоимость активации:", "Costo de activación:");
@@ -100,7 +95,7 @@ public class LanguageManager {
         add("difficulty_hard", "HARD", "קשה", "صعب", "СЛОЖНО", "DIFÍCIL");
         add("difficulty_expert", "EXPERT", "מומחה", "خبير", "ЭКСПЕРТ", "EXPERTO");
 
-        // Question Management Frame
+        // Question Management
         add("question_management", "Question Management", "ניהול שאלות", "إدارة الأسئلة", "Управление вопросами", "Gestión de preguntas");
         add("add", "Add", "הוסף", "إضافة", "Добавить", "Añadir");
         add("edit", "Edit", "ערוך", "تعديل", "Редактировать", "Editar");
@@ -143,7 +138,10 @@ public class LanguageManager {
                 "تلميح: انقر على عناوين الأعمدة للترتيب", "Совет: нажмите на заголовки столбцов для сортировки",
                 "Consejo: Haz clic en los encabezados de las columnas para ordenar");
 
-        // Exit/Restart Dialogs
+        // ** NEW KEYS FOR VALIDATION **
+        add("validation_error", "Validation Error", "שגיאת אימות", "خطأ في التحقق", "Ошибка проверки", "Error de validación");
+        add("fill_all_fields", "All fields must be filled.", "יש למלא את כל השדות.", "يجب ملء جميع الحقول.", "Все поля должны быть заполнены.", "Todos los campos deben ser completados.");
+
         add("exit_game", "Exit Game", "יציאה מהמשחק", "الخروج من اللعبة", "Выход из игры", "Salir del juego");
         add("exit_confirm", "Are you sure you want to exit?\nGame progress will be lost.",
                 "האם אתה בטוח שברצונך לצאת?\nההתקדמות במשחק תאבד.",
@@ -156,26 +154,15 @@ public class LanguageManager {
                 "هل أنت متأكد أنك تريد إعادة اللعبة؟\nسيتم فقدان التقدم الحالي.",
                 "Вы уверены, что хотите начать заново?\nТекущий прогресс будет потерян.",
                 "¿Estás seguro de que quieres reiniciar?\nSe perderá el progreso actual.");
-
-        // Exit Title and Message (for ExitConfirmHelper)
         add("exit_title", "Exit", "יציאה", "خروج", "Выход", "Salir");
         add("exit_confirm_msg", "Are you sure you want to exit?", "האם אתה בטוח שברצונך לצאת?",
                 "هل أنت متأكد أنك تريد الخروج؟", "Вы уверены, что хотите выйти?", "¿Estás seguro de que quieres salir?");
-
-        add("restart_title", "Restart",
-                "התחל מחדש",
-                "إعادة",
-                "Заново",
-                "Reiniciar");
-
-        add("restart_confirm_msg",
-                "Are you sure you want to restart?\nCurrent progress will be lost.",
+        add("restart_title", "Restart", "התחל מחדש", "إعادة", "Заново", "Reiniciar");
+        add("restart_confirm_msg", "Are you sure you want to restart?\nCurrent progress will be lost.",
                 "האם אתה בטוח שברצונך להתחיל מחדש?\nההתקדמות הנוכחית תאבד.",
                 "هل أنت متأكد أنك تريد إعادة اللعبة؟\nسيتم فقدان التقدم الحالي.",
                 "Вы уверены, что хотите начать заново?\nТекущий прогресс будет потерян.",
                 "¿Estás seguro de que quieres reiniciar?\nSe perderá el progreso actual.");
-
-        // StartPanel specific
         add("player1", "PLAYER 1", "שחקן 1", "اللاعب 1", "ИГРОК 1", "JUGADOR 1");
         add("player2", "PLAYER 2", "שחקן 2", "اللاعب 2", "ИГРОК 2", "JUGADOR 2");
         add("level", "LEVEL:", "רמת קושי:", "المستوى:", "УРОВЕНЬ:", "NIVEL:");
@@ -186,12 +173,8 @@ public class LanguageManager {
         add("surprises_count", "Surprises", "הפתעות", "مفاجآت", "Сюрпризы", "Sorpresas");
         add("missing_names", "Please enter names for both players.", "אנא הזן שמות לשני השחקנים.", "يرجى إدخال أسماء لكلا اللاعبين.", "Введите имена обоих игроков.", "Por favor, ingresa los nombres de ambos jugadores.");
         add("missing_names_title", "Missing Names", "חסרים שמות", "أسماء مفقودة", "Отсутствуют имена", "Faltan nombres");
-
-        // Yes/No buttons
         add("yes", "Yes", "כן", "نعم", "Да", "Sí");
         add("no", "No", "לא", "لا", "Нет", "No");
-
-        // Game History
         add("game_history", "Game History", "היסטוריית משחקים", "سجل الألعاب", "История игр", "Historial de juegos");
         add("no_history", "No game history yet.", "אין היסטוריית משחקים עדיין.", "لا يوجد سجل ألعاب بعد.", "История игр пока пуста.", "Aún no hay historial de juegos.");
         add("back", "Back", "חזור", "رجوع", "Назад", "Volver");
@@ -200,8 +183,6 @@ public class LanguageManager {
         add("result_label", "Result:", "תוצאה:", "النتيجة:", "Результат:", "Resultado:");
         add("won", "WON", "ניצחון", "فوز", "ПОБЕДА", "GANADO");
         add("lost", "LOST", "הפסד", "خسارة", "ПОРАЖЕНИЕ", "PERDIDO");
-
-        // Game History Table Headers
         add("players", "Players", "שחקנים", "اللاعبون", "Игроки", "Jugadores");
         add("date_time", "Date / Time", "תאריך / שעה", "التاريخ / الوقت", "Дата / Время", "Fecha / Hora");
         add("final_score", "Final Score", "ניקוד סופי", "النتيجة النهائية", "Итоговый счёт", "Puntuación final");
@@ -209,23 +190,17 @@ public class LanguageManager {
         add("correct_answers", "Correct Ans", "תשובות נכונות", "إجابات صحيحة", "Правильных ответов", "Respuestas correctas");
         add("accuracy", "Accuracy", "דיוק", "الدقة", "Точность", "Precisión");
         add("duration", "Duration", "משך זמן", "المدة", "Продолжительность", "Duración");
-
-        // Player History Table Headers
         add("player", "Player", "שחקן", "اللاعب", "Игрок", "Jugador");
         add("total_games", "Total Games", "סה\"כ משחקים", "إجمالي الألعاب", "Всего игр", "Total de juegos");
         add("best_score", "Best Score", "תוצאה טובה", "أفضل نتيجة", "Лучший счёт", "Mejor puntuación");
         add("avg_accuracy", "Avg Accuracy", "דיוק ממוצע", "متوسط الدقة", "Средняя точность", "Precisión promedio");
         add("pref_difficulty", "Pref Difficulty", "רמה מועדפת", "الصعوبة المفضلة", "Любимая сложность", "Dificultad preferida");
-
-        // Flag messages
         add("flag", "Flag", "דגל", "علامة", "Флаг", "Bandera");
         add("no_flags_left", "No flags left!\nYou already used all flags.\nRemove a flag to place a new one.",
                 "אין דגלים נותרים!\nכבר השתמשת בכל הדגלים.\nהסר דגל כדי להניח חדש.",
                 "لا توجد أعلام متبقية!\nلقد استخدمت جميع الأعلام.\nأزل علامة لوضع واحدة جديدة.",
                 "Флаги закончились!\nВы использовали все флаги.\nУберите флаг, чтобы поставить новый.",
                 "¡No quedan banderas!\nYa usaste todas las banderas.\nQuita una bandera para colocar una nueva.");
-
-        // Outcome messages - Rewards and Penalties
         add("reward", "Reward", "פרס", "مكافأة", "Награда", "Recompensa");
         add("penalty", "Penalty", "עונש", "عقوبة", "Штраф", "Penalización");
         add("reveal_mine", "reveal 1 mine", "חשיפת מוקש אחד", "كشف لغم واحد", "открыть 1 мину", "revelar 1 mina");
@@ -234,17 +209,13 @@ public class LanguageManager {
         add("revealed_3x3", "revealed random 3x3 area", "נחשף אזור 3x3 אקראי", "تم كشف منطقة 3x3 عشوائية", "открыта случайная область 3x3", "se reveló área 3x3 aleatoria");
         add("or_nothing", "OR nothing", "או כלום", "أو لا شيء", "ИЛИ ничего", "O nada");
         add("chosen_nothing", "Chosen: nothing", "נבחר: כלום", "المختار: لا شيء", "Выбрано: ничего", "Elegido: nada");
-
-        // NEW: Chosen word
         add("chosen", "Chosen", "נבחר", "المختار", "Выбрано", "Elegido");
-
-        // How to Play - Full translation
         add("how_to_play", "HOW TO PLAY", "איך לשחק", "كيفية اللعب", "КАК ИГРАТЬ", "CÓMO JUGAR");
         add("how_to_play_intro", "Two players, each has a board.", "שני שחקנים, לכל אחד לוח.", "لاعبان، لكل منهما لوحة.", "Два игрока, у каждого своё поле.", "Dos jugadores, cada uno tiene un tablero.");
         add("how_to_play_shared", "You share lives and score.", "אתם חולקים חיים וניקוד.", "تتشاركون في الأرواح والنقاط.", "Вы делите жизни и очки.", "Comparten vidas y puntuación.");
         add("how_to_play_turn_title", "Your turn:", "התור שלך:", "دورك:", "Ваш ход:", "Tu turno:");
         add("how_to_play_left_click", "Left click = reveal a cell.", "לחיצה שמאלית = חשוף תא.", "النقر الأيسر = كشف خلية.", "Левый клик = открыть клетку.", "Clic izquierdo = revelar celda.");
-        add("how_to_play_right_click", "Right click = flag a cell you think is a mine.", "לחיצה ימנית = סמן תא שאתה חושב שהוא מוקש.", "النقر الأيمن = وضع علامة على خلية تعتقد أنها لغم.", "Правый клик = отметить клетку как мину.", "Clic derecho = marcar celda como mina.");
+        add("how_to_play_right_click", "Right click = flag a cell you think is a mine.", "לחיצה ימנית = סמן תא שאתה חושב שהוא מוקש.", "النقر الأיمن = وضع علامة على خلية تعتقد أنها لغم.", "Правый клик = отметить клетку как мину.", "Clic derecho = marcar celda como mina.");
         add("how_to_play_turn_switch", "After your move, the turn switches.", "אחרי המהלך שלך, התור עובר.", "بعد حركتك، ينتقل الدور.", "После хода очередь переходит.", "Después de tu movimiento, el turno cambia.");
         add("how_to_play_cell_types", "Cell types:", "סוגי תאים:", "أنواع الخلايا:", "Типы клеток:", "Tipos de celdas:");
         add("how_to_play_mine", "Mine – losing a life if revealed.", "מוקש – מאבדים חיים אם נחשף.", "لغم – تفقد حياة إذا كُشف.", "Мина – теряете жизнь при открытии.", "Mina – pierdes una vida si se revela.");
@@ -274,16 +245,10 @@ public class LanguageManager {
         return result == null ? key : result;
     }
 
-    /**
-     * Check if a language is RTL (Right-to-Left)
-     */
     public static boolean isRTL(Language lang) {
         return lang == Language.HE || lang == Language.AR;
     }
 
-    /**
-     * Get the language display name in its native form
-     */
     public static String getDisplayName(Language lang) {
         return switch (lang) {
             case EN -> "English";
@@ -294,39 +259,24 @@ public class LanguageManager {
         };
     }
 
-    /**
-     * Get all available languages
-     */
     public static Language[] getAllLanguages() {
         return Language.values();
     }
 
-    /**
-     * Get the next language in rotation (for cycling through languages)
-     */
     public static Language getNextLanguage(Language current) {
         Language[] all = Language.values();
         int idx = current.ordinal();
         return all[(idx + 1) % all.length];
     }
 
-    /**
-     * Get font size multiplier for Arabic (needs bigger text)
-     */
     public static float getFontSizeMultiplier(Language lang) {
         return (lang == Language.AR) ? 1.25f : 1.0f;
     }
 
-    /**
-     * Get adjusted font size for current language
-     */
     public static int getAdjustedFontSize(int baseSize, Language lang) {
         return Math.round(baseSize * getFontSizeMultiplier(lang));
     }
 
-    /**
-     * Get the language code string for translation services
-     */
     public static String getLanguageCode(Language lang) {
         return switch (lang) {
             case EN -> "en";

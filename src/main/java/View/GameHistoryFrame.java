@@ -110,8 +110,8 @@ public class GameHistoryFrame extends JFrame {
         // Sort hint label
         lblSortHint = new JLabel();
         lblSortHint.setForeground(HINT_COLOR);
-        // FIX: Arial for Arabic support
-        lblSortHint.setFont(new Font("Arial", Font.ITALIC, 12));
+        // FIX: PLAIN FONT for Arabic support
+        lblSortHint.setFont(new Font("Arial", Font.PLAIN, 12));
 
         filtersPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         filtersPanel.setOpaque(false);
