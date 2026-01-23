@@ -40,9 +40,11 @@ public class MainMenuPanel extends JPanel {
 
         createButtons();
 
-        // -- LANGUAGE BUTTON --
         btnLanguage = new IconButton("/ui/menu/lang_btn.png", true);
-        btnLanguage.setOnClick(this::handleLanguageSwitch);
+
+        // Change: Instead of cycling, open a popup menu
+        btnLanguage.setOnClick(this::showLanguagePopup);
+
         bg.add(btnLanguage);
 
         // -- NOTIFICATION LABEL --
@@ -57,6 +59,7 @@ public class MainMenuPanel extends JPanel {
 
         toastTimer = new Timer(2000, e -> toastLabel.setVisible(false));
         toastTimer.setRepeats(false);
+
 
         addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
@@ -87,7 +90,68 @@ public class MainMenuPanel extends JPanel {
             }
         }).start();
     }
+    private void showLanguagePopup() {
+        JPopupMenu langMenu = new JPopupMenu();
+        langMenu.setBackground(new Color(11, 15, 26));
+        langMenu.setBorder(BorderFactory.createLineBorder(new Color(0, 245, 255)));
 
+        for (LanguageManager.Language lang : LanguageManager.Language.values()) {
+            JMenuItem item = new JMenuItem(LanguageManager.getDisplayName(lang));
+            item.setForeground(Color.WHITE);
+            item.setBackground(new Color(11, 15, 26));
+            item.setFont(new Font("Arial", Font.BOLD, 14));
+
+            // Highlight current
+            if (lang == GameController.getInstance().getCurrentLanguage()) {
+                item.setForeground(new Color(0, 245, 255));
+            }
+
+            item.addActionListener(e -> handleLanguageSelection(lang));
+            langMenu.add(item);
+        }
+
+        /// --- UPDATED POSITION LOGIC ---
+        // 1. Calculate the preferred size of the menu so we know its height
+        Dimension size = langMenu.getPreferredSize();
+
+        // 2. Show it ABOVE the button
+        // x = 0 (aligned with left of button)
+        // y = -size.height (shifts the menu up by its exact height, placing it flush on top)
+        langMenu.show(btnLanguage, 0, -size.height);
+    }
+
+    private void handleLanguageSelection(LanguageManager.Language lang) {
+        // 1. Show thinking icon immediately
+        btnLanguage.setIconPath(THINKING_ICON);
+        btnLanguage.setOnClick(null); // Disable clicks
+
+        // 2. Background Thread
+        new Thread(() -> {
+            try {
+                // Set the language
+                GameController.getInstance().setCurrentLanguage(lang);
+
+                // Heavy Load (Reload questions from the specific CSV)
+                GameController.getInstance().getQuestionManager().loadQuestions();
+
+                // Visual Pause
+                Thread.sleep(400);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                // 3. Update UI on EDT
+                SwingUtilities.invokeLater(() -> {
+                    refreshButtonIcons(); // Updates Start/History images
+                    btnLanguage.setIconPath("/ui/menu/lang_btn.png");
+                    showLanguageToast();
+                    btnLanguage.setOnClick(this::showLanguagePopup); // Re-enable click to popup
+
+                    if (listener != null) listener.onLanguageToggle();
+                });
+            }
+        }).start();
+    }
     /**
      * Handles the threading logic for language switching
      * Now cycles through all languages: EN -> HE -> AR -> RU -> ES -> EN ...

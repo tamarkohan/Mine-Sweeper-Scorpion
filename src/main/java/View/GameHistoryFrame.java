@@ -61,10 +61,8 @@ public class GameHistoryFrame extends JFrame {
         getRootPane().getActionMap().put("EXIT", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (util.ExitConfirmHelper.confirmExit(GameHistoryFrame.this)) {
-                    dispose();
-                    if (onExitToMenu != null) onExitToMenu.run();
-                }
+                dispose();
+                if (onExitToMenu != null) onExitToMenu.run();
             }
         });
 
