@@ -72,16 +72,14 @@ public class QuestionManagementFrame extends JFrame {
         this.manager = manager;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        // ESC Key Binding
+        // ESC Key Binding - Direct close without confirmation
         getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
                 KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_ESCAPE, 0), "closeWindow");
         getRootPane().getActionMap().put("closeWindow", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (util.ExitConfirmHelper.confirmExit(QuestionManagementFrame.this)) {
-                    dispose();
-                    if (onExitToMenu != null) onExitToMenu.run();
-                }
+                dispose();
+                if (onExitToMenu != null) onExitToMenu.run();
             }
         });
 
