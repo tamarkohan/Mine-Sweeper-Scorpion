@@ -114,7 +114,8 @@ public class StartPanel extends JPanel {
         bg.add(btnBack);
 
         btnLanguage = new IconButton("/ui/menu/lang_btn.png", true);
-        btnLanguage.setOnClick(this::handleLanguageSwitch);
+        // Changed: Use popup menu instead of cycling
+        btnLanguage.setOnClick(this::showLanguagePopup);
         bg.add(btnLanguage);
 
         toastLabel = new JLabel("", SwingConstants.CENTER);
@@ -143,24 +144,69 @@ public class StartPanel extends JPanel {
         new Thread(() -> new IconButton(THINKING_ICON, true)).start();
     }
 
-    private void handleLanguageSwitch() {
-        btnLanguage.setIconPath(THINKING_ICON);
-        btnLanguage.setOnClick(null);
+    /**
+     * Shows language selection popup menu with all 5 languages
+     */
+    private void showLanguagePopup() {
+        JPopupMenu langMenu = new JPopupMenu();
+        langMenu.setBackground(new Color(11, 15, 26));
+        langMenu.setBorder(BorderFactory.createLineBorder(new Color(0, 245, 255)));
 
+        for (LanguageManager.Language lang : LanguageManager.Language.values()) {
+            JMenuItem item = new JMenuItem(LanguageManager.getDisplayName(lang));
+            item.setForeground(Color.WHITE);
+            item.setBackground(new Color(11, 15, 26));
+            item.setFont(new Font("Arial", Font.BOLD, 14));
+
+            // Highlight current language
+            if (lang == GameController.getInstance().getCurrentLanguage()) {
+                item.setForeground(new Color(0, 245, 255));
+            }
+
+            item.addActionListener(e -> handleLanguageSelection(lang));
+            langMenu.add(item);
+        }
+
+        // Show popup above the button
+        Dimension size = langMenu.getPreferredSize();
+        langMenu.show(btnLanguage, 0, -size.height);
+    }
+
+    /**
+     * Handles language selection from popup menu
+     */
+    private void handleLanguageSelection(LanguageManager.Language lang) {
+        // Skip if same language selected
+        if (lang == GameController.getInstance().getCurrentLanguage()) {
+            return;
+        }
+
+        // 1. Show thinking icon immediately
+        btnLanguage.setIconPath(THINKING_ICON);
+        btnLanguage.setOnClick(null); // Disable clicks during switch
+
+        // 2. Background Thread
         new Thread(() -> {
             try {
-                cycleLanguage();
-                GameController.getInstance().getQuestionManager().switchLanguageFromCache();
-                Thread.sleep(300);
+                // Set the language
+                GameController.getInstance().setCurrentLanguage(lang);
+
+                // Heavy Load (Reload questions from the specific CSV)
+                GameController.getInstance().getQuestionManager().loadQuestions();
+
+                // Visual Pause
+                Thread.sleep(400);
+
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
+                // 3. Update UI on EDT
                 SwingUtilities.invokeLater(() -> {
                     updateUIText();
                     updateLevelInfo(currentDifficulty);
                     showLanguageToast();
                     btnLanguage.setIconPath("/ui/menu/lang_btn.png");
-                    btnLanguage.setOnClick(this::handleLanguageSwitch);
+                    btnLanguage.setOnClick(this::showLanguagePopup); // Re-enable popup
                     revalidate();
                     repaint();
                 });
@@ -177,10 +223,6 @@ public class StartPanel extends JPanel {
                 int overLimit = (currentLength + text.length()) - length - limit;
                 if (overLimit > 0) text = text.substring(0, text.length() - overLimit);
                 if (text.length() > 0) super.replace(fb, offset, length, text, attrs);
-            }
-            @Override
-            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
-                replace(fb, offset, 0, string, attr);
             }
         });
     }
@@ -299,13 +341,6 @@ public class StartPanel extends JPanel {
 
     private void setBoundsRatio(JComponent c, double x, double y, double w, double h, int W, int H) {
         c.setBounds((int) (x * W), (int) (y * H), (int) (w * W), (int) (h * H));
-    }
-
-    private void cycleLanguage() {
-        GameController gc = GameController.getInstance();
-        LanguageManager.Language current = gc.getCurrentLanguage();
-        LanguageManager.Language next = LanguageManager.getNextLanguage(current);
-        gc.setCurrentLanguage(next);
     }
 
     private void showLanguageToast() {

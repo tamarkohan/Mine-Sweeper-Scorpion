@@ -131,16 +131,15 @@ public class QuestionManagementFrame extends JFrame {
         btnExit.setPreferredSize(new Dimension(46, 46));
         btnExit.setSafePadPx(2);
         btnExit.setOnClick(() -> {
-            if (util.ExitConfirmHelper.confirmExit(this)) {
-                dispose();
-                if (onExitToMenu != null) onExitToMenu.run();
-            }
+            dispose();
+            if (onExitToMenu != null) onExitToMenu.run();
         });
 
 
         btnLanguage = new IconButton("/ui/icons/language.png", true);
         btnLanguage.setPreferredSize(new Dimension(46, 46));
-        btnLanguage.setOnClick(this::handleLanguageSwitch);
+        // Changed: Use popup menu instead of toggle
+        btnLanguage.setOnClick(this::showLanguagePopup);
 
         // Action Listeners
         btnAdd.addActionListener(e -> addQuestion());
@@ -149,11 +148,10 @@ public class QuestionManagementFrame extends JFrame {
             if (selectedRow >= 0) {
                 editQuestion(table.convertRowIndexToModel(selectedRow));
             } else {
-                // Show message if no row selected
-                boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
+                LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
                 JOptionPane.showMessageDialog(this,
-                        isHe ? "אנא בחר שאלה לעריכה" : "Please select a question to edit",
-                        isHe ? "לא נבחרה שאלה" : "No Selection",
+                        LanguageManager.get("select_question_edit", lang),
+                        LanguageManager.get("no_selection", lang),
                         JOptionPane.WARNING_MESSAGE);
             }
         });
@@ -162,10 +160,10 @@ public class QuestionManagementFrame extends JFrame {
             if (selectedRow >= 0) {
                 deleteQuestion(table.convertRowIndexToModel(selectedRow));
             } else {
-                boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
+                LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
                 JOptionPane.showMessageDialog(this,
-                        isHe ? "אנא בחר שאלה למחיקה" : "Please select a question to delete",
-                        isHe ? "לא נבחרה שאלה" : "No Selection",
+                        LanguageManager.get("select_question_delete", lang),
+                        LanguageManager.get("no_selection", lang),
                         JOptionPane.WARNING_MESSAGE);
             }
         });
@@ -265,10 +263,10 @@ public class QuestionManagementFrame extends JFrame {
                 loadTable();
             } catch (Exception ex) {
                 ex.printStackTrace();
-                boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
+                LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
                 JOptionPane.showMessageDialog(this,
-                        isHe ? "תרגום נכשל. בדקי מפתח Azure/אינטרנט." : "Translation failed. Check Azure key / internet.",
-                        isHe ? "שגיאה" : "Error",
+                        LanguageManager.get("translation_failed", lang),
+                        LanguageManager.get("error", lang),
                         JOptionPane.ERROR_MESSAGE);
             }
         }
@@ -279,10 +277,10 @@ public class QuestionManagementFrame extends JFrame {
         if (row < 0) return;
         Question existing = buildQuestionFromRow(row);
         if (existing == null) {
-            boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
+            LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
             JOptionPane.showMessageDialog(this,
-                    isHe ? "לא ניתן לטעון את השאלה" : "Could not load question",
-                    isHe ? "שגיאה" : "Error",
+                    LanguageManager.get("could_not_load", lang),
+                    LanguageManager.get("error", lang),
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -295,10 +293,10 @@ public class QuestionManagementFrame extends JFrame {
                 loadTable();
             } catch (Exception ex) {
                 ex.printStackTrace();
-                boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
+                LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
                 JOptionPane.showMessageDialog(this,
-                        isHe ? "תרגום נכשל. בדקי מפתח Azure/אינטרנט." : "Translation failed. Check Azure key / internet.",
-                        isHe ? "שגיאה" : "Error",
+                        LanguageManager.get("translation_failed", lang),
+                        LanguageManager.get("error", lang),
                         JOptionPane.ERROR_MESSAGE);
             }
         }
@@ -308,12 +306,11 @@ public class QuestionManagementFrame extends JFrame {
     private void deleteQuestion(int row) {
         if (row < 0) return;
 
-        boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        boolean isRTL = LanguageManager.isRTL(lang);
 
-        String title = isHe ? "מחיקת שאלה" : "Delete Question";
-        String msg = isHe
-                ? "האם אתה בטוח שברצונך למחוק את השאלה הזו?\nלא ניתן לבטל פעולה זו."
-                : "Are you sure you want to delete this question?\nThis action cannot be undone.";
+        String title = LanguageManager.get("delete_question", lang);
+        String msg = LanguageManager.get("delete_confirm", lang);
 
         // optional: play dialog-open sound (choose what you like)
         SoundManager.exitDialog(); // or SoundManager.specialCellDialog();
@@ -321,7 +318,7 @@ public class QuestionManagementFrame extends JFrame {
         // blue accent like restart dialog vibe
         Color accentBlue = new Color(0, 255, 255);
 
-        boolean confirm = ConfirmDialog.show(this, title, msg, accentBlue, isHe);
+        boolean confirm = ConfirmDialog.show(this, title, msg, accentBlue, isRTL);
         if (!confirm) return;
 
         int id = Integer.parseInt(model.getValueAt(row, 0).toString());
@@ -335,9 +332,9 @@ public class QuestionManagementFrame extends JFrame {
 
     private void saveQuestions() {
         manager.saveQuestions();
-        boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
-        String msg = isHe ? "השאלות נשמרו לקובץ CSV." : "Questions saved to CSV.";
-        String title = isHe ? "נשמר" : "Saved";
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        String msg = LanguageManager.get("questions_saved", lang);
+        String title = LanguageManager.get("saved", lang);
         JOptionPane.showMessageDialog(this, msg, title, JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -357,7 +354,8 @@ public class QuestionManagementFrame extends JFrame {
         private final JComboBox<String> correctCombo = new JComboBox<>();
         private final JComboBox<String> diffCombo = new JComboBox<>();
 
-        private final boolean isHebrew;
+        private final boolean isRTL;
+        private final LanguageManager.Language currentLang;
 
         NeonQuestionDialog(JFrame owner, Question existing, int autoId) {
             super(owner, existing == null ? "Add Question" : "Edit Question", true);
@@ -370,31 +368,15 @@ public class QuestionManagementFrame extends JFrame {
                 setIconImage(new java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_ARGB));
             }
 
-            isHebrew = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
+            currentLang = GameController.getInstance().getCurrentLanguage();
+            isRTL = LanguageManager.isRTL(currentLang);
 
             setTitle(existing == null
-                    ? (isHebrew ? "הוסף שאלה חדשה" : "Add New Question")
-                    : (isHebrew ? "ערוך שאלה" : "Edit Question"));
+                    ? LanguageManager.get("add_new_question", currentLang)
+                    : LanguageManager.get("edit_question", currentLang));
 
-            if (isHebrew) {
-                correctCombo.addItem("א");
-                correctCombo.addItem("ב");
-                correctCombo.addItem("ג");
-                correctCombo.addItem("ד");
-                diffCombo.addItem("קל");
-                diffCombo.addItem("בינוני");
-                diffCombo.addItem("קשה");
-                diffCombo.addItem("מומחה");
-            } else {
-                correctCombo.addItem("A");
-                correctCombo.addItem("B");
-                correctCombo.addItem("C");
-                correctCombo.addItem("D");
-                diffCombo.addItem("EASY");
-                diffCombo.addItem("MEDIUM");
-                diffCombo.addItem("HARD");
-                diffCombo.addItem("EXPERT");
-            }
+            // Setup combo boxes based on language
+            setupComboBoxes();
 
             int fieldW = 360;
             Dimension fieldMax = new Dimension(fieldW, 36);
@@ -407,16 +389,16 @@ public class QuestionManagementFrame extends JFrame {
             root.setBackground(DIALOG_BG);
             root.setBorder(new EmptyBorder(16, 16, 16, 16));
 
-            if (isHebrew) root.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+            if (isRTL) root.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 
             String headerText = existing == null
-                    ? (isHebrew ? "הוסף שאלה חדשה" : "Add New Question")
-                    : (isHebrew ? "ערוך שאלה" : "Edit Question");
+                    ? LanguageManager.get("add_new_question", currentLang)
+                    : LanguageManager.get("edit_question", currentLang);
 
             JLabel header = new JLabel(headerText);
             header.setForeground(ACCENT_COLOR);
             header.setFont(new Font("Segoe UI", Font.BOLD, 22));
-            if (isHebrew) {
+            if (isRTL) {
                 header.setHorizontalAlignment(SwingConstants.RIGHT);
                 header.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
             }
@@ -425,7 +407,7 @@ public class QuestionManagementFrame extends JFrame {
             JPanel card = new JPanel(new GridBagLayout());
             card.setBackground(DIALOG_PANEL);
             card.setBorder(neonBorder(ACCENT_COLOR));
-            if (isHebrew) card.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+            if (isRTL) card.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 
             GridBagConstraints gc = new GridBagConstraints();
             gc.insets = new Insets(8, 8, 8, 8);
@@ -487,16 +469,17 @@ public class QuestionManagementFrame extends JFrame {
             attachTypingSound(bField);
             attachTypingSound(cField);
             attachTypingSound(dField);
-// idField is not editable, so no need
+            // idField is not editable, so no need
 
-            String lblId = isHebrew ? "מזהה" : "ID";
-            String lblText = isHebrew ? "טקסט השאלה" : "Question Text";
-            String lblOptA = isHebrew ? "תשובה א" : "Option A";
-            String lblOptB = isHebrew ? "תשובה ב" : "Option B";
-            String lblOptC = isHebrew ? "תשובה ג" : "Option C";
-            String lblOptD = isHebrew ? "תשובה ד" : "Option D";
-            String lblCorrect = isHebrew ? "תשובה נכונה" : "Correct Answer";
-            String lblDiff = isHebrew ? "רמת קושי" : "Difficulty";
+            // Get labels in current language
+            String lblId = LanguageManager.get("id", currentLang);
+            String lblText = LanguageManager.get("question_text", currentLang);
+            String lblOptA = LanguageManager.get("option_a", currentLang);
+            String lblOptB = LanguageManager.get("option_b", currentLang);
+            String lblOptC = LanguageManager.get("option_c", currentLang);
+            String lblOptD = LanguageManager.get("option_d", currentLang);
+            String lblCorrect = LanguageManager.get("correct_answer_label", currentLang);
+            String lblDiff = LanguageManager.get("difficulty_label", currentLang);
 
             addRow(card, gc, 0, lblId, idField);
             addRow(card, gc, 1, lblText, textField);
@@ -509,118 +492,116 @@ public class QuestionManagementFrame extends JFrame {
 
             root.add(card, BorderLayout.CENTER);
 
-            JPanel buttons = new JPanel(new FlowLayout(isHebrew ? FlowLayout.LEFT : FlowLayout.RIGHT, 10, 0));
-            buttons.setBackground(DIALOG_BG);
+            JPanel buttonsPanel = new JPanel(new FlowLayout(isRTL ? FlowLayout.LEFT : FlowLayout.RIGHT, 10, 0));
+            buttonsPanel.setOpaque(false);
 
-            JButton btnCancel = createStyledButton(isHebrew ? "ביטול" : "Cancel");
-            JButton btnSaveDialog = createStyledButton(isHebrew ? "שמור" : "Save");
-            attachClickSound(btnCancel);
-            attachClickSound(btnSaveDialog);
+            JButton btnCancel = createStyledButton(LanguageManager.get("cancel", currentLang));
+            JButton btnSave = createStyledButton(LanguageManager.get("save", currentLang));
 
-            btnCancel.addActionListener(e -> dispose());
-            btnSaveDialog.addActionListener(e -> onSave());
+            btnCancel.addActionListener(e -> {
+                SoundManager.click();
+                dispose();
+            });
 
-            if (isHebrew) {
-                buttons.add(btnSaveDialog);
-                buttons.add(btnCancel);
-            } else {
-                buttons.add(btnCancel);
-                buttons.add(btnSaveDialog);
-            }
-            root.add(buttons, BorderLayout.SOUTH);
+            btnSave.addActionListener(e -> {
+                SoundManager.click();
+                if (validateAndSave()) {
+                    dispose();
+                }
+            });
+
+            buttonsPanel.add(btnCancel);
+            buttonsPanel.add(btnSave);
+
+            root.add(buttonsPanel, BorderLayout.SOUTH);
 
             setContentPane(root);
-            pack();
-            setSize(750, 650);
-            setResizable(true);
-            setMinimumSize(new Dimension(600, 500));
+            setSize(520, 560);
             setLocationRelativeTo(owner);
         }
 
-        private void styleNeonField(JTextField f) {
-            f.setBackground(DIALOG_PANEL);
-            f.setForeground(TEXT_COLOR);
-            f.setCaretColor(ACCENT_COLOR);
-            f.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-            f.setBorder(neonBorder(ACCENT_COLOR));
-            if (isHebrew) f.setHorizontalAlignment(JTextField.RIGHT);
-            else f.setHorizontalAlignment(JTextField.LEFT);
-            if (!f.isEditable()) f.setForeground(Color.GRAY);
-        }
+        private void setupComboBoxes() {
+            // Setup correct answer combo (always A-D)
+            correctCombo.addItem("A");
+            correctCombo.addItem("B");
+            correctCombo.addItem("C");
+            correctCombo.addItem("D");
 
-        private void addRow(JPanel card, GridBagConstraints gc, int row, String label, JComponent input) {
-            JLabel l = new JLabel(label + ":");
-            styleNeonLabel(l);
-
-            if (isHebrew) {
-                l.setHorizontalAlignment(SwingConstants.RIGHT);
-                gc.gridx = 1;
-                gc.gridy = row;
-                gc.weightx = 1;
-                gc.anchor = GridBagConstraints.EAST;
-                card.add(input, gc);
-                gc.gridx = 0;
-                gc.gridy = row;
-                gc.weightx = 0;
-                gc.anchor = GridBagConstraints.WEST;
-                card.add(l, gc);
-            } else {
-                gc.gridx = 0;
-                gc.gridy = row;
-                gc.weightx = 0;
-                gc.anchor = GridBagConstraints.WEST;
-                card.add(l, gc);
-                gc.gridx = 1;
-                gc.gridy = row;
-                gc.weightx = 1;
-                gc.anchor = GridBagConstraints.EAST;
-                card.add(input, gc);
+            // Setup difficulty combo based on language
+            switch (currentLang) {
+                case HE -> {
+                    diffCombo.addItem("קל");
+                    diffCombo.addItem("בינוני");
+                    diffCombo.addItem("קשה");
+                    diffCombo.addItem("מומחה");
+                }
+                case AR -> {
+                    diffCombo.addItem("سهل");
+                    diffCombo.addItem("متوسط");
+                    diffCombo.addItem("صعب");
+                    diffCombo.addItem("خبير");
+                }
+                case RU -> {
+                    diffCombo.addItem("Легко");
+                    diffCombo.addItem("Средне");
+                    diffCombo.addItem("Сложно");
+                    diffCombo.addItem("Эксперт");
+                }
+                case ES -> {
+                    diffCombo.addItem("Fácil");
+                    diffCombo.addItem("Medio");
+                    diffCombo.addItem("Difícil");
+                    diffCombo.addItem("Experto");
+                }
+                default -> {
+                    diffCombo.addItem("EASY");
+                    diffCombo.addItem("MEDIUM");
+                    diffCombo.addItem("HARD");
+                    diffCombo.addItem("EXPERT");
+                }
             }
         }
 
-        private void onSave() {
-            try {
-                int id = Integer.parseInt(idField.getText().trim());
-                String text = textField.getText().trim();
+        private void addRow(JPanel card, GridBagConstraints gc, int row, String labelText, JComponent field) {
+            JLabel lbl = new JLabel(labelText);
+            styleNeonLabel(lbl);
 
-                if (text.isEmpty()) {
-                    throw new IllegalArgumentException(isHebrew ? "טקסט השאלה ריק." : "Question text is empty.");
-                }
+            gc.gridy = row;
+            gc.gridx = isRTL ? 1 : 0;
+            gc.anchor = isRTL ? GridBagConstraints.EAST : GridBagConstraints.WEST;
+            gc.weightx = 0;
+            card.add(lbl, gc);
 
-                List<String> opts = new ArrayList<>();
-                opts.add(aField.getText().trim());
-                opts.add(bField.getText().trim());
-                opts.add(cField.getText().trim());
-                opts.add(dField.getText().trim());
+            gc.gridx = isRTL ? 0 : 1;
+            gc.anchor = isRTL ? GridBagConstraints.WEST : GridBagConstraints.EAST;
+            gc.weightx = 1;
+            card.add(field, gc);
+        }
 
-                // Validate all options are filled
-                for (int i = 0; i < opts.size(); i++) {
-                    if (opts.get(i).isEmpty()) {
-                        char optLetter = (char) ('A' + i);
-                        throw new IllegalArgumentException(
-                                isHebrew ? "תשובה " + (char) ('א' + i) + " ריקה." : "Option " + optLetter + " is empty.");
-                    }
-                }
+        private boolean validateAndSave() {
+            String text = textField.getText().trim();
+            String a = aField.getText().trim();
+            String b = bField.getText().trim();
+            String c = cField.getText().trim();
+            String d = dField.getText().trim();
 
-                int correctIndex = correctCombo.getSelectedIndex();
-                char correct = (char) ('A' + correctIndex);
-
-                int diffIndex = diffCombo.getSelectedIndex();
-                String diff = switch (diffIndex) {
-                    case 0 -> "EASY";
-                    case 1 -> "MEDIUM";
-                    case 2 -> "HARD";
-                    case 3 -> "EXPERT";
-                    default -> "EASY";
-                };
-
-                result = new Question(id, text, opts, correct, diff);
-                dispose();
-            } catch (Exception ex) {
-                String errTitle = isHebrew ? "שגיאה" : "Error";
-                String errMsg = isHebrew ? "קלט לא תקין: " : "Invalid input: ";
-                JOptionPane.showMessageDialog(this, errMsg + ex.getMessage(), errTitle, JOptionPane.ERROR_MESSAGE);
+            if (text.isEmpty() || a.isEmpty() || b.isEmpty() || c.isEmpty() || d.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "All fields must be filled.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return false;
             }
+
+            int id = Integer.parseInt(idField.getText().trim());
+            char correct = (char) ('A' + correctCombo.getSelectedIndex());
+            String difficultyValue = translateDifficultyToEnglish((String) diffCombo.getSelectedItem());
+
+            List<String> opts = new ArrayList<>();
+            opts.add(a);
+            opts.add(b);
+            opts.add(c);
+            opts.add(d);
+
+            result = new Question(id, text, opts, correct, difficultyValue);
+            return true;
         }
 
         public Question getResult() {
@@ -628,14 +609,15 @@ public class QuestionManagementFrame extends JFrame {
         }
     }
 
-    // ================= HELPER CLASS =================
+    // ================= BACKGROUND PANEL =================
+
     private static class BackgroundPanel extends JPanel {
         private Image backgroundImage;
 
-        public BackgroundPanel(String resourcePath) {
-            URL url = getClass().getResource(resourcePath);
-            if (url != null) {
-                backgroundImage = new ImageIcon(url).getImage();
+        BackgroundPanel(String resourcePath) {
+            URL resource = getClass().getResource(resourcePath);
+            if (resource != null) {
+                backgroundImage = new ImageIcon(resource).getImage();
             } else {
                 System.err.println("ERROR: Could not find background image at: " + resourcePath);
             }
@@ -653,18 +635,51 @@ public class QuestionManagementFrame extends JFrame {
         }
     }
 
-    // ================= STANDARD UI METHODS =================
+    // ================= LANGUAGE METHODS =================
 
-    private void handleLanguageSwitch() {
+    /**
+     * Shows language selection popup menu with all 5 languages
+     */
+    private void showLanguagePopup() {
+        JPopupMenu langMenu = new JPopupMenu();
+        langMenu.setBackground(new Color(11, 15, 26));
+        langMenu.setBorder(BorderFactory.createLineBorder(new Color(0, 245, 255)));
+
+        for (LanguageManager.Language lang : LanguageManager.Language.values()) {
+            JMenuItem item = new JMenuItem(LanguageManager.getDisplayName(lang));
+            item.setForeground(Color.WHITE);
+            item.setBackground(new Color(11, 15, 26));
+            item.setFont(new Font("Arial", Font.BOLD, 14));
+
+            // Highlight current language
+            if (lang == GameController.getInstance().getCurrentLanguage()) {
+                item.setForeground(new Color(0, 245, 255));
+            }
+
+            item.addActionListener(e -> handleLanguageSelection(lang));
+            langMenu.add(item);
+        }
+
+        // Show popup above the button
+        Dimension size = langMenu.getPreferredSize();
+        langMenu.show(btnLanguage, 0, -size.height);
+    }
+
+    /**
+     * Handles language selection from popup menu
+     */
+    private void handleLanguageSelection(LanguageManager.Language lang) {
+        // Skip if same language selected
+        if (lang == GameController.getInstance().getCurrentLanguage()) {
+            return;
+        }
+
         btnLanguage.setIconPath(THINKING_ICON);
         btnLanguage.setOnClick(null);
         new Thread(() -> {
             try {
                 GameController gc = GameController.getInstance();
-                if (gc.getCurrentLanguage() == LanguageManager.Language.EN)
-                    gc.setCurrentLanguage(LanguageManager.Language.HE);
-                else
-                    gc.setCurrentLanguage(LanguageManager.Language.EN);
+                gc.setCurrentLanguage(lang);
                 gc.getQuestionManager().switchLanguageFromCache();
                 Thread.sleep(300);
             } catch (Exception e) {
@@ -676,31 +691,32 @@ public class QuestionManagementFrame extends JFrame {
                 loadTable();
                 showLanguageToast();
                 btnLanguage.setIconPath("/ui/icons/language.png");
-                btnLanguage.setOnClick(this::handleLanguageSwitch);
+                btnLanguage.setOnClick(this::showLanguagePopup);
             });
         }).start();
     }
 
     private void updateUIText() {
-        boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
-        setTitle(isHe ? "ניהול שאלות" : "Question Management");
-        btnAdd.setText(isHe ? "הוסף" : "Add");
-        btnEdit.setText(isHe ? "ערוך" : "Edit");
-        btnDelete.setText(isHe ? "מחק" : "Delete");
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        boolean isRTL = LanguageManager.isRTL(lang);
 
-        diffLabel.setText(isHe ? "רמת קושי:" : "Difficulty:");
-        corrLabel.setText(isHe ? "תשובה נכונה:" : "Correct:");
-        clearBtn.setText(isHe ? "נקה" : "Clear");
+        setTitle(LanguageManager.get("question_management", lang));
+        btnAdd.setText(LanguageManager.get("add", lang));
+        btnEdit.setText(LanguageManager.get("edit", lang));
+        btnDelete.setText(LanguageManager.get("delete", lang));
+
+        diffLabel.setText(LanguageManager.get("difficulty", lang));
+        corrLabel.setText(LanguageManager.get("correct_label", lang));
+        clearBtn.setText(LanguageManager.get("clear", lang));
 
         // Sort hint text
-        lblSortHint.setText(isHe ? "טיפ: ניתן ללחוץ על כותרות העמודות כדי למיין" : "Tip: Click on column headers to sort");
+        lblSortHint.setText(LanguageManager.get("sort_hint", lang));
 
-        String[] headers = isHe
-                ? new String[]{"מזהה", "טקסט", "א", "ב", "ג", "ד", "נכונה", "רמה"}
-                : new String[]{"ID", "Text", "A", "B", "C", "D", "Correct", "Difficulty"};
+        // Update table headers
+        String[] headers = getTableHeaders(lang);
         model.setColumnIdentifiers(headers);
 
-        ComponentOrientation o = isHe ? ComponentOrientation.RIGHT_TO_LEFT : ComponentOrientation.LEFT_TO_RIGHT;
+        ComponentOrientation o = isRTL ? ComponentOrientation.RIGHT_TO_LEFT : ComponentOrientation.LEFT_TO_RIGHT;
         table.setComponentOrientation(o);
         table.getTableHeader().setComponentOrientation(o);
         if (tableScroll != null) {
@@ -708,16 +724,29 @@ public class QuestionManagementFrame extends JFrame {
             tableScroll.getViewport().setComponentOrientation(o);
         }
         filterPanel.setComponentOrientation(o);
-        rebuildFilterPanel(isHe);
+        rebuildFilterPanel(isRTL);
         table.getTableHeader().resizeAndRepaint();
     }
 
-    private void rebuildFilterPanel(boolean isHe) {
+    /**
+     * Get table headers for all 5 languages
+     */
+    private String[] getTableHeaders(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> new String[]{"מזהה", "טקסט", "א", "ב", "ג", "ד", "נכונה", "רמה"};
+            case AR -> new String[]{"المعرف", "النص", "أ", "ب", "ج", "د", "الصحيحة", "الصعوبة"};
+            case RU -> new String[]{"ID", "Текст", "A", "B", "C", "D", "Ответ", "Сложность"};
+            case ES -> new String[]{"ID", "Texto", "A", "B", "C", "D", "Correcta", "Dificultad"};
+            default -> new String[]{"ID", "Text", "A", "B", "C", "D", "Correct", "Difficulty"};
+        };
+    }
+
+    private void rebuildFilterPanel(boolean isRTL) {
         filterPanel.removeAll();
         FlowLayout layout = (FlowLayout) filterPanel.getLayout();
-        layout.setAlignment(isHe ? FlowLayout.RIGHT : FlowLayout.LEFT);
+        layout.setAlignment(isRTL ? FlowLayout.RIGHT : FlowLayout.LEFT);
 
-        if (isHe) {
+        if (isRTL) {
             filterPanel.add(clearBtn);
             filterPanel.add(correctAnswerFilter);
             filterPanel.add(corrLabel);
@@ -742,23 +771,56 @@ public class QuestionManagementFrame extends JFrame {
         difficultyFilter.removeAllItems();
         correctAnswerFilter.removeAllItems();
 
-        boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
-        if (isHe) {
-            difficultyFilter.addItem("הכל");
-            difficultyFilter.addItem("קל");
-            difficultyFilter.addItem("בינוני");
-            difficultyFilter.addItem("קשה");
-            difficultyFilter.addItem("מומחה");
-        } else {
-            difficultyFilter.addItem("All");
-            difficultyFilter.addItem("EASY");
-            difficultyFilter.addItem("MEDIUM");
-            difficultyFilter.addItem("HARD");
-            difficultyFilter.addItem("EXPERT");
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+
+        // Add difficulty items based on language
+        switch (lang) {
+            case HE -> {
+                difficultyFilter.addItem("הכל");
+                difficultyFilter.addItem("קל");
+                difficultyFilter.addItem("בינוני");
+                difficultyFilter.addItem("קשה");
+                difficultyFilter.addItem("מומחה");
+            }
+            case AR -> {
+                difficultyFilter.addItem("الكل");
+                difficultyFilter.addItem("سهل");
+                difficultyFilter.addItem("متوسط");
+                difficultyFilter.addItem("صعب");
+                difficultyFilter.addItem("خبير");
+            }
+            case RU -> {
+                difficultyFilter.addItem("Все");
+                difficultyFilter.addItem("Легко");
+                difficultyFilter.addItem("Средне");
+                difficultyFilter.addItem("Сложно");
+                difficultyFilter.addItem("Эксперт");
+            }
+            case ES -> {
+                difficultyFilter.addItem("Todos");
+                difficultyFilter.addItem("Fácil");
+                difficultyFilter.addItem("Medio");
+                difficultyFilter.addItem("Difícil");
+                difficultyFilter.addItem("Experto");
+            }
+            default -> {
+                difficultyFilter.addItem("All");
+                difficultyFilter.addItem("EASY");
+                difficultyFilter.addItem("MEDIUM");
+                difficultyFilter.addItem("HARD");
+                difficultyFilter.addItem("EXPERT");
+            }
         }
 
-        // Use letters A-D to match table display
-        correctAnswerFilter.addItem(isHe ? "הכל" : "All");
+        // Use letters A-D to match table display (universal)
+        String allText = switch (lang) {
+            case HE -> "הכל";
+            case AR -> "الكل";
+            case RU -> "Все";
+            case ES -> "Todos";
+            default -> "All";
+        };
+        correctAnswerFilter.addItem(allText);
         correctAnswerFilter.addItem("A");
         correctAnswerFilter.addItem("B");
         correctAnswerFilter.addItem("C");
@@ -771,8 +833,8 @@ public class QuestionManagementFrame extends JFrame {
     }
 
     private void showLanguageToast() {
-        boolean isHe = GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE;
-        toastLabel.setText(isHe ? "עברית" : "English");
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        toastLabel.setText(LanguageManager.getDisplayName(lang));
         Dimension size = toastLabel.getPreferredSize();
         int w = size.width + 30;
         int h = 30;
@@ -846,6 +908,14 @@ public class QuestionManagementFrame extends JFrame {
         l.setFont(new Font("Segoe UI", Font.BOLD, 14));
     }
 
+    private void styleNeonField(JTextField field) {
+        field.setBackground(DIALOG_PANEL);
+        field.setForeground(TEXT_COLOR);
+        field.setCaretColor(ACCENT_COLOR);
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        field.setBorder(neonBorder(ACCENT_COLOR));
+    }
+
     private void styleNeonCombo(JComboBox<?> c) {
         c.setBackground(DIALOG_PANEL);
         c.setForeground(TEXT_COLOR);
@@ -855,7 +925,7 @@ public class QuestionManagementFrame extends JFrame {
 
     private void loadTable() {
         model.setRowCount(0);
-        boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
         for (Question q : manager.getAllQuestions()) {
             List<String> o = new ArrayList<>(q.getOptions());
             while (o.size() < 4) o.add("");
@@ -866,21 +936,49 @@ public class QuestionManagementFrame extends JFrame {
                     q.getText(),
                     o.get(0), o.get(1), o.get(2), o.get(3),
                     String.valueOf(correctLetter),
-                    translateDifficulty(q.getDifficultyLevel(), isHe)
+                    translateDifficulty(q.getDifficultyLevel(), lang)
             });
 
         }
         applyFilters();
     }
 
-    private String translateDifficulty(String diff, boolean toHebrew) {
+    /**
+     * Translate difficulty for display in all 5 languages
+     */
+    private String translateDifficulty(String diff, LanguageManager.Language lang) {
         if (diff == null) return "";
-        if (!toHebrew) return diff;
-        return switch (diff.toUpperCase()) {
-            case "EASY" -> "קל";
-            case "MEDIUM" -> "בינוני";
-            case "HARD" -> "קשה";
-            case "EXPERT" -> "מומחה";
+        if (lang == LanguageManager.Language.EN) return diff.toUpperCase();
+
+        return switch (lang) {
+            case HE -> switch (diff.toUpperCase()) {
+                case "EASY" -> "קל";
+                case "MEDIUM" -> "בינוני";
+                case "HARD" -> "קשה";
+                case "EXPERT" -> "מומחה";
+                default -> diff;
+            };
+            case AR -> switch (diff.toUpperCase()) {
+                case "EASY" -> "سهل";
+                case "MEDIUM" -> "متوسط";
+                case "HARD" -> "صعب";
+                case "EXPERT" -> "خبير";
+                default -> diff;
+            };
+            case RU -> switch (diff.toUpperCase()) {
+                case "EASY" -> "Легко";
+                case "MEDIUM" -> "Средне";
+                case "HARD" -> "Сложно";
+                case "EXPERT" -> "Эксперт";
+                default -> diff;
+            };
+            case ES -> switch (diff.toUpperCase()) {
+                case "EASY" -> "Fácil";
+                case "MEDIUM" -> "Medio";
+                case "HARD" -> "Difícil";
+                case "EXPERT" -> "Experto";
+                default -> diff;
+            };
             default -> diff;
         };
     }
@@ -888,10 +986,26 @@ public class QuestionManagementFrame extends JFrame {
     private String translateDifficultyToEnglish(String diff) {
         if (diff == null) return "EASY";
         return switch (diff) {
+            // Hebrew
             case "קל" -> "EASY";
             case "בינוני" -> "MEDIUM";
             case "קשה" -> "HARD";
             case "מומחה" -> "EXPERT";
+            // Arabic
+            case "سهل" -> "EASY";
+            case "متوسط" -> "MEDIUM";
+            case "صعب" -> "HARD";
+            case "خبير" -> "EXPERT";
+            // Russian
+            case "Легко" -> "EASY";
+            case "Средне" -> "MEDIUM";
+            case "Сложно" -> "HARD";
+            case "Эксперт" -> "EXPERT";
+            // Spanish
+            case "Fácil" -> "EASY";
+            case "Medio" -> "MEDIUM";
+            case "Difícil" -> "HARD";
+            case "Experto" -> "EXPERT";
             default -> diff.toUpperCase();
         };
     }
@@ -985,11 +1099,12 @@ public class QuestionManagementFrame extends JFrame {
         List<RowFilter<Object, Object>> filters = new ArrayList<>();
 
         String diffFilter = mapDifficultyToFilter(diff);
-        if (diffFilter != null && !"All".equalsIgnoreCase(diffFilter) && !"הכל".equals(diffFilter)) {
+        if (diffFilter != null && !"All".equalsIgnoreCase(diffFilter)) {
             filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(diffFilter) + "$", 7));
         }
 
-        if (corr != null && !"All".equalsIgnoreCase(corr) && !"הכל".equals(corr)) {
+        // Handle "All" in different languages for correct filter
+        if (corr != null && !isAllValue(corr)) {
             filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(corr) + "$", 6));
         }
 
@@ -997,18 +1112,23 @@ public class QuestionManagementFrame extends JFrame {
         else sorter.setRowFilter(RowFilter.andFilter(filters));
     }
 
+    private boolean isAllValue(String value) {
+        if (value == null) return true;
+        return switch (value) {
+            case "All", "הכל", "الكل", "Все", "Todos" -> true;
+            default -> false;
+        };
+    }
+
 
     private String mapDifficultyToFilter(String value) {
-        if (value == null) return "All";
-        boolean isHe = (GameController.getInstance().getCurrentLanguage() == LanguageManager.Language.HE);
-        return switch (value) {
-            case "הכל", "All" -> "All";
-            case "קל", "EASY" -> isHe ? "קל" : "EASY";
-            case "בינוני", "MEDIUM" -> isHe ? "בינוני" : "MEDIUM";
-            case "קשה", "HARD" -> isHe ? "קשה" : "HARD";
-            case "מומחה", "EXPERT" -> isHe ? "מומחה" : "EXPERT";
-            default -> "All";
-        };
+        if (value == null || isAllValue(value)) return "All";
+
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+
+        // Map to the displayed value in the current language
+        String englishValue = translateDifficultyToEnglish(value);
+        return translateDifficulty(englishValue, lang);
     }
 
     private static int parseIntSafe(Object o) {
