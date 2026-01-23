@@ -110,7 +110,8 @@ public class GameHistoryFrame extends JFrame {
         // Sort hint label
         lblSortHint = new JLabel();
         lblSortHint.setForeground(HINT_COLOR);
-        lblSortHint.setFont(new Font("Arial", Font.ITALIC, 12));
+        // FIX: PLAIN FONT for Arabic support
+        lblSortHint.setFont(new Font("Arial", Font.PLAIN, 12));
 
         filtersPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         filtersPanel.setOpaque(false);
@@ -145,16 +146,15 @@ public class GameHistoryFrame extends JFrame {
         exitBtn.setPreferredSize(new Dimension(46, 46));
         exitBtn.setSafePadPx(2);
         exitBtn.setOnClick(() -> {
-            if (util.ExitConfirmHelper.confirmExit(this)) {
-                dispose();
-                if (onExitToMenu != null) onExitToMenu.run();
-            }
+            dispose();
+            if (onExitToMenu != null) onExitToMenu.run();
         });
 
 
         btnLanguage = new IconButton("/ui/icons/language.png", true);
         btnLanguage.setPreferredSize(new Dimension(46, 46));
-        btnLanguage.setOnClick(this::handleLanguageSwitch);
+        // Changed: Use popup menu instead of toggle
+        btnLanguage.setOnClick(this::showLanguagePopup);
 
         JPanel leftBottom = new JPanel(new FlowLayout(FlowLayout.LEFT));
         leftBottom.setOpaque(false);
@@ -209,18 +209,50 @@ public class GameHistoryFrame extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    private void handleLanguageSwitch() {
+    /**
+     * Shows language selection popup menu with all 5 languages
+     */
+    private void showLanguagePopup() {
+        JPopupMenu langMenu = new JPopupMenu();
+        langMenu.setBackground(new Color(11, 15, 26));
+        langMenu.setBorder(BorderFactory.createLineBorder(new Color(0, 245, 255)));
+
+        for (LanguageManager.Language lang : LanguageManager.Language.values()) {
+            JMenuItem item = new JMenuItem(LanguageManager.getDisplayName(lang));
+            item.setForeground(Color.WHITE);
+            item.setBackground(new Color(11, 15, 26));
+            item.setFont(new Font("Arial", Font.BOLD, 14));
+
+            // Highlight current language
+            if (lang == GameController.getInstance().getCurrentLanguage()) {
+                item.setForeground(new Color(0, 245, 255));
+            }
+
+            item.addActionListener(e -> handleLanguageSelection(lang));
+            langMenu.add(item);
+        }
+
+        // Show popup above the button
+        Dimension size = langMenu.getPreferredSize();
+        langMenu.show(btnLanguage, 0, -size.height);
+    }
+
+    /**
+     * Handles language selection from popup menu
+     */
+    private void handleLanguageSelection(LanguageManager.Language lang) {
+        // Skip if same language selected
+        if (lang == GameController.getInstance().getCurrentLanguage()) {
+            return;
+        }
+
         btnLanguage.setIconPath(THINKING_ICON);
         btnLanguage.setOnClick(null);
 
         new Thread(() -> {
             try {
                 GameController gc = GameController.getInstance();
-                if (gc.getCurrentLanguage() == LanguageManager.Language.EN) {
-                    gc.setCurrentLanguage(LanguageManager.Language.HE);
-                } else {
-                    gc.setCurrentLanguage(LanguageManager.Language.EN);
-                }
+                gc.setCurrentLanguage(lang);
                 gc.getQuestionManager().switchLanguageFromCache();
                 Thread.sleep(300);
             } catch (Exception e) {
@@ -232,7 +264,7 @@ public class GameHistoryFrame extends JFrame {
                     reload();
                     showLanguageToast();
                     btnLanguage.setIconPath("/ui/icons/language.png");
-                    btnLanguage.setOnClick(this::handleLanguageSwitch);
+                    btnLanguage.setOnClick(this::showLanguagePopup);
                     revalidate();
                     repaint();
                 });
@@ -242,25 +274,26 @@ public class GameHistoryFrame extends JFrame {
 
     private void updateUIText() {
         LanguageManager.Language lang = controller.getCurrentLanguage();
-        boolean isHe = (lang == LanguageManager.Language.HE);
+        boolean isRTL = LanguageManager.isRTL(lang);
 
-        setTitle(isHe ? "היסטוריית משחקים" : "Game History");
-        lblSearch.setText(isHe ? "חיפוש:" : "Search:");
-        lblDiff.setText(isHe ? "רמת קושי:" : "Difficulty:");
-        lblResult.setText(isHe ? "תוצאה:" : "Result:");
-        searchBtn.setText(isHe ? "חפש" : "Search");
+        setTitle(LanguageManager.get("game_history", lang));
+        lblSearch.setText(LanguageManager.get("search_label", lang));
+        lblDiff.setText(LanguageManager.get("difficulty", lang));
+        lblResult.setText(LanguageManager.get("result_label", lang));
+        searchBtn.setText(LanguageManager.get("search", lang));
 
-        // Sort hint text - use text instead of emoji
-        lblSortHint.setText(isHe ? "טיפ: ניתן ללחוץ על כותרות העמודות כדי למיין" : "Tip: Click on column headers to sort");
+        // Sort hint text
+        lblSortHint.setText(LanguageManager.get("sort_hint", lang));
 
+        // FIX: Rebuild layouts for RTL/LTR switching
         FlowLayout topBarLayout = (FlowLayout) topBar.getLayout();
-        topBarLayout.setAlignment(isHe ? FlowLayout.RIGHT : FlowLayout.LEFT);
+        topBarLayout.setAlignment(isRTL ? FlowLayout.RIGHT : FlowLayout.LEFT);
 
         FlowLayout filtersLayout = (FlowLayout) filtersPanel.getLayout();
-        filtersLayout.setAlignment(isHe ? FlowLayout.RIGHT : FlowLayout.LEFT);
+        filtersLayout.setAlignment(isRTL ? FlowLayout.RIGHT : FlowLayout.LEFT);
 
         topBar.removeAll();
-        if (isHe) {
+        if (isRTL) {
             topBar.add(searchBtn);
             topBar.add(searchBox);
             topBar.add(lblSearch);
@@ -271,7 +304,7 @@ public class GameHistoryFrame extends JFrame {
         }
 
         filtersPanel.removeAll();
-        if (isHe) {
+        if (isRTL) {
             filtersPanel.add(resultFilter);
             filtersPanel.add(lblResult);
             filtersPanel.add(difficultyFilter);
@@ -283,7 +316,7 @@ public class GameHistoryFrame extends JFrame {
             filtersPanel.add(resultFilter);
         }
 
-        ComponentOrientation orientation = isHe ? ComponentOrientation.RIGHT_TO_LEFT : ComponentOrientation.LEFT_TO_RIGHT;
+        ComponentOrientation orientation = isRTL ? ComponentOrientation.RIGHT_TO_LEFT : ComponentOrientation.LEFT_TO_RIGHT;
         gamesTable.setComponentOrientation(orientation);
         playersTable.setComponentOrientation(orientation);
 
@@ -300,17 +333,39 @@ public class GameHistoryFrame extends JFrame {
         filtersPanel.revalidate();
         filtersPanel.repaint();
 
-        String[] gHeaders = isHe
-                ? new String[]{"שחקנים", "תאריך / שעה", "רמה", "תוצאה", "ניקוד", "חיים", "תשובות נכונות", "דיוק", "משך זמן"}
-                : new String[]{"Players", "Date / Time", "Difficulty", "Result", "Final Score", "Lives Left", "Correct Ans", "Accuracy", "Duration"};
-
-        String[] pHeaders = isHe
-                ? new String[]{"שחקן", "סה\"כ משחקים", "תוצאה טובה", "דיוק ממוצע", "רמה מועדפת"}
-                : new String[]{"Player", "Total Games", "Best Score", "Avg Accuracy", "Pref Difficulty"};
+        // Update table headers for all 5 languages
+        String[] gHeaders = getGameTableHeaders(lang);
+        String[] pHeaders = getPlayerTableHeaders(lang);
 
         gamesModel.setColumnIdentifiers(gHeaders);
         playersModel.setColumnIdentifiers(pHeaders);
         setupSorters(gamesTable, playersTable);
+    }
+
+    /**
+     * Get game table headers for all 5 languages
+     */
+    private String[] getGameTableHeaders(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> new String[]{"שחקנים", "תאריך / שעה", "רמה", "תוצאה", "ניקוד", "חיים", "תשובות נכונות", "דיוק", "משך זמן"};
+            case AR -> new String[]{"اللاعبون", "التاريخ / الوقت", "الصعوبة", "النتيجة", "النقاط", "الأرواح", "الإجابات الصحيحة", "الدقة", "المدة"};
+            case RU -> new String[]{"Игроки", "Дата / Время", "Сложность", "Результат", "Счёт", "Жизни", "Правильные ответы", "Точность", "Продолжительность"};
+            case ES -> new String[]{"Jugadores", "Fecha / Hora", "Dificultad", "Resultado", "Puntuación", "Vidas", "Respuestas correctas", "Precisión", "Duración"};
+            default -> new String[]{"Players", "Date / Time", "Difficulty", "Result", "Final Score", "Lives Left", "Correct Ans", "Accuracy", "Duration"};
+        };
+    }
+
+    /**
+     * Get player table headers for all 5 languages
+     */
+    private String[] getPlayerTableHeaders(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> new String[]{"שחקן", "סה\"כ משחקים", "תוצאה טובה", "דיוק ממוצע", "רמה מועדפת"};
+            case AR -> new String[]{"اللاعب", "إجمالي الألعاب", "أفضل نتيجة", "متوسط الدقة", "الصعوبة المفضلة"};
+            case RU -> new String[]{"Игрок", "Всего игр", "Лучший счёт", "Средняя точность", "Любимая сложность"};
+            case ES -> new String[]{"Jugador", "Total de juegos", "Mejor puntuación", "Precisión promedio", "Dificultad preferida"};
+            default -> new String[]{"Player", "Total Games", "Best Score", "Avg Accuracy", "Pref Difficulty"};
+        };
     }
 
     private void updateComboItems() {
@@ -320,24 +375,55 @@ public class GameHistoryFrame extends JFrame {
         difficultyFilter.removeAllItems();
         resultFilter.removeAllItems();
 
-        boolean isHe = (controller.getCurrentLanguage() == LanguageManager.Language.HE);
+        LanguageManager.Language lang = controller.getCurrentLanguage();
 
-        if (isHe) {
-            difficultyFilter.addItem("הכל");
-            difficultyFilter.addItem("קל");
-            difficultyFilter.addItem("בינוני");
-            difficultyFilter.addItem("קשה");
-            resultFilter.addItem("הכל");
-            resultFilter.addItem("ניצחון");
-            resultFilter.addItem("הפסד");
-        } else {
-            difficultyFilter.addItem("All");
-            difficultyFilter.addItem("EASY");
-            difficultyFilter.addItem("MEDIUM");
-            difficultyFilter.addItem("HARD");
-            resultFilter.addItem("All");
-            resultFilter.addItem("WON");
-            resultFilter.addItem("LOST");
+        // Add items based on current language
+        switch (lang) {
+            case HE -> {
+                difficultyFilter.addItem("הכל");
+                difficultyFilter.addItem("קל");
+                difficultyFilter.addItem("בינוני");
+                difficultyFilter.addItem("קשה");
+                resultFilter.addItem("הכל");
+                resultFilter.addItem("ניצחון");
+                resultFilter.addItem("הפסד");
+            }
+            case AR -> {
+                difficultyFilter.addItem("الكل");
+                difficultyFilter.addItem("سهل");
+                difficultyFilter.addItem("متوسط");
+                difficultyFilter.addItem("صعب");
+                resultFilter.addItem("الكل");
+                resultFilter.addItem("فوز");
+                resultFilter.addItem("خسارة");
+            }
+            case RU -> {
+                difficultyFilter.addItem("Все");
+                difficultyFilter.addItem("Легко");
+                difficultyFilter.addItem("Средне");
+                difficultyFilter.addItem("Сложно");
+                resultFilter.addItem("Все");
+                resultFilter.addItem("Победа");
+                resultFilter.addItem("Поражение");
+            }
+            case ES -> {
+                difficultyFilter.addItem("Todos");
+                difficultyFilter.addItem("Fácil");
+                difficultyFilter.addItem("Medio");
+                difficultyFilter.addItem("Difícil");
+                resultFilter.addItem("Todos");
+                resultFilter.addItem("Ganado");
+                resultFilter.addItem("Perdido");
+            }
+            default -> {
+                difficultyFilter.addItem("All");
+                difficultyFilter.addItem("EASY");
+                difficultyFilter.addItem("MEDIUM");
+                difficultyFilter.addItem("HARD");
+                resultFilter.addItem("All");
+                resultFilter.addItem("WON");
+                resultFilter.addItem("LOST");
+            }
         }
 
         if (diffIdx >= 0 && diffIdx < difficultyFilter.getItemCount()) difficultyFilter.setSelectedIndex(diffIdx);
@@ -351,8 +437,8 @@ public class GameHistoryFrame extends JFrame {
         JLayeredPane lp = getLayeredPane();
         if (toastLabel.getParent() != null) lp.remove(toastLabel);
 
-        boolean isHe = controller.getCurrentLanguage() == LanguageManager.Language.HE;
-        toastLabel.setText(isHe ? "עברית" : "English");
+        LanguageManager.Language lang = controller.getCurrentLanguage();
+        toastLabel.setText(LanguageManager.getDisplayName(lang));
 
         Dimension size = toastLabel.getPreferredSize();
         int w = size.width + 30;
@@ -379,7 +465,7 @@ public class GameHistoryFrame extends JFrame {
         String dKey = mapToEnglishKey(dSel);
         String rKey = mapToEnglishKey(rSel);
 
-        boolean isHe = (controller.getCurrentLanguage() == LanguageManager.Language.HE);
+        LanguageManager.Language lang = controller.getCurrentLanguage();
 
         List<GameHistoryRow> g = controller.getGameHistory(dKey, rKey, search);
 
@@ -387,8 +473,8 @@ public class GameHistoryFrame extends JFrame {
             gamesModel.addRow(new Object[]{
                     r.players,
                     r.dateTime,
-                    translateData(r.difficulty, isHe),
-                    translateData(r.result, isHe),
+                    translateData(r.difficulty, lang),
+                    translateData(r.result, lang),
                     r.finalScore,
                     r.remainingLives,
                     r.correctAnswers,
@@ -403,7 +489,7 @@ public class GameHistoryFrame extends JFrame {
                     r.totalGames,
                     r.bestScore,
                     r.averageAccuracy,
-                    translateData(r.preferredDifficulty, isHe)
+                    translateData(r.preferredDifficulty, lang)
             });
         }
 
@@ -416,26 +502,59 @@ public class GameHistoryFrame extends JFrame {
     private String mapToEnglishKey(String uiValue) {
         if (uiValue == null) return "All";
         return switch (uiValue) {
-            case "הכל", "All" -> "All";
-            case "קל", "EASY" -> "EASY";
-            case "בינוני", "MEDIUM" -> "MEDIUM";
-            case "קשה", "HARD" -> "HARD";
-            case "ניצחון", "WON" -> "WON";
-            case "הפסד", "LOST" -> "LOST";
+            // All variants
+            case "הכל", "الكل", "Все", "Todos", "All" -> "All";
+            // Difficulty variants
+            case "קל", "سهل", "Легко", "Fácil", "EASY" -> "EASY";
+            case "בינוני", "متوسط", "Средне", "Medio", "MEDIUM" -> "MEDIUM";
+            case "קשה", "صعب", "Сложно", "Difícil", "HARD" -> "HARD";
+            // Result variants
+            case "ניצחון", "فوز", "Победа", "Ganado", "WON" -> "WON";
+            case "הפסד", "خسارة", "Поражение", "Perdido", "LOST" -> "LOST";
             default -> "All";
         };
     }
 
-    private String translateData(String data, boolean toHebrew) {
+    /**
+     * Translate data values for all 5 languages
+     */
+    private String translateData(String data, LanguageManager.Language lang) {
         if (data == null) return "";
-        if (!toHebrew) return data;
+        if (lang == LanguageManager.Language.EN) return data;
 
-        return switch (data.toUpperCase()) {
-            case "EASY" -> "קל";
-            case "MEDIUM" -> "בינוני";
-            case "HARD" -> "קשה";
-            case "WON" -> "ניצחון";
-            case "LOST" -> "הפסד";
+        return switch (lang) {
+            case HE -> switch (data.toUpperCase()) {
+                case "EASY" -> "קל";
+                case "MEDIUM" -> "בינוני";
+                case "HARD" -> "קשה";
+                case "WON" -> "ניצחון";
+                case "LOST" -> "הפסד";
+                default -> data;
+            };
+            case AR -> switch (data.toUpperCase()) {
+                case "EASY" -> "سهل";
+                case "MEDIUM" -> "متوسط";
+                case "HARD" -> "صعب";
+                case "WON" -> "فوز";
+                case "LOST" -> "خسارة";
+                default -> data;
+            };
+            case RU -> switch (data.toUpperCase()) {
+                case "EASY" -> "Легко";
+                case "MEDIUM" -> "Средне";
+                case "HARD" -> "Сложно";
+                case "WON" -> "Победа";
+                case "LOST" -> "Поражение";
+                default -> data;
+            };
+            case ES -> switch (data.toUpperCase()) {
+                case "EASY" -> "Fácil";
+                case "MEDIUM" -> "Medio";
+                case "HARD" -> "Difícil";
+                case "WON" -> "Ganado";
+                case "LOST" -> "Perdido";
+                default -> data;
+            };
             default -> data;
         };
     }
@@ -447,6 +566,8 @@ public class GameHistoryFrame extends JFrame {
         box.setBackground(new Color(0, 0, 0, 180));
         box.setForeground(TEXT_COLOR);
         box.setCaretColor(ACCENT_COLOR);
+        // FIX: Arial font for Arabic input
+        box.setFont(new Font("Arial", Font.PLAIN, 14));
         box.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(ACCENT_COLOR, 2),
                 BorderFactory.createEmptyBorder(6, 8, 6, 8)
@@ -456,12 +577,14 @@ public class GameHistoryFrame extends JFrame {
     private JLabel label(String t) {
         JLabel l = new JLabel(t);
         l.setForeground(TEXT_COLOR);
+        // FIX: Arial font
         l.setFont(new Font("Arial", Font.BOLD, 14));
         return l;
     }
 
     private JComboBox<String> createCombo() {
         JComboBox<String> c = new JComboBox<>();
+        // FIX: Arial font
         c.setFont(new Font("Arial", Font.PLAIN, 14));
         c.setPreferredSize(new Dimension(100, 30));
         return c;
@@ -474,6 +597,8 @@ public class GameHistoryFrame extends JFrame {
         b.setBorder(BorderFactory.createLineBorder(ACCENT_COLOR));
         b.setFocusPainted(false);
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        // FIX: Arial font
+        b.setFont(new Font("Arial", Font.BOLD, 12));
         return b;
     }
 
@@ -491,12 +616,15 @@ public class GameHistoryFrame extends JFrame {
         t.setForeground(TEXT_COLOR);
         t.setSelectionBackground(TABLE_SELECTION_BG);
         t.setSelectionForeground(TEXT_COLOR);
+        // FIX: Arial font for table cells (fixes empty squares)
+        t.setFont(new Font("Arial", Font.PLAIN, 14));
         t.getTableHeader().setReorderingAllowed(false);
 
         JTableHeader h = t.getTableHeader();
         h.setForeground(ACCENT_COLOR);
         h.setBackground(TABLE_HEADER_BG);
         h.setOpaque(false);
+        // FIX: Arial font for header
         h.setFont(new Font("Arial", Font.BOLD, 14));
         h.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         h.setDefaultRenderer(new HeaderRenderer());

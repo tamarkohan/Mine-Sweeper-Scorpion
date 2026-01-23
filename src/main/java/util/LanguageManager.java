@@ -13,7 +13,6 @@ public class LanguageManager {
 
     public enum Language { EN, HE, AR, RU, ES }
 
-
     private static final Map<String, Map<Language, String>> translations = new HashMap<>();
 
     static {
@@ -48,36 +47,31 @@ public class LanguageManager {
         add("correct_answer", "Correct answer:", "התשובה הנכונה:", "الإجابة الصحيحة:", "Правильный ответ:", "Respuesta correcta:");
         add("ok", "OK", "אישור", "موافق", "ОК", "OK");
 
-        // Language Toast
+        // Language Display Names
         add("lang_english", "English", "English", "English", "English", "English");
         add("lang_hebrew", "עברית", "עברית", "עברית", "עברית", "עברית");
         add("lang_arabic", "العربية", "العربية", "العربية", "العربية", "العربية");
         add("lang_russian", "Русский", "Русский", "Русский", "Русский", "Русский");
         add("lang_spanish", "Español", "Español", "Español", "Español", "Español");
 
-        // ActivationConfirmDialog - Question Cell
+        // ActivationConfirmDialog
         add("question_cell", "Question Cell", "תא שאלה", "خلية سؤال", "Ячейка вопроса", "Celda de pregunta");
         add("this_is_question_cell", "This is a Question cell", "זהו תא שאלה", "هذه خلية سؤال", "Это ячейка вопроса", "Esta es una celda de pregunta");
         add("do_you_want_to_activate", "Do you want to activate it?", "האם ברצונך להפעיל אותו?", "هل تريد تفعيلها؟", "Хотите активировать?", "¿Quieres activarla?");
         add("activate", "Activate", "הפעל", "تفعيل", "Активировать", "Activar");
-
-        // ActivationConfirmDialog - Surprise Cell
         add("surprise_cell", "Surprise Cell", "תא הפתעה", "خلية مفاجأة", "Ячейка сюрприза", "Celda de sorpresa");
         add("this_is_surprise_cell", "This is a Surprise cell", "זהו תא הפתעה", "هذه خلية مفاجأة", "Это ячейка сюрприза", "Esta es una celda de sorpresa");
 
-        // Outcome Dialog - Question Results
+        // Outcome Dialog
         add("outcome_correct", "CORRECT!", "נכון!", "صحيح!", "ПРАВИЛЬНО!", "¡CORRECTO!");
         add("outcome_wrong", "WRONG!", "שגוי!", "خطأ!", "НЕПРАВИЛЬНО!", "¡INCORRECTO!");
         add("outcome_skipped", "SKIPPED", "דילגת", "تم التخطي", "ПРОПУЩЕНО", "OMITIDO");
         add("outcome", "OUTCOME", "תוצאה", "النتيجة", "РЕЗУЛЬТАТ", "RESULTADO");
         add("result", "Result", "תוצאה", "النتيجة", "Результат", "Resultado");
-
-        // Outcome Dialog - Surprise Results
         add("surprise_good", "Good Surprise!", "הפתעה טובה!", "مفاجأة جيدة!", "Хороший сюрприз!", "¡Buena sorpresa!");
         add("surprise_bad", "Bad Surprise!", "הפתעה רעה!", "مفاجأة سيئة!", "Плохой сюрприз!", "¡Mala sorpresa!");
         add("surprise", "SURPRISE!", "הפתעה!", "مفاجأة!", "СЮРПРИЗ!", "¡SORPRESA!");
 
-        // Outcome message parts (for translation in dialogs)
         add("wrong_prefix", "Wrong", "שגוי", "خطأ", "Неправильно", "Incorrecto");
         add("correct_prefix", "Correct", "נכון", "صحيح", "Правильно", "Correcto");
         add("activation_cost", "Activation cost:", "עלות הפעלה:", "تكلفة التفعيل:", "Стоимость активации:", "Costo de activación:");
@@ -87,7 +81,7 @@ public class LanguageManager {
         add("life", "life", "חיים", "حياة", "жизнь", "vida");
         add("special_effect", "Special effect:", "אפקט מיוחד:", "تأثير خاص:", "Спецэффект:", "Efecto especial:");
         add("good_surprise_msg", "Good surprise!", "הפתעה טובה!", "مفاجأة جيدة!", "Хороший сюрприз!", "¡Buena sorpresa!");
-        add("bad_surprise_msg", "Bad surprise!", "הפתעה רעה!", "مفاجأة سيئة!", "Плохой сюрприз!", "¡Mala sorpresa!");
+        add("bad_surprise_msg", "Bad Surprise!", "הפתעה רעה!", "مفاجأة سيئة!", "Плохой сюрприз!", "¡Mala sorpresa!");
         add("surprise_activated", "The surprise was activated!", "ההפתעה הופעלה!", "تم تفعيل المفاجأة!", "Сюрприз активирован!", "¡La sorpresa fue activada!");
         add("surprise_result", "Surprise result:", "תוצאת ההפתעה:", "نتيجة المفاجأة:", "Результат сюрприза:", "Resultado de la sorpresa:");
         add("good", "Good", "טוב", "جيد", "Хорошо", "Bueno");
@@ -101,7 +95,7 @@ public class LanguageManager {
         add("difficulty_hard", "HARD", "קשה", "صعب", "СЛОЖНО", "DIFÍCIL");
         add("difficulty_expert", "EXPERT", "מומחה", "خبير", "ЭКСПЕРТ", "EXPERTO");
 
-        // Question Management Frame
+        // Question Management
         add("question_management", "Question Management", "ניהול שאלות", "إدارة الأسئلة", "Управление вопросами", "Gestión de preguntas");
         add("add", "Add", "הוסף", "إضافة", "Добавить", "Añadir");
         add("edit", "Edit", "ערוך", "تعديل", "Редактировать", "Editar");
@@ -111,63 +105,64 @@ public class LanguageManager {
         add("clear", "Clear", "נקה", "مسح", "Очистить", "Limpiar");
         add("difficulty", "Difficulty:", "רמת קושי:", "الصعوبة:", "Сложность:", "Dificultad:");
         add("correct_label", "Correct:", "תשובה נכונה:", "الإجابة الصحيحة:", "Правильный:", "Correcta:");
-        add("id", "ID:", "מזהה:", "المعرف:", "ID:", "ID:");
         add("all", "All", "הכל", "الكل", "Все", "Todos");
-        add("saved_msg", "Questions saved to CSV.", "השאלות נשמרו לקובץ CSV.", "تم حفظ الأسئلة في ملف CSV.", "Вопросы сохранены в CSV.", "Preguntas guardadas en CSV.");
-        add("saved_title", "Saved", "נשמר", "تم الحفظ", "Сохранено", "Guardado");
-
-        // Add/Edit Question Dialog
-        add("add_question", "Add Question", "הוסף שאלה", "إضافة سؤال", "Добавить вопрос", "Añadir pregunta");
-        add("edit_question", "Edit Question", "ערוך שאלה", "تعديل سؤال", "Редактировать вопрос", "Editar pregunta");
-        add("add_new_question", "Add New Question", "הוסף שאלה חדשה", "إضافة سؤال جديد", "Добавить новый вопрос", "Añadir nueva pregunta");
-        add("text", "Text", "טקסט", "النص", "Текст", "Texto");
-        add("option_a", "Option A", "אפשרות א", "الخيار أ", "Вариант A", "Opción A");
-        add("option_b", "Option B", "אפשרות ב", "الخيار ب", "Вариант B", "Opción B");
-        add("option_c", "Option C", "אפשרות ג", "الخيار ج", "Вариант C", "Opción C");
-        add("option_d", "Option D", "אפשרות ד", "الخيار د", "Вариант D", "Opción D");
-        add("correct_option", "Correct", "נכונה", "الصحيحة", "Правильный", "Correcta");
-        add("difficulty_level", "Difficulty", "רמה", "المستوى", "Уровень", "Nivel");
-        add("text_empty", "Text is empty.", "הטקסט ריק.", "النص فارغ.", "Текст пустой.", "El texto está vacío.");
-        add("invalid_input", "Invalid input: ", "קלט לא תקין: ", "إدخال غير صالح: ", "Неверный ввод: ", "Entrada inválida: ");
+        add("select_question_edit", "Please select a question to edit", "אנא בחר שאלה לעריכה", "يرجى اختيار سؤال للتعديل", "Выберите вопрос для редактирования", "Por favor selecciona una pregunta para editar");
+        add("select_question_delete", "Please select a question to delete", "אנא בחר שאלה למחיקה", "يرجى اختيار سؤال للحذف", "Выберите вопрос для удаления", "Por favor selecciona una pregunta para eliminar");
+        add("no_selection", "No Selection", "לא נבחרה שאלה", "لا يوجد اختيار", "Нет выбора", "Sin selección");
+        add("delete_question", "Delete Question", "מחיקת שאלה", "حذف سؤال", "Удалить вопрос", "Eliminar pregunta");
+        add("delete_confirm", "Are you sure you want to delete this question?\nThis action cannot be undone.",
+                "האם אתה בטוח שברצונך למחוק את השאלה הזו?\nלא ניתן לבטל פעולה זו.",
+                "هل أنت متأكد أنك تريد حذف هذا السؤال؟\nلا يمكن التراجع عن هذا الإجراء.",
+                "Вы уверены, что хотите удалить этот вопрос?\nЭто действие нельзя отменить.",
+                "¿Estás seguro de que quieres eliminar esta pregunta?\nEsta acción no se puede deshacer.");
+        add("translation_failed", "Translation failed. Check Azure key / internet.",
+                "תרגום נכשל. בדקי מפתח Azure/אינטרנט.",
+                "فشلت الترجمة. تحقق من مفتاح Azure / الإنترنت.",
+                "Ошибка перевода. Проверьте ключ Azure / интернет.",
+                "La traducción falló. Verifica la clave de Azure / internet.");
         add("error", "Error", "שגיאה", "خطأ", "Ошибка", "Error");
+        add("could_not_load", "Could not load question", "לא ניתן לטעון את השאלה", "تعذر تحميل السؤال", "Не удалось загрузить вопрос", "No se pudo cargar la pregunta");
+        add("questions_saved", "Questions saved to CSV.", "השאלות נשמרו לקובץ CSV.", "تم حفظ الأسئلة في CSV.", "Вопросы сохранены в CSV.", "Preguntas guardadas en CSV.");
+        add("saved", "Saved", "נשמר", "تم الحفظ", "Сохранено", "Guardado");
+        add("add_new_question", "Add New Question", "הוסף שאלה חדשה", "أضف سؤالاً جديداً", "Добавить новый вопрос", "Añadir nueva pregunta");
+        add("edit_question", "Edit Question", "ערוך שאלה", "تعديل سؤال", "Редактировать вопрос", "Editar pregunta");
+        add("id", "ID", "מזהה", "المعرف", "ID", "ID");
+        add("question_text", "Question Text", "טקסט השאלה", "نص السؤال", "Текст вопроса", "Texto de la pregunta");
+        add("option_a", "Option A", "תשובה א", "الخيار أ", "Вариант A", "Opción A");
+        add("option_b", "Option B", "תשובה ב", "الخيار ب", "Вариант B", "Opción B");
+        add("option_c", "Option C", "תשובה ג", "الخيار ج", "Вариант C", "Opción C");
+        add("option_d", "Option D", "תשובה ד", "الخيار د", "Вариант D", "Opción D");
+        add("correct_answer_label", "Correct Answer", "תשובה נכונה", "الإجابة الصحيحة", "Правильный ответ", "Respuesta correcta");
+        add("difficulty_label", "Difficulty", "רמת קושי", "الصعوبة", "Сложность", "Dificultad");
+        add("sort_hint", "Tip: Click on column headers to sort", "טיפ: ניתן ללחוץ על כותרות העמודות כדי למיין",
+                "تلميح: انقر على عناوين الأعمدة للترتيب", "Совет: нажмите на заголовки столбцов для сортировки",
+                "Consejo: Haz clic en los encabezados de las columnas para ordenar");
 
-        // Admin Access Dialog
-        add("admin_access", "Admin Access", "גישת מנהל", "وصول المسؤول", "Доступ администратора", "Acceso de administrador");
-        add("enter_admin_password", "Enter Admin Password:", "הזן סיסמת מנהל:", "أدخل كلمة مرور المسؤول:", "Введите пароль администратора:", "Ingresa la contraseña de admin:");
-        add("access_denied", "Access denied.", "הגישה נדחתה.", "تم رفض الوصول.", "Доступ запрещён.", "Acceso denegado.");
-        add("wrong_password", "Wrong password", "סיסמה שגויה", "كلمة مرور خاطئة", "Неверный пароль", "Contraseña incorrecta");
+        // ** NEW KEYS FOR VALIDATION **
+        add("validation_error", "Validation Error", "שגיאת אימות", "خطأ في التحقق", "Ошибка проверки", "Error de validación");
+        add("fill_all_fields", "All fields must be filled.", "יש למלא את כל השדות.", "يجب ملء جميع الحقول.", "Все поля должны быть заполнены.", "Todos los campos deben ser completados.");
 
-        // Table headers for Question Management
-        add("header_id", "ID", "מזהה", "المعرف", "ID", "ID");
-        add("header_text", "Text", "טקסט", "النص", "Текст", "Texto");
-        add("header_a", "A", "א", "أ", "A", "A");
-        add("header_b", "B", "ב", "ب", "B", "B");
-        add("header_c", "C", "ג", "ج", "C", "C");
-        add("header_d", "D", "ד", "د", "D", "D");
-        add("header_correct", "Correct", "נכונה", "الصحيحة", "Правильный", "Correcta");
-        add("header_difficulty", "Difficulty", "רמה", "المستوى", "Уровень", "Nivel");
-
-        // Exit/Restart Confirmation (ONLY for in-game, not for menus)
-        add("exit_title", "Exit", "יציאה", "خروج", "Выход", "Salir");
-        add("exit_confirm_msg", "Are you sure you want to exit?\nProgress will be lost.",
-                "האם אתה בטוח שברצונך לצאת?\nההתקדמות תאבד.",
-                "هل أنت متأكد أنك تريد الخروج؟\nسيتم فقدان التقدم.",
-                "Вы уверены, что хотите выйти?\nПрогресс будет потерян.",
-                "¿Estás seguro de que quieres salir?\nSe perderá el progreso.");
-        add("exit_game", "Exit Game", "יציאה מהמשחק", "الخروج من اللعبة", "Выйти из игры", "Salir del juego");
-        add("exit_game_confirm", "Are you sure you want to exit?\nGame progress will be lost.",
-                "האם אתה בטוח שברצונך לצאת?\nהתקדמות המשחק תאבד.",
+        add("exit_game", "Exit Game", "יציאה מהמשחק", "الخروج من اللعبة", "Выход из игры", "Salir del juego");
+        add("exit_confirm", "Are you sure you want to exit?\nGame progress will be lost.",
+                "האם אתה בטוח שברצונך לצאת?\nההתקדמות במשחק תאבד.",
                 "هل أنت متأكد أنك تريد الخروج؟\nسيتم فقدان تقدم اللعبة.",
                 "Вы уверены, что хотите выйти?\nПрогресс игры будет потерян.",
                 "¿Estás seguro de que quieres salir?\nSe perderá el progreso del juego.");
-        add("restart_game", "Restart Game", "התחל מחדש", "إعادة اللعبة", "Перезапустить игру", "Reiniciar juego");
+        add("restart_game", "Restart Game", "התחלה מחדש", "إعادة اللعبة", "Начать заново", "Reiniciar juego");
         add("restart_confirm", "Are you sure you want to restart?\nCurrent progress will be lost.",
                 "האם אתה בטוח שברצונך להתחיל מחדש?\nההתקדמות הנוכחית תאבד.",
                 "هل أنت متأكد أنك تريد إعادة اللعبة؟\nسيتم فقدان التقدم الحالي.",
                 "Вы уверены, что хотите начать заново?\nТекущий прогресс будет потерян.",
                 "¿Estás seguro de que quieres reiniciar?\nSe perderá el progreso actual.");
-
-        // StartPanel specific
+        add("exit_title", "Exit", "יציאה", "خروج", "Выход", "Salir");
+        add("exit_confirm_msg", "Are you sure you want to exit?", "האם אתה בטוח שברצונך לצאת?",
+                "هل أنت متأكد أنك تريد الخروج؟", "Вы уверены, что хотите выйти?", "¿Estás seguro de que quieres salir?");
+        add("restart_title", "Restart", "התחל מחדש", "إعادة", "Заново", "Reiniciar");
+        add("restart_confirm_msg", "Are you sure you want to restart?\nCurrent progress will be lost.",
+                "האם אתה בטוח שברצונך להתחיל מחדש?\nההתקדמות הנוכחית תאבד.",
+                "هل أنت متأكد أنك تريد إعادة اللعبة؟\nسيتم فقدان التقدم الحالي.",
+                "Вы уверены, что хотите начать заново?\nТекущий прогресс будет потерян.",
+                "¿Estás seguro de que quieres reiniciar?\nSe perderá el progreso actual.");
         add("player1", "PLAYER 1", "שחקן 1", "اللاعب 1", "ИГРОК 1", "JUGADOR 1");
         add("player2", "PLAYER 2", "שחקן 2", "اللاعب 2", "ИГРОК 2", "JUGADOR 2");
         add("level", "LEVEL:", "רמת קושי:", "المستوى:", "УРОВЕНЬ:", "NIVEL:");
@@ -178,23 +173,49 @@ public class LanguageManager {
         add("surprises_count", "Surprises", "הפתעות", "مفاجآت", "Сюрпризы", "Sorpresas");
         add("missing_names", "Please enter names for both players.", "אנא הזן שמות לשני השחקנים.", "يرجى إدخال أسماء لكلا اللاعبين.", "Введите имена обоих игроков.", "Por favor, ingresa los nombres de ambos jugadores.");
         add("missing_names_title", "Missing Names", "חסרים שמות", "أسماء مفقودة", "Отсутствуют имена", "Faltan nombres");
-
-        // Yes/No buttons
         add("yes", "Yes", "כן", "نعم", "Да", "Sí");
         add("no", "No", "לא", "لا", "Нет", "No");
-
-        // Game History
         add("game_history", "Game History", "היסטוריית משחקים", "سجل الألعاب", "История игр", "Historial de juegos");
         add("no_history", "No game history yet.", "אין היסטוריית משחקים עדיין.", "لا يوجد سجل ألعاب بعد.", "История игр пока пуста.", "Aún no hay historial de juegos.");
         add("back", "Back", "חזור", "رجوع", "Назад", "Volver");
-
-        // How to Play - Full translation
+        add("search", "Search", "חפש", "بحث", "Поиск", "Buscar");
+        add("search_label", "Search:", "חיפוש:", "بحث:", "Поиск:", "Buscar:");
+        add("result_label", "Result:", "תוצאה:", "النتيجة:", "Результат:", "Resultado:");
+        add("won", "WON", "ניצחון", "فوز", "ПОБЕДА", "GANADO");
+        add("lost", "LOST", "הפסד", "خسارة", "ПОРАЖЕНИЕ", "PERDIDO");
+        add("players", "Players", "שחקנים", "اللاعبون", "Игроки", "Jugadores");
+        add("date_time", "Date / Time", "תאריך / שעה", "التاريخ / الوقت", "Дата / Время", "Fecha / Hora");
+        add("final_score", "Final Score", "ניקוד סופי", "النتيجة النهائية", "Итоговый счёт", "Puntuación final");
+        add("lives_left", "Lives Left", "חיים נותרו", "الأرواح المتبقية", "Осталось жизней", "Vidas restantes");
+        add("correct_answers", "Correct Ans", "תשובות נכונות", "إجابات صحيحة", "Правильных ответов", "Respuestas correctas");
+        add("accuracy", "Accuracy", "דיוק", "الدقة", "Точность", "Precisión");
+        add("duration", "Duration", "משך זמן", "المدة", "Продолжительность", "Duración");
+        add("player", "Player", "שחקן", "اللاعب", "Игрок", "Jugador");
+        add("total_games", "Total Games", "סה\"כ משחקים", "إجمالي الألعاب", "Всего игр", "Total de juegos");
+        add("best_score", "Best Score", "תוצאה טובה", "أفضل نتيجة", "Лучший счёт", "Mejor puntuación");
+        add("avg_accuracy", "Avg Accuracy", "דיוק ממוצע", "متوسط الدقة", "Средняя точность", "Precisión promedio");
+        add("pref_difficulty", "Pref Difficulty", "רמה מועדפת", "الصعوبة المفضلة", "Любимая сложность", "Dificultad preferida");
+        add("flag", "Flag", "דגל", "علامة", "Флаг", "Bandera");
+        add("no_flags_left", "No flags left!\nYou already used all flags.\nRemove a flag to place a new one.",
+                "אין דגלים נותרים!\nכבר השתמשת בכל הדגלים.\nהסר דגל כדי להניח חדש.",
+                "لا توجد أعلام متبقية!\nلقد استخدمت جميع الأعلام.\nأزل علامة لوضع واحدة جديدة.",
+                "Флаги закончились!\nВы использовали все флаги.\nУберите флаг, чтобы поставить новый.",
+                "¡No quedan banderas!\nYa usaste todas las banderas.\nQuita una bandera para colocar una nueva.");
+        add("reward", "Reward", "פרס", "مكافأة", "Награда", "Recompensa");
+        add("penalty", "Penalty", "עונש", "عقوبة", "Штраф", "Penalización");
+        add("reveal_mine", "reveal 1 mine", "חשיפת מוקש אחד", "كشف لغم واحد", "открыть 1 мину", "revelar 1 mina");
+        add("revealed_mine", "revealed 1 mine", "נחשף מוקש אחד", "تم كشف لغم واحد", "открыта 1 мина", "se reveló 1 mina");
+        add("reveal_3x3", "reveal random 3x3", "חשיפת 3x3 אקראי", "كشف 3x3 عشوائي", "открыть случайную 3x3 область", "revelar 3x3 aleatorio");
+        add("revealed_3x3", "revealed random 3x3 area", "נחשף אזור 3x3 אקראי", "تم كشف منطقة 3x3 عشوائية", "открыта случайная область 3x3", "se reveló área 3x3 aleatoria");
+        add("or_nothing", "OR nothing", "או כלום", "أو لا شيء", "ИЛИ ничего", "O nada");
+        add("chosen_nothing", "Chosen: nothing", "נבחר: כלום", "المختار: لا شيء", "Выбрано: ничего", "Elegido: nada");
+        add("chosen", "Chosen", "נבחר", "المختار", "Выбрано", "Elegido");
         add("how_to_play", "HOW TO PLAY", "איך לשחק", "كيفية اللعب", "КАК ИГРАТЬ", "CÓMO JUGAR");
         add("how_to_play_intro", "Two players, each has a board.", "שני שחקנים, לכל אחד לוח.", "لاعبان، لكل منهما لوحة.", "Два игрока, у каждого своё поле.", "Dos jugadores, cada uno tiene un tablero.");
         add("how_to_play_shared", "You share lives and score.", "אתם חולקים חיים וניקוד.", "تتشاركون في الأرواح والنقاط.", "Вы делите жизни и очки.", "Comparten vidas y puntuación.");
         add("how_to_play_turn_title", "Your turn:", "התור שלך:", "دورك:", "Ваш ход:", "Tu turno:");
         add("how_to_play_left_click", "Left click = reveal a cell.", "לחיצה שמאלית = חשוף תא.", "النقر الأيسر = كشف خلية.", "Левый клик = открыть клетку.", "Clic izquierdo = revelar celda.");
-        add("how_to_play_right_click", "Right click = flag a cell you think is a mine.", "לחיצה ימנית = סמן תא שאתה חושב שהוא מוקש.", "النقر الأيمن = وضع علامة على خلية تعتقد أنها لغم.", "Правый клик = отметить клетку как мину.", "Clic derecho = marcar celda como mina.");
+        add("how_to_play_right_click", "Right click = flag a cell you think is a mine.", "לחיצה ימנית = סמן תא שאתה חושב שהוא מוקש.", "النقر الأיمن = وضع علامة على خلية تعتقد أنها لغم.", "Правый клик = отметить клетку как мину.", "Clic derecho = marcar celda como mina.");
         add("how_to_play_turn_switch", "After your move, the turn switches.", "אחרי המהלך שלך, התור עובר.", "بعد حركتك، ينتقل الدور.", "После хода очередь переходит.", "Después de tu movimiento, el turno cambia.");
         add("how_to_play_cell_types", "Cell types:", "סוגי תאים:", "أنواع الخلايا:", "Типы клеток:", "Tipos de celdas:");
         add("how_to_play_mine", "Mine – losing a life if revealed.", "מוקש – מאבדים חיים אם נחשף.", "لغم – تفقد حياة إذا كُشف.", "Мина – теряете жизнь при открытии.", "Mina – pierdes una vida si se revela.");
@@ -224,16 +245,10 @@ public class LanguageManager {
         return result == null ? key : result;
     }
 
-    /**
-     * Check if a language is RTL (Right-to-Left)
-     */
     public static boolean isRTL(Language lang) {
         return lang == Language.HE || lang == Language.AR;
     }
 
-    /**
-     * Get the language display name in its native form
-     */
     public static String getDisplayName(Language lang) {
         return switch (lang) {
             case EN -> "English";
@@ -244,33 +259,31 @@ public class LanguageManager {
         };
     }
 
-    /**
-     * Get all available languages
-     */
     public static Language[] getAllLanguages() {
         return Language.values();
     }
 
-    /**
-     * Get the next language in rotation (for cycling through languages)
-     */
     public static Language getNextLanguage(Language current) {
         Language[] all = Language.values();
         int idx = current.ordinal();
         return all[(idx + 1) % all.length];
     }
 
-    /**
-     * Get font size multiplier for Arabic (needs bigger text)
-     */
     public static float getFontSizeMultiplier(Language lang) {
         return (lang == Language.AR) ? 1.25f : 1.0f;
     }
 
-    /**
-     * Get adjusted font size for current language
-     */
     public static int getAdjustedFontSize(int baseSize, Language lang) {
         return Math.round(baseSize * getFontSizeMultiplier(lang));
+    }
+
+    public static String getLanguageCode(Language lang) {
+        return switch (lang) {
+            case EN -> "en";
+            case HE -> "he";
+            case AR -> "ar";
+            case RU -> "ru";
+            case ES -> "es";
+        };
     }
 }

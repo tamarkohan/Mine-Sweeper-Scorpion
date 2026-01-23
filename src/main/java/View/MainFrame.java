@@ -172,13 +172,14 @@ public class MainFrame extends JFrame
     // =================================================================
 
     private void showHowToPlayDialog() {
-        JDialog dialog = new JDialog(this, "How to Play", true);
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        boolean isRTL = LanguageManager.isRTL(lang);
+
+        String dialogTitle = getHowToPlayTitle(lang);
+        JDialog dialog = new JDialog(this, dialogTitle, true);
         dialog.setUndecorated(true);
         dialog.setSize(700, 520);
         dialog.setLocationRelativeTo(this);
-
-        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
-        boolean isHe = (lang == LanguageManager.Language.HE);
 
         JPanel contentPanel = new JPanel(new BorderLayout());
         contentPanel.setBackground(Color.BLACK);
@@ -188,7 +189,7 @@ public class MainFrame extends JFrame
                 BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
 
-        String titleText = isHe ? "הוראות משחק" : "HOW TO PLAY";
+        String titleText = getHowToPlayTitle(lang);
         JLabel titleLabel = new JLabel(titleText, SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 22));
         titleLabel.setForeground(Color.WHITE);
@@ -207,45 +208,12 @@ public class MainFrame extends JFrame
         styleSheet.addRule("p { margin-top: 8px; margin-bottom: 8px; }");
         textPane.setEditorKit(kit);
 
-        String htmlContent;
-        if (isHe) {
+        String htmlContent = getHowToPlayContent(lang);
+
+        if (isRTL) {
             textPane.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-            htmlContent = "<html><body dir='rtl' style='text-align: right;'>" +
-                    "<p><b>שני שחקנים, לכל אחד לוח משלו.</b><br>" +
-                    "אתם חולקים חיים וניקוד משותפים.</p>" +
-                    "<p><b>התור שלך:</b><br>" +
-                    "קליק שמאלי = חשיפת תא.<br>" +
-                    "קליק ימני = סימון דגל על חשד למוקש.<br>" +
-                    "• בסיום המהלך, התור עובר לשחקן השני.</p>" +
-                    "<p><b>סוגי תאים:</b><br>" +
-                    "<span style='color: #FF5050;'>מוקש</span> – איבוד חיים בעת חשיפה.<br>" +
-                    "<span style='color: #50B4FF;'>מספר</span> – מציין כמה מוקשים יש מסביב.<br>" +
-                    "<span style='color: #FFFF00;'>שאלה (Q)</span> – בחשיפה, ניתן לשלם נקודות ולענות על חידה (תשובה נכונה נותנת בונוס).<br>" +
-                    "<span style='color: #FF00FF;'>הפתעה (S)</span> – בחשיפה, ניתן לשלם נקודות ולקבל אפקט אקראי (טוב או רע).</p>" +
-                    "<p><b>ניצחון / הפסד:</b><br>" +
-                    "ניצחון = כל התאים הבטוחים נחשפו.<br>" +
-                    "הפסד = החיים המשותפים הגיעו ל-0.<br>" +
-                    "חיים שנותרו מומרים לניקוד בונוס בסוף.</p>" +
-                    "</body></html>";
         } else {
             textPane.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
-            htmlContent = "<html><body>" +
-                    "<p><b>Two players, each has a board.</b><br>" +
-                    "You share lives and score.</p>" +
-                    "<p><b>Your turn:</b><br>" +
-                    "Left click = reveal a cell.<br>" +
-                    "Right click = flag a cell you think is a mine.<br>" +
-                    "• After your move, the turn switches.</p>" +
-                    "<p><b>Cell types:</b><br>" +
-                    "<span style='color: #FF5050;'>Mine</span> – losing a life if revealed.<br>" +
-                    "<span style='color: #50B4FF;'>Number</span> – tells how many mines around.<br>" +
-                    "<span style='color: #FFFF00;'>Question (Q)</span> – after reveal, you can pay points and answer a quiz (correct gives bonus, wrong can hurt).<br>" +
-                    "<span style='color: #FF00FF;'>Surprise (S)</span> – after reveal, you can pay points for random good/bad effect.</p>" +
-                    "<p><b>Win / Lose:</b><br>" +
-                    "Win = all safe cells cleared.<br>" +
-                    "Lose = shared lives reach 0.<br>" +
-                    "Remaining lives turn into extra score at the end.</p>" +
-                    "</body></html>";
         }
 
         textPane.setText(htmlContent);
@@ -258,7 +226,7 @@ public class MainFrame extends JFrame
 
         contentPanel.add(textWrapper, BorderLayout.CENTER);
 
-        String btnText = isHe ? "אישור" : "OK";
+        String btnText = LanguageManager.get("ok", lang);
         JButton closeBtn = createStyledButton(btnText);
         closeBtn.addActionListener(e -> {
             SoundManager.click();   // play click sound
@@ -275,11 +243,116 @@ public class MainFrame extends JFrame
         dialog.setVisible(true);
     }
 
+    private String getHowToPlayTitle(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> "הוראות משחק";
+            case AR -> "كيفية اللعب";
+            case RU -> "КАК ИГРАТЬ";
+            case ES -> "CÓMO JUGAR";
+            default -> "HOW TO PLAY";
+        };
+    }
+
+    private String getHowToPlayContent(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> "<html><body dir='rtl' style='text-align: right;'>" +
+                    "<p><b>שני שחקנים, לכל אחד לוח משלו.</b><br>" +
+                    "אתם חולקים חיים וניקוד.</p>" +
+                    "<p><b>בתורך:</b><br>" +
+                    "לחיצה שמאלית = חשיפת תא.<br>" +
+                    "לחיצה ימנית = סימון תא כמוקש.<br>" +
+                    "• לאחר המהלך, התור עובר לשחקן השני.</p>" +
+                    "<p><b>סוגי תאים:</b><br>" +
+                    "<span style='color: #FF5050;'>מוקש</span> – פגיעה בחיים אם נחשף.<br>" +
+                    "<span style='color: #50B4FF;'>מספר</span> – מציין כמה מוקשים מסביב.<br>" +
+                    "<span style='color: #FFFF00;'>שאלה (Q)</span> – לאחר חשיפה, ניתן לשלם נקודות ולענות על שאלה (תשובה נכונה נותנת בונוס, שגויה עלולה להזיק).<br>" +
+                    "<span style='color: #FF00FF;'>הפתעה (S)</span> – לאחר חשיפה, ניתן לשלם נקודות לאפקט אקראי טוב/רע.</p>" +
+                    "<p><b>ניצחון / הפסד:</b><br>" +
+                    "ניצחון = כל התאים הבטוחים נחשפו.<br>" +
+                    "הפסד = החיים המשותפים הגיעו ל-0.<br>" +
+                    "חיים שנותרו הופכים לניקוד נוסף בסוף.</p>" +
+                    "</body></html>";
+
+            case AR -> "<html><body dir='rtl' style='text-align: right;'>" +
+                    "<p><b>لاعبان، لكل منهما لوحة خاصة.</b><br>" +
+                    "تتشاركون الأرواح والنقاط.</p>" +
+                    "<p><b>في دورك:</b><br>" +
+                    "النقر الأيسر = كشف خلية.<br>" +
+                    "النقر الأيمن = وضع علامة على خلية تعتقد أنها لغم.<br>" +
+                    "• بعد حركتك، ينتقل الدور للاعب الآخر.</p>" +
+                    "<p><b>أنواع الخلايا:</b><br>" +
+                    "<span style='color: #FF5050;'>لغم</span> – تخسر حياة إذا كُشف.<br>" +
+                    "<span style='color: #50B4FF;'>رقم</span> – يُظهر عدد الألغام المحيطة.<br>" +
+                    "<span style='color: #FFFF00;'>سؤال (Q)</span> – بعد الكشف، يمكنك دفع نقاط والإجابة على سؤال (الإجابة الصحيحة تعطي مكافأة، الخاطئة قد تضر).<br>" +
+                    "<span style='color: #FF00FF;'>مفاجأة (S)</span> – بعد الكشف، يمكنك دفع نقاط لتأثير عشوائي جيد/سيء.</p>" +
+                    "<p><b>الفوز / الخسارة:</b><br>" +
+                    "الفوز = كشف جميع الخلايا الآمنة.<br>" +
+                    "الخسارة = وصول الأرواح المشتركة إلى 0.<br>" +
+                    "الأرواح المتبقية تتحول إلى نقاط إضافية في النهاية.</p>" +
+                    "</body></html>";
+
+            case RU -> "<html><body>" +
+                    "<p><b>Два игрока, у каждого своё поле.</b><br>" +
+                    "Вы делите жизни и очки.</p>" +
+                    "<p><b>Ваш ход:</b><br>" +
+                    "Левый клик = открыть ячейку.<br>" +
+                    "Правый клик = пометить ячейку как мину.<br>" +
+                    "• После хода очередь переходит другому игроку.</p>" +
+                    "<p><b>Типы ячеек:</b><br>" +
+                    "<span style='color: #FF5050;'>Мина</span> – потеря жизни при открытии.<br>" +
+                    "<span style='color: #50B4FF;'>Число</span> – показывает количество мин вокруг.<br>" +
+                    "<span style='color: #FFFF00;'>Вопрос (Q)</span> – после открытия можно заплатить очки и ответить на вопрос (правильный ответ даёт бонус, неправильный может навредить).<br>" +
+                    "<span style='color: #FF00FF;'>Сюрприз (S)</span> – после открытия можно заплатить очки за случайный хороший/плохой эффект.</p>" +
+                    "<p><b>Победа / Поражение:</b><br>" +
+                    "Победа = все безопасные ячейки открыты.<br>" +
+                    "Поражение = общие жизни достигли 0.<br>" +
+                    "Оставшиеся жизни превращаются в дополнительные очки в конце.</p>" +
+                    "</body></html>";
+
+            case ES -> "<html><body>" +
+                    "<p><b>Dos jugadores, cada uno tiene un tablero.</b><br>" +
+                    "Comparten vidas y puntuación.</p>" +
+                    "<p><b>Tu turno:</b><br>" +
+                    "Clic izquierdo = revelar una celda.<br>" +
+                    "Clic derecho = marcar una celda que crees que es una mina.<br>" +
+                    "• Después de tu movimiento, el turno pasa al otro jugador.</p>" +
+                    "<p><b>Tipos de celdas:</b><br>" +
+                    "<span style='color: #FF5050;'>Mina</span> – pierdes una vida si se revela.<br>" +
+                    "<span style='color: #50B4FF;'>Número</span> – indica cuántas minas hay alrededor.<br>" +
+                    "<span style='color: #FFFF00;'>Pregunta (Q)</span> – después de revelar, puedes pagar puntos y responder una pregunta (respuesta correcta da bonificación, incorrecta puede perjudicar).<br>" +
+                    "<span style='color: #FF00FF;'>Sorpresa (S)</span> – después de revelar, puedes pagar puntos por un efecto aleatorio bueno/malo.</p>" +
+                    "<p><b>Ganar / Perder:</b><br>" +
+                    "Ganar = todas las celdas seguras reveladas.<br>" +
+                    "Perder = las vidas compartidas llegan a 0.<br>" +
+                    "Las vidas restantes se convierten en puntos extra al final.</p>" +
+                    "</body></html>";
+
+            default -> "<html><body>" +
+                    "<p><b>Two players, each has a board.</b><br>" +
+                    "You share lives and score.</p>" +
+                    "<p><b>Your turn:</b><br>" +
+                    "Left click = reveal a cell.<br>" +
+                    "Right click = flag a cell you think is a mine.<br>" +
+                    "• After your move, the turn switches.</p>" +
+                    "<p><b>Cell types:</b><br>" +
+                    "<span style='color: #FF5050;'>Mine</span> – losing a life if revealed.<br>" +
+                    "<span style='color: #50B4FF;'>Number</span> – tells how many mines around.<br>" +
+                    "<span style='color: #FFFF00;'>Question (Q)</span> – after reveal, you can pay points and answer a quiz (correct gives bonus, wrong can hurt).<br>" +
+                    "<span style='color: #FF00FF;'>Surprise (S)</span> – after reveal, you can pay points for random good/bad effect.</p>" +
+                    "<p><b>Win / Lose:</b><br>" +
+                    "Win = all safe cells cleared.<br>" +
+                    "Lose = shared lives reach 0.<br>" +
+                    "Remaining lives turn into extra score at the end.</p>" +
+                    "</body></html>";
+        };
+    }
+
     private void handleAdminQuestionManagement() {
         LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
-        boolean isHe = (lang == LanguageManager.Language.HE);
+        boolean isRTL = LanguageManager.isRTL(lang);
 
-        JDialog dialog = new JDialog(this, isHe ? "גישת מנהל" : "Admin Access", true);
+        String dialogTitle = getAdminAccessTitle(lang);
+        JDialog dialog = new JDialog(this, dialogTitle, true);
         dialog.setUndecorated(true);
         dialog.setLayout(new BorderLayout());
 
@@ -290,11 +363,11 @@ public class MainFrame extends JFrame
                 BorderFactory.createEmptyBorder(30, 20, 20, 20)
         ));
 
-        if (isHe) {
+        if (isRTL) {
             content.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         }
 
-        String labelText = isHe ? "הזן סיסמת מנהל:" : "Enter Admin Password:";
+        String labelText = getEnterPasswordText(lang);
         JLabel lbl = new JLabel(labelText, SwingConstants.CENTER);
         lbl.setForeground(Color.WHITE);
         lbl.setFont(new Font("Arial", Font.BOLD, 16));
@@ -345,8 +418,8 @@ public class MainFrame extends JFrame
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         btnPanel.setBackground(BG_COLOR);
 
-        String okText = isHe ? "אישור" : "OK";
-        String cancelText = isHe ? "ביטול" : "Cancel";
+        String okText = LanguageManager.get("ok", lang);
+        String cancelText = LanguageManager.get("cancel", lang);
 
         JButton btnOk = createStyledButton(okText);
         JButton btnCancel = createStyledButton(cancelText);
@@ -363,7 +436,7 @@ public class MainFrame extends JFrame
         });
 
 
-        if (isHe) {
+        if (isRTL) {
             btnPanel.add(btnCancel);
             btnPanel.add(btnOk);
         } else {
@@ -392,8 +465,8 @@ public class MainFrame extends JFrame
                 });
                 frame.setVisible(true);
             } else {
-                String errMsg = isHe ? "הגישה נדחתה." : "Access denied.";
-                String errTitle = isHe ? "סיסמה שגויה" : "Wrong password";
+                String errMsg = getAccessDeniedMessage(lang);
+                String errTitle = getWrongPasswordTitle(lang);
                 JOptionPane.showMessageDialog(dialog,
                         errMsg,
                         errTitle,
@@ -404,6 +477,46 @@ public class MainFrame extends JFrame
 
         dialog.getRootPane().setDefaultButton(btnOk);
         dialog.setVisible(true);
+    }
+
+    private String getAdminAccessTitle(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> "גישת מנהל";
+            case AR -> "وصول المسؤول";
+            case RU -> "Доступ администратора";
+            case ES -> "Acceso de administrador";
+            default -> "Admin Access";
+        };
+    }
+
+    private String getEnterPasswordText(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> "הזן סיסמת מנהל:";
+            case AR -> "أدخل كلمة مرور المسؤول:";
+            case RU -> "Введите пароль администратора:";
+            case ES -> "Ingrese contraseña de administrador:";
+            default -> "Enter Admin Password:";
+        };
+    }
+
+    private String getAccessDeniedMessage(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> "הגישה נדחתה.";
+            case AR -> "تم رفض الوصول.";
+            case RU -> "Доступ запрещён.";
+            case ES -> "Acceso denegado.";
+            default -> "Access denied.";
+        };
+    }
+
+    private String getWrongPasswordTitle(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> "סיסמה שגויה";
+            case AR -> "كلمة مرور خاطئة";
+            case RU -> "Неверный пароль";
+            case ES -> "Contraseña incorrecta";
+            default -> "Wrong password";
+        };
     }
 
     private JButton createStyledButton(String text) {
