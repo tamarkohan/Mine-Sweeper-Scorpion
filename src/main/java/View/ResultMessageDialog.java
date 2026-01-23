@@ -1,5 +1,8 @@
 package View;
 
+import Controller.GameController;
+import util.LanguageManager;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -12,7 +15,7 @@ public class ResultMessageDialog extends JDialog {
     private static final Color BG_COLOR = new Color(20, 25, 40);
     private static final Color TEXT_COLOR = Color.WHITE;
 
-    private ResultMessageDialog(Window owner, String title, String message, Color accentColor, boolean isHebrew) {
+    private ResultMessageDialog(Window owner, String title, String message, Color accentColor, boolean isRTL) {
         super(owner, title, ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setUndecorated(true);
@@ -57,7 +60,7 @@ public class ResultMessageDialog extends JDialog {
             }
         });
 
-        if (isHebrew) {
+        if (isRTL) {
             header.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
             titleLabel.setHorizontalAlignment(SwingConstants.RIGHT);
             header.add(titleLabel, BorderLayout.CENTER);
@@ -83,7 +86,7 @@ public class ResultMessageDialog extends JDialog {
             lineLabel.setForeground(TEXT_COLOR);
             lineLabel.setFont(new Font("Arial", Font.PLAIN, 14));
 
-            if (isHebrew) {
+            if (isRTL) {
                 lineLabel.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
                 lineLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
             } else {
@@ -99,7 +102,10 @@ public class ResultMessageDialog extends JDialog {
         footer.setOpaque(false);
         footer.setBorder(BorderFactory.createEmptyBorder(5, 10, 12, 10));
 
-        JButton okBtn = new JButton("OK");
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        String okText = LanguageManager.get("ok", lang);
+
+        JButton okBtn = new JButton(okText);
         okBtn.setBackground(accentColor);
         okBtn.setForeground(Color.WHITE);
         okBtn.setFont(new Font("Arial", Font.BOLD, 13));
@@ -130,8 +136,17 @@ public class ResultMessageDialog extends JDialog {
     /**
      * Shows a modal result dialog and blocks until closed.
      */
-    public static void show(Window owner, String title, String message, Color accentColor, boolean isHebrew) {
-        ResultMessageDialog dialog = new ResultMessageDialog(owner, title, message, accentColor, isHebrew);
+    public static void show(Window owner, String title, String message, Color accentColor, boolean isRTL) {
+        ResultMessageDialog dialog = new ResultMessageDialog(owner, title, message, accentColor, isRTL);
         dialog.setVisible(true);
+    }
+
+    /**
+     * Shows a modal result dialog using current language settings.
+     */
+    public static void show(Window owner, String title, String message, Color accentColor) {
+        LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
+        boolean isRTL = LanguageManager.isRTL(lang);
+        show(owner, title, message, accentColor, isRTL);
     }
 }

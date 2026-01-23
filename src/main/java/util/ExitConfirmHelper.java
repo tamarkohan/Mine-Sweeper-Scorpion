@@ -11,17 +11,15 @@ public final class ExitConfirmHelper {
 
     public static boolean confirmExit(Window owner) {
         var lang = GameController.getInstance().getCurrentLanguage();
-        boolean isHe = (lang == util.LanguageManager.Language.HE);
+        boolean isRTL = LanguageManager.isRTL(lang);
 
-        String title = isHe ? "יציאה" : "Exit";
-        String msg = isHe
-                ? "האם אתה בטוח שברצונך לצאת?\nההתקדמות תאבד."
-                : "Are you sure you want to exit?\nProgress will be lost.";
+        String title = LanguageManager.get("exit_title", lang);
+        String msg = LanguageManager.get("exit_confirm_msg", lang);
 
         // play sound when dialog opens
         SoundManager.exitDialog();
 
         // same style as game panel
-        return ConfirmDialog.show(owner, title, msg, new java.awt.Color(255, 200, 80), isHe);
+        return ConfirmDialog.show(owner, title, msg, new java.awt.Color(255, 200, 80), isRTL);
     }
 }
