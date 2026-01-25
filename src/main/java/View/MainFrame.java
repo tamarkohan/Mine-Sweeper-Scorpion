@@ -482,7 +482,7 @@ public class MainFrame extends JFrame
     private String getAdminAccessTitle(LanguageManager.Language lang) {
         return switch (lang) {
             case HE -> "גישת מנהל";
-            case AR -> "وصول المسؤول";
+            case AR -> "صلاحية المسؤول";
             case RU -> "Доступ администратора";
             case ES -> "Acceso de administrador";
             default -> "Admin Access";
@@ -502,7 +502,7 @@ public class MainFrame extends JFrame
     private String getAccessDeniedMessage(LanguageManager.Language lang) {
         return switch (lang) {
             case HE -> "הגישה נדחתה.";
-            case AR -> "تم رفض الوصول.";
+            case AR -> "تم رفض الصلاحية .";
             case RU -> "Доступ запрещён.";
             case ES -> "Acceso denegado.";
             default -> "Access denied.";

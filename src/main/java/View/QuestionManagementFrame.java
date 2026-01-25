@@ -430,7 +430,7 @@ public class QuestionManagementFrame extends JFrame {
     private String getDeleteMessage(LanguageManager.Language lang) {
         return switch (lang) {
             case HE -> "האם אתה בטוח שברצונך למחוק את השאלה הזו?\nלא ניתן לבטל פעולה זו.";
-            case AR -> "هل أنت متأكد أنك تريد حذف هذا السؤال؟\nلا يمكن التراجع عن هذا الإجراء.";
+            case AR -> "هل أنت متأكد أنك تريد حذف هذا السؤال؟\nلا يمكن الغاء هذا الإجراء.";
             case RU -> "Вы уверены, что хотите удалить этот вопрос?\nЭто действие нельзя отменить.";
             case ES -> "¿Estás seguro de que quieres eliminar esta pregunta?\nEsta acción no se puede deshacer.";
             default -> "Are you sure you want to delete this question?\nThis action cannot be undone.";
@@ -520,7 +520,7 @@ public class QuestionManagementFrame extends JFrame {
     private String[] getTableHeaders(LanguageManager.Language lang) {
         return switch (lang) {
             case HE -> new String[]{"מזהה", "טקסט", "א", "ב", "ג", "ד", "נכונה", "רמה"};
-            case AR -> new String[]{"المعرف", "النص", "أ", "ب", "ج", "د", "الصحيحة", "الصعوبة"};
+            case AR -> new String[]{"التسلسلي", "نص", "أ", "ب", "ج", "د", "الصحيح", "المستوى"};
             case RU -> new String[]{"ID", "Текст", "А", "Б", "В", "Г", "Правильный", "Сложность"};
             case ES -> new String[]{"ID", "Texto", "A", "B", "C", "D", "Correcta", "Dificultad"};
             default -> new String[]{"ID", "Text", "A", "B", "C", "D", "Correct", "Difficulty"};
@@ -1171,7 +1171,7 @@ public class QuestionManagementFrame extends JFrame {
             };
         }
 
-        private String getLabelId() { return switch (lang) { case HE -> "מזהה"; case AR -> "المعرف"; case RU -> "ID"; case ES -> "ID"; default -> "ID"; }; }
+        private String getLabelId() { return switch (lang) { case HE -> "מזהה"; case AR -> "الرقم التسلسلي"; case RU -> "ID"; case ES -> "ID"; default -> "ID"; }; }
         private String getLabelText() { return switch (lang) { case HE -> "טקסט השאלה"; case AR -> "نص السؤال"; case RU -> "Текст вопроса"; case ES -> "Texto de la pregunta"; default -> "Question Text"; }; }
         private String getLabelOptA() { return switch (lang) { case HE -> "תשובה א"; case AR -> "الخيار أ"; case RU -> "Вариант А"; case ES -> "Opción A"; default -> "Option A"; }; }
         private String getLabelOptB() { return switch (lang) { case HE -> "תשובה ב"; case AR -> "الخيار ب"; case RU -> "Вариант Б"; case ES -> "Opción B"; default -> "Option B"; }; }
@@ -1257,7 +1257,7 @@ public class QuestionManagementFrame extends JFrame {
         private String getEmptyTextError() { return switch (lang) { case HE -> "טקסט השאלה ריק."; case AR -> "نص السؤال فارغ."; case RU -> "Текст вопроса пуст."; case ES -> "El texto de la pregunta está vacío."; default -> "Question text is empty."; }; }
         private String getEmptyOptionError(char opt) { return switch (lang) { case HE -> "תשובה " + opt + " ריקה."; case AR -> "الخيار " + opt + " فارغ."; case RU -> "Вариант " + opt + " пуст."; case ES -> "La opción " + opt + " está vacía."; default -> "Option " + opt + " is empty."; }; }
         private String getErrorTitle() { return switch (lang) { case HE -> "שגיאה"; case AR -> "خطأ"; case RU -> "Ошибка"; case ES -> "Error"; default -> "Error"; }; }
-        private String getInvalidInputPrefix() { return switch (lang) { case HE -> "קלט לא תקין: "; case AR -> "إدخال غير صالح: "; case RU -> "Неверный ввод: "; case ES -> "Entrada no válida: "; default -> "Invalid input: "; }; }
+        private String getInvalidInputPrefix() { return switch (lang) { case HE -> "קלט לא תקין: "; case AR -> "تفاصيل غير صحيحة: "; case RU -> "Неверный ввод: "; case ES -> "Entrada no válida: "; default -> "Invalid input: "; }; }
 
         public Question getResult() {
             return result;

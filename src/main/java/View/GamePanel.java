@@ -779,12 +779,12 @@ public class GamePanel extends JPanel {
         // Fix arrow direction for RTL languages (Hebrew, Arabic)
         // In RTL, → should become ← so the change direction is correct when read right-to-left
         if (LanguageManager.isRTL(lang)) {
-            result = result.replace("->", "<-");
+            result = fixRtlNumberArrows(result);
         } else {
-            result = result.replace("->", "\u2192"); // → arrow for LTR languages
+            result = result.replace("->", " \u2192 ");
         }
-
         return result;
+
     }
 
     public void updateStatus() {
@@ -872,4 +872,19 @@ public class GamePanel extends JPanel {
         });
         resizeStabilizer.start();
     }
+
+    private String fixRtlNumberArrows(String s) {
+        if (s == null) return null;
+
+        s = s.replace("->", " \u2192 ");
+
+        String LRE = "\u202A";
+        String PDF = "\u202C";
+
+        s = s.replaceAll("(\\d+)\\s*\u2192\\s*(\\d+)", LRE + "$1 \u2192 $2" + PDF);
+
+        return s;
+    }
+
+
 }
