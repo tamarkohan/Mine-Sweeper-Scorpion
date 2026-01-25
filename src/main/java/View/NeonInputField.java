@@ -1,7 +1,10 @@
 package View;
 
+import util.LanguageManager;
+
 import javax.swing.*;
 import java.awt.*;
+import javax.swing.SwingConstants;
 
 public class NeonInputField extends JPanel {
 
@@ -76,4 +79,19 @@ public class NeonInputField extends JPanel {
         // Restored to stable height
         return new Dimension(customWidth, 72);
     }
+
+    public void applyLanguageDirection(LanguageManager.Language lang) {
+        boolean rtl = (lang == LanguageManager.Language.HE ||
+                lang == LanguageManager.Language.AR);
+
+        textField.setHorizontalAlignment(
+                rtl ? SwingConstants.RIGHT : SwingConstants.LEFT
+        );
+
+        textField.setComponentOrientation(
+                rtl ? ComponentOrientation.RIGHT_TO_LEFT
+                        : ComponentOrientation.LEFT_TO_RIGHT
+        );
+    }
+
 }
