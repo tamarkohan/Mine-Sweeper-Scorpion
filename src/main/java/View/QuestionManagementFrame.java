@@ -718,6 +718,12 @@ public class QuestionManagementFrame extends JFrame {
         return new CompoundBorder(new LineBorder(new Color(c.getRed(), c.getGreen(), c.getBlue(), 200), 2, true),
                 new EmptyBorder(10, 12, 10, 12));
     }
+    private Border neonFieldBorder(Color c) {
+        return new CompoundBorder(
+                new LineBorder(new Color(c.getRed(), c.getGreen(), c.getBlue(), 200), 2, true),
+                new EmptyBorder(4, 12, 4, 12) // פחות פדינג כדי שהטקסט ייראה טוב
+        );
+    }
 
     private void styleNeonLabel(JLabel l) {
         l.setForeground(TEXT_COLOR);
@@ -1010,11 +1016,13 @@ public class QuestionManagementFrame extends JFrame {
             setupDiffCombo();
 
             int fieldW = 360;
-            Dimension fieldMax = new Dimension(fieldW, 36);
+            int fieldH = 44;
+            Dimension fieldMax = new Dimension(fieldW, fieldH);
             for (JTextField f : new JTextField[]{idField, textField, aField, bField, cField, dField}) {
-                f.setPreferredSize(new Dimension(fieldW, 36));
+                f.setPreferredSize(new Dimension(fieldW, fieldH));
                 f.setMaximumSize(fieldMax);
             }
+
 
             JPanel root = new JPanel(new BorderLayout(14, 14));
             root.setBackground(DIALOG_BG);
@@ -1187,7 +1195,7 @@ public class QuestionManagementFrame extends JFrame {
             f.setForeground(TEXT_COLOR);
             f.setCaretColor(ACCENT_COLOR);
             f.setFont(new Font("Dialog", Font.PLAIN, 14));
-            f.setBorder(neonBorder(ACCENT_COLOR));
+            f.setBorder(neonFieldBorder(ACCENT_COLOR));
             if (LanguageManager.isRTL(lang)) f.setHorizontalAlignment(JTextField.RIGHT);
             else f.setHorizontalAlignment(JTextField.LEFT);
             if (!f.isEditable()) f.setForeground(Color.GRAY);
