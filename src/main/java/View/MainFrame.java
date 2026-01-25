@@ -116,6 +116,8 @@ public class MainFrame extends JFrame
 
         cardPanel.add(gamePanel, "GAME");
         cardLayout.show(cardPanel, "GAME");
+        gamePanel.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+        gamePanel.applyComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
     }
 
     @Override
