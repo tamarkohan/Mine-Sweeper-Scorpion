@@ -59,11 +59,19 @@ public class QuestionActivator extends SpecialCellActivator {
         //  existing "Easy game special effects"
         if (game.getDifficulty() == Model.Difficulty.EASY && isCorrect) {
             if (level == Game.QuestionLevel.MEDIUM) {
-                board.revealRandomMine();
-                return "\nSpecial effect: revealed 1 mine (reward).";
+                boolean revealed = board.revealRandomMine();
+                if (revealed) {
+                    return "\nSpecial effect: revealed 1 mine (reward).";
+                } else {
+                    return "\nSpecial effect: no unrevealed mines to show.";
+                }
             } else if (level == Game.QuestionLevel.HARD) {
-                board.revealRandom3x3AreaReward();
-                return "\nSpecial effect: revealed random 3x3 area (reward).";
+                int revealedCount = board.revealRandom3x3AreaReward();
+                if (revealedCount > 0) {
+                    return "\nSpecial effect: revealed random 3x3 area (reward).";
+                } else {
+                    return "\nSpecial effect: no unrevealed cells for 3x3 area.";
+                }
             }
         }
         return "";
@@ -83,7 +91,7 @@ public class QuestionActivator extends SpecialCellActivator {
         return result.details + "\n" +
                 "Activation cost: -" + cost + " pts" +
                 extra +
-                "\nScore: " + beforeScore + " → " + afterScore +
-                "\nLives: " + beforeLives + " → " + afterLives;
+                "\nScore: " + beforeScore + " -> " + afterScore +
+                "\nLives: " + beforeLives + " -> " + afterLives;
     }
 }

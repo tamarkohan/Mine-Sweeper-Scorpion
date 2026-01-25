@@ -12,7 +12,6 @@ import java.util.ArrayList;
 /**
  * Main in-game panel: displays two boards, player info, score, lives and controls.
  * Handles the "Thinking" animation during language switching.
- * Updated: Language popup menu with all 5 languages support.
  */
 public class GamePanel extends JPanel {
 
@@ -57,6 +56,7 @@ public class GamePanel extends JPanel {
     // Dimensions
     private static final int FIXED_BOX_WIDTH = 250;
     private static final int FIXED_BOX_HEIGHT = 65;
+    private static final int TOP_HEADER_HEIGHT = 240;
 
     // Thinking Icon Path
     private static final String THINKING_ICON = "/ui/icons/thinking.png";
@@ -88,7 +88,6 @@ public class GamePanel extends JPanel {
     }
 
     private void setupEscapeKey() {
-        // Register ESC key to trigger exit confirmation
         InputMap inputMap = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actionMap = getActionMap();
 
@@ -105,8 +104,8 @@ public class GamePanel extends JPanel {
         LanguageManager.Language lang = controller.getCurrentLanguage();
         boolean isRTL = LanguageManager.isRTL(lang);
 
-        String title = LanguageManager.get("exit_game", lang);
-        String message = LanguageManager.get("exit_confirm", lang);
+        String title = getExitTitle(lang);
+        String message = getExitMessage(lang);
         SoundManager.exitDialog();
 
         boolean confirmed = ConfirmDialog.show(
@@ -124,12 +123,32 @@ public class GamePanel extends JPanel {
         }
     }
 
+    private String getExitTitle(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> "יציאה מהמשחק";
+            case AR -> "الخروج من اللعبة";
+            case RU -> "Выход из игры";
+            case ES -> "Salir del juego";
+            default -> "Exit Game";
+        };
+    }
+
+    private String getExitMessage(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> "האם אתה בטוח שברצונך לצאת?\nההתקדמות במשחק תאבד.";
+            case AR -> "هل أنت متأكد أنك تريد الخروج؟\nسيتم فقدان تقدم اللعبة.";
+            case RU -> "Вы уверены, что хотите выйти?\nПрогресс игры будет потерян.";
+            case ES -> "¿Estás seguro de que quieres salir?\nEl progreso del juego se perderá.";
+            default -> "Are you sure you want to exit?\nGame progress will be lost.";
+        };
+    }
+
     private void showRestartConfirmation() {
         LanguageManager.Language lang = controller.getCurrentLanguage();
         boolean isRTL = LanguageManager.isRTL(lang);
 
-        String title = LanguageManager.get("restart_game", lang);
-        String message = LanguageManager.get("restart_confirm", lang);
+        String title = getRestartTitle(lang);
+        String message = getRestartMessage(lang);
         SoundManager.exitDialog();
         boolean confirmed = ConfirmDialog.show(
                 SwingUtilities.getWindowAncestor(this),
@@ -151,6 +170,25 @@ public class GamePanel extends JPanel {
         }
     }
 
+    private String getRestartTitle(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> "התחלה מחדש";
+            case AR -> "إعادة تشغيل اللعبة";
+            case RU -> "Перезапуск игры";
+            case ES -> "Reiniciar juego";
+            default -> "Restart Game";
+        };
+    }
+
+    private String getRestartMessage(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> "האם אתה בטוח שברצונך להתחיל מחדש?\nההתקדמות הנוכחית תאבד.";
+            case AR -> "هل أنت متأكد أنك تريد إعادة التشغيل؟\nسيتم فقدان التقدم الحالي.";
+            case RU -> "Вы уверены, что хотите перезапустить?\nТекущий прогресс будет потерян.";
+            case ES -> "¿Estás seguro de que quieres reiniciar?\nEl progreso actual se perderá.";
+            default -> "Are you sure you want to restart?\nCurrent progress will be lost.";
+        };
+    }
 
     private void initComponents() {
         setLayout(new BorderLayout());
@@ -172,11 +210,11 @@ public class GamePanel extends JPanel {
         centerPanel.setOpaque(false);
         bg.add(centerPanel, BorderLayout.CENTER);
 
-        // *** FIX: Increased header height to move names down ***
+        // *** INCREASED: Dynamic header height based on difficulty ***
         int headerHeight = switch (levelName) {
-            case "EASY" -> 240;
-            case "MEDIUM" -> 260;
-            case "HARD" -> 270;
+            case "EASY" -> 240;      // Was 200
+            case "MEDIUM" -> 260;    // Was 220
+            case "HARD" -> 270;      // Was 230
             default -> 240;
         };
 
@@ -203,14 +241,14 @@ public class GamePanel extends JPanel {
 
         lblMinesLeft1 = new JLabel(getMinesLeftText(1), SwingConstants.CENTER);
         lblMinesLeft1.setForeground(Color.WHITE);
-        lblMinesLeft1.setFont(new Font("Arial", Font.BOLD, 14));
+        lblMinesLeft1.setFont(new Font("Dialog", Font.BOLD, 14));
         lblMinesLeft1.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // *** FIX: Increased top spacing to push names down ***
+        // *** INCREASED: Dynamic top spacing ***
         int topSpacing = switch (levelName) {
-            case "EASY" -> 160;
-            case "MEDIUM" -> 180;
-            case "HARD" -> 195;
+            case "EASY" -> 160;      // Was 120
+            case "MEDIUM" -> 180;    // Was 140
+            case "HARD" -> 195;      // Was 155
             default -> 160;
         };
 
@@ -249,7 +287,7 @@ public class GamePanel extends JPanel {
 
         lblMinesLeft2 = new JLabel(getMinesLeftText(2), SwingConstants.CENTER);
         lblMinesLeft2.setForeground(Color.WHITE);
-        lblMinesLeft2.setFont(new Font("Arial", Font.BOLD, 14));
+        lblMinesLeft2.setFont(new Font("Dialog", Font.BOLD, 14));
         lblMinesLeft2.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         rightTopGroup.add(Box.createVerticalStrut(topSpacing));
@@ -281,15 +319,15 @@ public class GamePanel extends JPanel {
         LanguageManager.Language lang = controller.getCurrentLanguage();
         lblScore = new JLabel(LanguageManager.get("score", lang) + ": 0");
         lblScore.setForeground(Color.WHITE);
-        lblScore.setFont(new Font("Arial", Font.BOLD, 18));
+        lblScore.setFont(new Font("Dialog", Font.BOLD, 18));
 
         lblLives = new JLabel(LanguageManager.get("lives", lang) + ": " + controller.getSharedLives() + "/" + controller.getMaxLives());
         lblLives.setForeground(Color.WHITE);
-        lblLives.setFont(new Font("Arial", Font.BOLD, 18));
+        lblLives.setFont(new Font("Dialog", Font.BOLD, 18));
 
         lblTime = new JLabel(LanguageManager.get("time", lang) + ": 00:00");
         lblTime.setForeground(Color.WHITE);
-        lblTime.setFont(new Font("Arial", Font.BOLD, 18));
+        lblTime.setFont(new Font("Dialog", Font.BOLD, 18));
 
         scoreLivesPanel.add(lblScore); scoreLivesPanel.add(lblLives); scoreLivesPanel.add(lblTime);
 
@@ -326,7 +364,6 @@ public class GamePanel extends JPanel {
 
         btnRestart.setOnClick(this::showRestartConfirmation);
         btnExit.setOnClick(this::showExitConfirmation);
-        // Changed: Use popup menu instead of toggle
         btnLanguage.setOnClick(this::showLanguagePopup);
 
         footer.add(statusGroup, BorderLayout.CENTER);
@@ -353,70 +390,48 @@ public class GamePanel extends JPanel {
         new Thread(() -> new IconButton(THINKING_ICON, true)).start();
     }
 
-    /**
-     * Shows language selection popup menu with all 5 languages
-     */
     private void showLanguagePopup() {
-        JPopupMenu langMenu = new JPopupMenu();
-        langMenu.setBackground(new Color(11, 15, 26));
-        langMenu.setBorder(BorderFactory.createLineBorder(new Color(0, 245, 255)));
+        JPopupMenu popup = new JPopupMenu();
+        popup.setBackground(new Color(30, 30, 40));
 
         for (LanguageManager.Language lang : LanguageManager.Language.values()) {
             JMenuItem item = new JMenuItem(LanguageManager.getDisplayName(lang));
+            item.setBackground(new Color(30, 30, 40));
             item.setForeground(Color.WHITE);
-            item.setBackground(new Color(11, 15, 26));
-            item.setFont(new Font("Arial", Font.BOLD, 14));
+            item.setFont(new Font("Dialog", Font.PLAIN, 14));
 
-            // Highlight current language
-            if (lang == GameController.getInstance().getCurrentLanguage()) {
-                item.setForeground(new Color(0, 245, 255));
+            if (lang == controller.getCurrentLanguage()) {
+                item.setForeground(new Color(0, 255, 255));
+                item.setFont(new Font("Dialog", Font.BOLD, 14));
             }
 
             item.addActionListener(e -> handleLanguageSelection(lang));
-            langMenu.add(item);
+            popup.add(item);
         }
 
-        // Show popup above the button
-        Dimension size = langMenu.getPreferredSize();
-        langMenu.show(btnLanguage, 0, -size.height);
+        popup.show(btnLanguage, 0, -popup.getPreferredSize().height);
     }
 
-    /**
-     * Handles language selection from popup menu
-     */
-    private void handleLanguageSelection(LanguageManager.Language lang) {
-        // Skip if same language selected
-        if (lang == GameController.getInstance().getCurrentLanguage()) {
-            return;
-        }
+    private void handleLanguageSelection(LanguageManager.Language newLang) {
+        if (newLang == controller.getCurrentLanguage()) return;
 
-        // 1. Show thinking icon immediately
         btnLanguage.setIconPath(THINKING_ICON);
-        btnLanguage.setOnClick(null); // Prevent spamming
+        btnLanguage.setOnClick(null);
 
-        // 2. Background Thread
         new Thread(() -> {
             try {
                 GameController gc = GameController.getInstance();
-                gc.setCurrentLanguage(lang);
-
-                // Heavy Load
+                gc.setCurrentLanguage(newLang);
                 gc.getQuestionManager().switchLanguageFromCache();
-
-                // Optional delay for visual smoothness
                 Thread.sleep(300);
-
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
-                // 3. Update UI on Main Thread
                 SwingUtilities.invokeLater(() -> {
                     updateAllLanguageTexts();
                     boardPanel1.refresh();
                     boardPanel2.refresh();
                     showLanguageToast();
-
-                    // Restore button
                     btnLanguage.setIconPath("/ui/icons/language.png");
                     btnLanguage.setOnClick(this::showLanguagePopup);
                 });
@@ -457,7 +472,7 @@ public class GamePanel extends JPanel {
         label.setOpaque(true);
         label.setBackground(new Color(0, 0, 0, 200));
         label.setForeground(Color.WHITE);
-        label.setFont(new Font("Arial", Font.BOLD, 14));
+        label.setFont(new Font("Dialog", Font.BOLD, 14));
         label.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(0, 255, 255), 2, true),
                 BorderFactory.createEmptyBorder(10, 20, 10, 20)
@@ -499,7 +514,18 @@ public class GamePanel extends JPanel {
     private void handleMoveMade(boolean endedTurn) {
         updateStatus();
         String outcomeMessage = controller.getAndClearLastActionMessage();
-        if (outcomeMessage != null) { showResultDialog(outcomeMessage); }
+
+        // Queue visual effect for reward reveals BEFORE refresh (so BoardPanel knows not to play mine sound)
+        if (outcomeMessage != null) {
+            if (outcomeMessage.contains("revealed 1 mine")) {
+                boardPanel1.queueEffect(BoardPanel.EffectType.REVEAL_1_MINE);
+                boardPanel2.queueEffect(BoardPanel.EffectType.REVEAL_1_MINE);
+            } else if (outcomeMessage.contains("revealed random 3x3")) {
+                boardPanel1.queueEffect(BoardPanel.EffectType.REVEAL_3X3);
+                boardPanel2.queueEffect(BoardPanel.EffectType.REVEAL_3X3);
+            }
+            showResultDialog(outcomeMessage);
+        }
 
         if (controller.isGameOver()) { handleGameOverUI(); return; }
 
@@ -515,23 +541,18 @@ public class GamePanel extends JPanel {
     private void showResultDialog(String message) {
         if (message == null || message.isBlank()) return;
 
-        // --- PLAY SOUND FIRST (surprise uses same sounds as answers) ---
         String lower = message.toLowerCase();
 
-        // Surprise result
         if (lower.contains("good surprise") || (lower.contains("surprise") && lower.contains("good")) || lower.contains("result: good")) {
-            SoundManager.correctAnswer();   // GOOD surprise = correct sound
+            SoundManager.correctAnswer();
         } else if (lower.contains("bad surprise") || (lower.contains("surprise") && lower.contains("bad")) || lower.contains("result: bad")) {
-            SoundManager.wrongAnswer();     // BAD surprise = wrong sound
-        }
-        // (Optional) If you also want correct/wrong question messages to play here too:
-        else if (lower.contains("correct")) {
+            SoundManager.wrongAnswer();
+        } else if (lower.contains("correct")) {
             SoundManager.correctAnswer();
         } else if (lower.contains("wrong")) {
             SoundManager.wrongAnswer();
         }
 
-        // --- EXISTING CODE ---
         LanguageManager.Language lang = controller.getCurrentLanguage();
         boolean isRTL = LanguageManager.isRTL(lang);
         boolean isPositive = isPositiveOutcome(message);
@@ -548,7 +569,6 @@ public class GamePanel extends JPanel {
         );
     }
 
-
     private boolean isPositiveOutcome(String message) {
         if (message == null) return false;
         String lower = message.toLowerCase();
@@ -559,110 +579,209 @@ public class GamePanel extends JPanel {
 
     private String determineToastTitle(String message, LanguageManager.Language lang) {
         String lower = message.toLowerCase();
-        if (lower.contains("correct")) return LanguageManager.get("outcome_correct", lang);
-        else if (lower.contains("wrong")) return LanguageManager.get("outcome_wrong", lang);
-        else if (lower.contains("good surprise") || (lower.contains("surprise") && lower.contains("good"))) return LanguageManager.get("surprise_good", lang);
-        else if (lower.contains("bad surprise") || (lower.contains("surprise") && lower.contains("bad"))) return LanguageManager.get("surprise_bad", lang);
-        else if (lower.contains("surprise")) return LanguageManager.get("surprise", lang);
-        else if (lower.contains("flag")) return LanguageManager.get("flag", lang);
-        return LanguageManager.get("result", lang);
+        if (lower.contains("correct")) {
+            return switch (lang) {
+                case HE -> "נכון!";
+                case AR -> "صحيح!";
+                case RU -> "Правильно!";
+                case ES -> "¡Correcto!";
+                default -> "Correct!";
+            };
+        } else if (lower.contains("wrong")) {
+            return switch (lang) {
+                case HE -> "שגוי!";
+                case AR -> "خطأ!";
+                case RU -> "Неправильно!";
+                case ES -> "¡Incorrecto!";
+                default -> "Wrong!";
+            };
+        } else if (lower.contains("good surprise") || (lower.contains("surprise") && lower.contains("good"))) {
+            return switch (lang) {
+                case HE -> "הפתעה טובה!";
+                case AR -> "مفاجأة جيدة!";
+                case RU -> "Хороший сюрприз!";
+                case ES -> "¡Buena sorpresa!";
+                default -> "Good Surprise!";
+            };
+        } else if (lower.contains("bad surprise") || (lower.contains("surprise") && lower.contains("bad"))) {
+            return switch (lang) {
+                case HE -> "הפתעה רעה!";
+                case AR -> "مفاجأة سيئة!";
+                case RU -> "Плохой сюрприз!";
+                case ES -> "¡Mala sorpresa!";
+                default -> "Bad Surprise!";
+            };
+        } else if (lower.contains("surprise")) {
+            return switch (lang) {
+                case HE -> "הפתעה!";
+                case AR -> "مفاجأة!";
+                case RU -> "Сюрприз!";
+                case ES -> "¡Sorpresa!";
+                default -> "Surprise!";
+            };
+        } else if (lower.contains("flag")) {
+            return switch (lang) {
+                case HE -> "דגל";
+                case AR -> "علم";
+                case RU -> "Флаг";
+                case ES -> "Bandera";
+                default -> "Flag";
+            };
+        }
+        return switch (lang) {
+            case HE -> "תוצאה";
+            case AR -> "النتيجة";
+            case RU -> "Результат";
+            case ES -> "Resultado";
+            default -> "Result";
+        };
     }
 
-    /**
-     * Translates toast messages for all 5 languages
-     */
     private String translateToastMessage(String message, LanguageManager.Language lang) {
         if (message == null || lang == LanguageManager.Language.EN) return message;
-
         String result = message;
 
-        // Common replacements for all non-English languages
-        switch (lang) {
-            case HE -> {
-                result = result.replace("EASY", "קל").replace("MEDIUM", "בינוני").replace("HARD", "קשה").replace("EXPERT", "מומחה");
-                result = result.replace("Wrong!", "שגוי!").replace("Wrong", "שגוי").replace("Correct!", "נכון!").replace("Correct", "נכון");
-                result = result.replace("Surprise activated!", "ההפתעה הופעלה!").replace("Surprise result: GOOD", "תוצאת ההפתעה: טוב").replace("Surprise result: BAD", "תוצאת ההפתעה: רע");
-                result = result.replace("Reward:", "פרס:").replace("Penalty:", "עונש:");
-                result = result.replace("reveal random 3x3", "חשיפת 3x3 אקראי").replace("revealed random 3x3 area", "נחשף אזור 3x3 אקראי");
-                result = result.replace("reveal 1 mine", "חשיפת מוקש אחד").replace("revealed 1 mine", "נחשף מוקש אחד");
-                result = result.replace("OR nothing", "או כלום").replace("Chosen: nothing", "נבחר: כלום");
-                // ** Added CHOSEN **
-                result = result.replace("Chosen", LanguageManager.get("chosen", lang));
-                result = result.replace("reward", "פרס").replace("Reward", "פרס");
-                result = result.replace("Activation cost:", "עלות הפעלה:").replace("Special effect:", "אפקט מיוחד:").replace("Score:", "ניקוד:").replace("Lives:", "חיים:");
-                result = result.replace("+1 life", "+1 חיים").replace("-1 life", "-1 חיים");
-                result = result.replace(" pts,", " נק',").replace(" pts.", " נק'.").replace(" pts", " נק'");
-                result = result.replace(" life.", " חיים.").replace(" life,", " חיים,").replace(" life", " חיים").replace(" lives", " חיים");
-                result = result.replace("game.", "משחק.").replace("game)", "משחק)");
-                result = result.replace("(Easy", "(קל").replace("(Medium", "(בינוני").replace("(Hard", "(קשה").replace("(Expert", "(מומחה");
-                result = result.replace("area", "אזור").replace("mine", "מוקש");
-                result = result.replace("Good surprise!", "הפתעה טובה!").replace("Bad surprise!", "הפתעה רעה!");
-                result = result.replace("GOOD", "טוב").replace("BAD", "רע").replace("Good", "טוב").replace("Bad", "רע");
-            }
-            case AR -> {
-                result = result.replace("EASY", "سهل").replace("MEDIUM", "متوسط").replace("HARD", "صعب").replace("EXPERT", "خبير");
-                result = result.replace("Wrong!", "خطأ!").replace("Wrong", "خطأ").replace("Correct!", "صحيح!").replace("Correct", "صحيح");
-                result = result.replace("Surprise activated!", "تم تفعيل المفاجأة!").replace("Surprise result: GOOD", "نتيجة المفاجأة: جيد").replace("Surprise result: BAD", "نتيجة المفاجأة: سيء");
-                result = result.replace("Reward:", "مكافأة:").replace("Penalty:", "عقوبة:");
-                result = result.replace("reveal random 3x3", "كشف 3x3 عشوائي").replace("revealed random 3x3 area", "تم كشف منطقة 3x3 عشوائية");
-                result = result.replace("reveal 1 mine", "كشف لغم واحد").replace("revealed 1 mine", "تم كشف لغم واحد");
-                result = result.replace("OR nothing", "أو لا شيء").replace("Chosen: nothing", "المختار: لا شيء");
-                // ** Added CHOSEN **
-                result = result.replace("Chosen", LanguageManager.get("chosen", lang));
-                result = result.replace("reward", "مكافأة").replace("Reward", "مكافأة");
-                result = result.replace("Activation cost:", "تكلفة التفعيل:").replace("Special effect:", "تأثير خاص:").replace("Score:", "النقاط:").replace("Lives:", "الأرواح:");
-                result = result.replace("+1 life", "+1 حياة").replace("-1 life", "-1 حياة");
-                result = result.replace(" pts,", " نقطة,").replace(" pts.", " نقطة.").replace(" pts", " نقطة");
-                result = result.replace(" life.", " حياة.").replace(" life,", " حياة,").replace(" life", " حياة").replace(" lives", " أرواح");
-                result = result.replace("game.", "لعبة.").replace("game)", "لعبة)");
-                result = result.replace("(Easy", "(سهل").replace("(Medium", "(متوسط").replace("(Hard", "(صعب").replace("(Expert", "(خبير");
-                result = result.replace("area", "منطقة").replace("mine", "لغم");
-                result = result.replace("Good surprise!", "مفاجأة جيدة!").replace("Bad surprise!", "مفاجأة سيئة!");
-                result = result.replace("GOOD", "جيد").replace("BAD", "سيء").replace("Good", "جيد").replace("Bad", "سيء");
-            }
-            case RU -> {
-                result = result.replace("EASY", "ЛЕГКО").replace("MEDIUM", "СРЕДНЕ").replace("HARD", "СЛОЖНО").replace("EXPERT", "ЭКСПЕРТ");
-                result = result.replace("Wrong!", "Неправильно!").replace("Wrong", "Неправильно").replace("Correct!", "Правильно!").replace("Correct", "Правильно");
-                result = result.replace("Surprise activated!", "Сюрприз активирован!").replace("Surprise result: GOOD", "Результат сюрприза: Хорошо").replace("Surprise result: BAD", "Результат сюрприза: Плохо");
-                result = result.replace("Reward:", "Награда:").replace("Penalty:", "Штраф:");
-                result = result.replace("reveal random 3x3", "открыть случайную 3x3 область").replace("revealed random 3x3 area", "открыта случайная область 3x3");
-                result = result.replace("reveal 1 mine", "открыть 1 мину").replace("revealed 1 mine", "открыта 1 мина");
-                result = result.replace("OR nothing", "ИЛИ ничего").replace("Chosen: nothing", "Выбрано: ничего");
-                // ** Added CHOSEN **
-                result = result.replace("Chosen", LanguageManager.get("chosen", lang));
-                result = result.replace("reward", "награда").replace("Reward", "Награда");
-                result = result.replace("Activation cost:", "Стоимость активации:").replace("Special effect:", "Спецэффект:").replace("Score:", "Счёт:").replace("Lives:", "Жизни:");
-                result = result.replace("+1 life", "+1 жизнь").replace("-1 life", "-1 жизнь");
-                result = result.replace(" pts,", " очк.,").replace(" pts.", " очк.").replace(" pts", " очк.");
-                result = result.replace(" life.", " жизнь.").replace(" life,", " жизнь,").replace(" life", " жизнь").replace(" lives", " жизней");
-                result = result.replace("game.", "игра.").replace("game)", "игра)");
-                result = result.replace("(Easy", "(Легко").replace("(Medium", "(Средне").replace("(Hard", "(Сложно").replace("(Expert", "(Эксперт");
-                result = result.replace("area", "область").replace("mine", "мина");
-                result = result.replace("Good surprise!", "Хороший сюрприз!").replace("Bad surprise!", "Плохой сюрприз!");
-                result = result.replace("GOOD", "Хорошо").replace("BAD", "Плохо").replace("Good", "Хорошо").replace("Bad", "Плохо");
-            }
-            case ES -> {
-                result = result.replace("EASY", "FÁCIL").replace("MEDIUM", "MEDIO").replace("HARD", "DIFÍCIL").replace("EXPERT", "EXPERTO");
-                result = result.replace("Wrong!", "¡Incorrecto!").replace("Wrong", "Incorrecto").replace("Correct!", "¡Correcto!").replace("Correct", "Correcto");
-                result = result.replace("Surprise activated!", "¡La sorpresa fue activada!").replace("Surprise result: GOOD", "Resultado de la sorpresa: Bueno").replace("Surprise result: BAD", "Resultado de la sorpresa: Malo");
-                result = result.replace("Reward:", "Recompensa:").replace("Penalty:", "Penalización:");
-                result = result.replace("reveal random 3x3", "revelar 3x3 aleatorio").replace("revealed random 3x3 area", "se reveló área 3x3 aleatoria");
-                result = result.replace("reveal 1 mine", "revelar 1 mina").replace("revealed 1 mine", "se reveló 1 mina");
-                result = result.replace("OR nothing", "O nada").replace("Chosen: nothing", "Elegido: nada");
-                // ** Added CHOSEN **
-                result = result.replace("Chosen", LanguageManager.get("chosen", lang));
-                result = result.replace("reward", "recompensa").replace("Reward", "Recompensa");
-                result = result.replace("Activation cost:", "Costo de activación:").replace("Special effect:", "Efecto especial:").replace("Score:", "Puntos:").replace("Lives:", "Vidas:");
-                result = result.replace("+1 life", "+1 vida").replace("-1 life", "-1 vida");
-                result = result.replace(" pts,", " pts,").replace(" pts.", " pts.").replace(" pts", " pts");
-                result = result.replace(" life.", " vida.").replace(" life,", " vida,").replace(" life", " vida").replace(" lives", " vidas");
-                result = result.replace("game.", "juego.").replace("game)", "juego)");
-                result = result.replace("(Easy", "(Fácil").replace("(Medium", "(Medio").replace("(Hard", "(Difícil").replace("(Expert", "(Experto");
-                result = result.replace("area", "área").replace("mine", "mina");
-                result = result.replace("Good surprise!", "¡Buena sorpresa!").replace("Bad surprise!", "¡Mala sorpresa!");
-                result = result.replace("GOOD", "Bueno").replace("BAD", "Malo").replace("Good", "Bueno").replace("Bad", "Malo");
-            }
-            default -> { }
+        // Language-specific translations
+        if (lang == LanguageManager.Language.HE) {
+            result = result.replace("EASY", "קל").replace("MEDIUM", "בינוני").replace("HARD", "קשה").replace("EXPERT", "מומחה");
+            result = result.replace("Wrong!", "שגוי!").replace("Wrong ", "שגוי ").replace("Wrong:", "שגוי:");
+            result = result.replace("Correct!", "נכון!").replace("Correct ", "נכון ").replace("Correct:", "נכון:");
+            result = result.replace("Surprise activated!", "ההפתעה הופעלה!");
+            result = result.replace("Surprise result:", "תוצאת ההפתעה:");
+            result = result.replace("Reward:", "פרס:").replace("Penalty:", "עונש:");
+            // Special effect translations
+            result = result.replace("Special effect:", "אפקט מיוחד:");
+            result = result.replace("reveal random 3x3", "חשיפת 3x3 אקראי");
+            result = result.replace("revealed random 3x3 area", "נחשף אזור 3x3 אקראי");
+            result = result.replace("reveal 1 mine", "חשיפת מוקש אחד");
+            result = result.replace("revealed 1 mine", "נחשף מוקש אחד");
+            result = result.replace("no unrevealed mines to show", "אין מוקשים לחשיפה");
+            result = result.replace("no unrevealed cells for 3x3 area", "אין תאים לחשיפת 3x3");
+            result = result.replace("(Easy game)", "(משחק קל)");
+            result = result.replace("(reward)", "(פרס)");
+            // New luck mechanic translations
+            result = result.replace("(50% luck)", "(50% מזל)");
+            result = result.replace("(50% luck between -1 or -2 lives)", "(50% מזל בין -1 ל-2 חיים)");
+            result = result.replace("(50% luck between +1 or +2 lives)", "(50% מזל בין +1 ל+2 חיים)");
+            result = result.replace("Unlucky - penalty applied.", "לא בר מזל - העונש הופעל.");
+            result = result.replace("Lucky - no penalty!", "בר מזל - ללא עונש!");
+            result = result.replace("Result:", "תוצאה:");
+            result = result.replace("reward", "פרס").replace("Reward", "פרס");
+            result = result.replace("Activation cost:", "עלות הפעלה:").replace("Score:", "ניקוד:").replace("Lives:", "חיים:");
+            result = result.replace("+1 life", "+1 חיים").replace("-1 life", "-1 חיים").replace("+2 lives", "+2 חיים").replace("-2 lives", "-2 חיים").replace("+3 lives", "+3 חיים").replace("-3 lives", "-3 חיים");
+            result = result.replace(" pts,", " נק',").replace(" pts.", " נק'.").replace(" pts", " נק'");
+            result = result.replace(" life.", " חיים.").replace(" life,", " חיים,").replace(" life", " חיים").replace(" lives", " חיים");
+            result = result.replace("game.", "משחק.").replace("game)", "משחק)");
+            result = result.replace("(Easy", "(קל").replace("(Medium", "(בינוני").replace("(Hard", "(קשה").replace("(Expert", "(מומחה");
+            result = result.replace("area", "אזור").replace("mine", "מוקש");
+            result = result.replace("Good surprise!", "הפתעה טובה!").replace("Bad surprise!", "הפתעה רעה!");
+            result = result.replace("GOOD", "טוב").replace("BAD", "רע").replace("Good", "טוב").replace("Bad", "רע");
+            result = result.replace("You didn't answer the question.", "לא ענית על השאלה.");
+            result = result.replace("Activation cost was deducted.", "עלות ההפעלה נוכתה.");
+        } else if (lang == LanguageManager.Language.AR) {
+            result = result.replace("EASY", "سهل").replace("MEDIUM", "متوسط").replace("HARD", "صعب").replace("EXPERT", "خبير");
+            result = result.replace("Wrong!", "خطأ!").replace("Wrong ", "خطأ ").replace("Wrong:", "خطأ:");
+            result = result.replace("Correct!", "صحيح!").replace("Correct ", "صحيح ").replace("Correct:", "صحيح:");
+            result = result.replace("Surprise activated!", "تم تفعيل المفاجأة!");
+            result = result.replace("Surprise result:", "نتيجة المفاجأة:");
+            result = result.replace("Reward:", "مكافأة:").replace("Penalty:", "عقوبة:");
+            // Special effect translations
+            result = result.replace("Special effect:", "تأثير خاص:");
+            result = result.replace("reveal random 3x3", "كشف 3x3 عشوائي");
+            result = result.replace("revealed random 3x3 area", "تم كشف منطقة 3x3 عشوائية");
+            result = result.replace("reveal 1 mine", "كشف لغم واحد");
+            result = result.replace("revealed 1 mine", "تم كشف لغم واحد");
+            result = result.replace("no unrevealed mines to show", "لا توجد ألغام للكشف");
+            result = result.replace("no unrevealed cells for 3x3 area", "لا توجد خلايا للكشف 3x3");
+            result = result.replace("(Easy game)", "(لعبة سهلة)");
+            result = result.replace("(reward)", "(مكافأة)");
+            // New luck mechanic translations
+            result = result.replace("(50% luck)", "(50% حظ)");
+            result = result.replace("(50% luck between -1 or -2 lives)", "(50% حظ بين -1 او -2 ارواح)");
+            result = result.replace("(50% luck between +1 or +2 lives)", "(50% حظ بين +1 او +2 ارواح)");
+            result = result.replace("Unlucky - penalty applied.", "سيء الحظ - تم تطبيق العقوبة.");
+            result = result.replace("Lucky - no penalty!", "محظوظ - بدون عقوبة!");
+            result = result.replace("Result:", "النتيجة:");
+            result = result.replace("Activation cost:", "تكلفة التفعيل:").replace("Score:", "النقاط:").replace("Lives:", "الأرواح:");
+            result = result.replace("+1 life", "+1 حياة").replace("-1 life", "-1 حياة").replace("+2 lives", "+2 أرواح").replace("-2 lives", "-2 أرواح").replace("+3 lives", "+3 أرواح").replace("-3 lives", "-3 أرواح");
+            result = result.replace(" pts,", " نقطة،").replace(" pts.", " نقطة.").replace(" pts", " نقطة");
+            result = result.replace(" life,", " حياة،").replace(" life.", " حياة.").replace(" life", " حياة").replace(" lives", " أرواح");
+            result = result.replace("Good surprise!", "مفاجأة جيدة!").replace("Bad surprise!", "مفاجأة سيئة!");
+            result = result.replace("GOOD", "جيد").replace("BAD", "سيء").replace("Good", "جيد").replace("Bad", "سيء");
+            result = result.replace("You didn't answer the question.", "لم تجب على السؤال.");
+            result = result.replace("Activation cost was deducted.", "تم خصم تكلفة التفعيل.");
+        } else if (lang == LanguageManager.Language.RU) {
+            result = result.replace("EASY", "Легкий").replace("MEDIUM", "Средний").replace("HARD", "Сложный").replace("EXPERT", "Эксперт");
+            result = result.replace("Wrong!", "Неправильно!").replace("Wrong ", "Неправильно ").replace("Wrong:", "Неправильно:");
+            result = result.replace("Correct!", "Правильно!").replace("Correct ", "Правильно ").replace("Correct:", "Правильно:");
+            result = result.replace("Surprise activated!", "Сюрприз активирован!");
+            result = result.replace("Surprise result:", "Результат сюрприза:");
+            result = result.replace("Reward:", "Награда:").replace("Penalty:", "Штраф:");
+            // Special effect translations
+            result = result.replace("Special effect:", "Специальный эффект:");
+            result = result.replace("reveal random 3x3", "раскрыть случайный 3x3");
+            result = result.replace("revealed random 3x3 area", "раскрыта случайная область 3x3");
+            result = result.replace("reveal 1 mine", "раскрыть 1 мину");
+            result = result.replace("revealed 1 mine", "раскрыта 1 мина");
+            result = result.replace("no unrevealed mines to show", "нет мин для раскрытия");
+            result = result.replace("no unrevealed cells for 3x3 area", "нет клеток для раскрытия 3x3");
+            result = result.replace("(Easy game)", "(Легкая игра)");
+            result = result.replace("(reward)", "(награда)");
+            // New luck mechanic translations
+            result = result.replace("(50% luck)", "(50% удача)");
+            result = result.replace("(50% luck between -1 or -2 lives)", "(50% удача между -1 или -2 жизни)");
+            result = result.replace("(50% luck between +1 or +2 lives)", "(50% удача между +1 или +2 жизни)");
+            result = result.replace("Unlucky - penalty applied.", "Не повезло - штраф применен.");
+            result = result.replace("Lucky - no penalty!", "Повезло - без штрафа!");
+            result = result.replace("Result:", "Результат:");
+            result = result.replace("Activation cost:", "Стоимость активации:").replace("Score:", "Счёт:").replace("Lives:", "Жизни:");
+            result = result.replace("+1 life", "+1 жизнь").replace("-1 life", "-1 жизнь").replace("+2 lives", "+2 жизни").replace("-2 lives", "-2 жизни").replace("+3 lives", "+3 жизни").replace("-3 lives", "-3 жизни");
+            result = result.replace(" pts,", " очк.,").replace(" pts.", " очк.").replace(" pts", " очк.");
+            result = result.replace(" life,", " жизнь,").replace(" life.", " жизнь.").replace(" life", " жизнь").replace(" lives", " жизни");
+            result = result.replace("Good surprise!", "Хороший сюрприз!").replace("Bad surprise!", "Плохой сюрприз!");
+            result = result.replace("GOOD", "Хорошо").replace("BAD", "Плохо").replace("Good", "Хорошо").replace("Bad", "Плохо");
+            result = result.replace("You didn't answer the question.", "Вы не ответили на вопрос.");
+            result = result.replace("Activation cost was deducted.", "Стоимость активации вычтена.");
+        } else if (lang == LanguageManager.Language.ES) {
+            result = result.replace("EASY", "Facil").replace("MEDIUM", "Medio").replace("HARD", "Dificil").replace("EXPERT", "Experto");
+            result = result.replace("Wrong!", "Incorrecto!").replace("Wrong ", "Incorrecto ").replace("Wrong:", "Incorrecto:");
+            result = result.replace("Correct!", "Correcto!").replace("Correct ", "Correcto ").replace("Correct:", "Correcto:");
+            result = result.replace("Surprise activated!", "Sorpresa activada!");
+            result = result.replace("Surprise result:", "Resultado de sorpresa:");
+            result = result.replace("Reward:", "Recompensa:").replace("Penalty:", "Penalizacion:");
+            // Special effect translations
+            result = result.replace("Special effect:", "Efecto especial:");
+            result = result.replace("reveal 1 mine", "revelar 1 mina");
+            result = result.replace("revealed 1 mine", "se revelo 1 mina");
+            result = result.replace("reveal random 3x3", "revelar 3x3 aleatorio");
+            result = result.replace("revealed random 3x3 area", "se revelo area 3x3 aleatoria");
+            result = result.replace("no unrevealed mines to show", "no hay minas para revelar");
+            result = result.replace("no unrevealed cells for 3x3 area", "no hay celdas para revelar 3x3");
+            result = result.replace("(Easy game)", "(juego Facil)");
+            result = result.replace("(reward)", "(recompensa)");
+            // New luck mechanic translations
+            result = result.replace("(50% luck)", "(50% suerte)");
+            result = result.replace("(50% luck between -1 or -2 lives)", "(50% suerte entre -1 o -2 vidas)");
+            result = result.replace("(50% luck between +1 or +2 lives)", "(50% suerte entre +1 o +2 vidas)");
+            result = result.replace("Unlucky - penalty applied.", "Sin suerte - penalizacion aplicada.");
+            result = result.replace("Lucky - no penalty!", "Con suerte - sin penalizacion!");
+            result = result.replace("Result:", "Resultado:");
+            result = result.replace("Activation cost:", "Costo de activacion:").replace("Score:", "Puntos:").replace("Lives:", "Vidas:");
+            result = result.replace("+1 life", "+1 vida").replace("-1 life", "-1 vida").replace("+2 lives", "+2 vidas").replace("-2 lives", "-2 vidas").replace("+3 lives", "+3 vidas").replace("-3 lives", "-3 vidas");
+            result = result.replace(" pts,", " pts,").replace(" pts.", " pts.").replace(" pts", " pts");
+            result = result.replace(" life,", " vida,").replace(" life.", " vida.").replace(" life", " vida").replace(" lives", " vidas");
+            result = result.replace("Good surprise!", "Buena sorpresa!").replace("Bad surprise!", "Mala sorpresa!");
+            result = result.replace("GOOD", "Bueno").replace("BAD", "Malo").replace("Good", "Bueno").replace("Bad", "Malo");
+            result = result.replace("You didn't answer the question.", "No respondiste la pregunta.");
+            result = result.replace("Activation cost was deducted.", "Se dedujo el costo de activacion.");
+        }
+
+        // Fix arrow direction for RTL languages (Hebrew, Arabic)
+        // In RTL, → should become ← so the change direction is correct when read right-to-left
+        if (LanguageManager.isRTL(lang)) {
+            result = result.replace("->", "<-");
+        } else {
+            result = result.replace("->", "\u2192"); // → arrow for LTR languages
         }
 
         return result;
@@ -711,11 +830,10 @@ public class GamePanel extends JPanel {
         int availW = Math.min(wrap1.getWidth(), wrap2.getWidth());
         int availH = Math.min(wrap1.getHeight(), wrap2.getHeight());
 
-        if (availW <= 40 || availH <= 40) return;  // Need minimum space
+        if (availW <= 40 || availH <= 40) return;
 
         String diff = controller.getDifficultyName();
 
-        // Get grid dimensions
         int rows = switch (diff) {
             case "MEDIUM" -> 13;
             case "HARD" -> 16;
@@ -723,32 +841,27 @@ public class GamePanel extends JPanel {
         };
         int cols = rows;
 
-        // *** KEY FIX: Unified cell size calculation with better proportions ***
-        // Account for glow effect padding (approximately 48px total)
         int effectivePadding = 48;
         int usableW = availW - effectivePadding;
         int usableH = availH - effectivePadding;
 
-        // Calculate maximum cell size that fits
         int cellFromWidth = usableW / cols;
         int cellFromHeight = usableH / rows;
         int cell = Math.min(cellFromWidth, cellFromHeight);
 
-        // *** UNIFIED LIMITS: Same range for all difficulties ***
-        int minCell = 22;  // Absolute minimum (readable)
+        int minCell = 22;
         int maxCell = switch (diff) {
-            case "EASY" -> 55;     // Generous max for Easy
-            case "MEDIUM" -> 42;   // Balanced for Medium
-            case "HARD" -> 36;     // Compact for Hard
+            case "EASY" -> 55;
+            case "MEDIUM" -> 42;
+            case "HARD" -> 36;
             default -> 55;
         };
 
-        // Clamp to range
         cell = Math.max(minCell, Math.min(maxCell, cell));
 
-        // Apply to both boards
         boardPanel1.setCellSize(cell);
-        boardPanel2.setCellSize(cell);}
+        boardPanel2.setCellSize(cell);
+    }
 
     private void requestResizeBoards() {
         if (resizeStabilizer != null && resizeStabilizer.isRunning()) { resizeStabilizer.restart(); return; }

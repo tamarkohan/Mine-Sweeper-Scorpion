@@ -17,8 +17,8 @@ public class LanguageManager {
 
     static {
         // Game Result Dialog
-        add("you_won", "🎊 YOU WON! 🎊", "🎊 ניצחתם! 🎊", "🎊 فزتم! 🎊", "🎊 ВЫ ПОБЕДИЛИ! 🎊", "🎊 ¡GANASTE! 🎊");
-        add("game_over", "💀 GAME OVER 💀", "💀 המשחק נגמר 💀", "💀 انتهت اللعبة 💀", "💀 ИГРА ОКОНЧЕНА 💀", "💀 FIN DEL JUEGO 💀");
+        add("you_won", "YOU WON!", "ניצחתם!", "فزتم!", "ВЫ ПОБЕДИЛИ!", "¡GANASTE!");
+        add("game_over", "GAME OVER", "המשחק נגמר", "انتهت اللعبة", "ИГРА ОКОНЧЕНА", "FIN DEL JUEGO");
         add("stat_score", "Score:", "ניקוד:", "النقاط:", "Счёт:", "Puntuación:");
         add("stat_lives", "Lives Remaining:", "חיים שנותרו:", "الأرواح المتبقية:", "Осталось жизней:", "Vidas restantes:");
         add("stat_questions", "Questions Answered:", "שאלות שנענו:", "الأسئلة المُجابة:", "Отвечено вопросов:", "Preguntas respondidas:");
@@ -133,7 +133,7 @@ public class LanguageManager {
         add("option_c", "Option C", "תשובה ג", "الخيار ج", "Вариант C", "Opción C");
         add("option_d", "Option D", "תשובה ד", "الخيار د", "Вариант D", "Opción D");
         add("correct_answer_label", "Correct Answer", "תשובה נכונה", "الإجابة الصحيحة", "Правильный ответ", "Respuesta correcta");
-        add("difficulty_label", "Difficulty", "רמת קושי", "الصعوبة", "Сложность", "Dificultad");
+        add("difficulty_label", "Difficulty", "רמת קושי", "الصעوبة", "Сложность", "Dificultad");
         add("sort_hint", "Tip: Click on column headers to sort", "טיפ: ניתן ללחוץ על כותרות העמודות כדי למיין",
                 "تلميح: انقر على عناوين الأعمدة للترتيب", "Совет: нажмите на заголовки столбцов для сортировки",
                 "Consejo: Haz clic en los encabezados de las columnas para ordenar");
@@ -148,12 +148,6 @@ public class LanguageManager {
                 "هل أنت متأكد أنك تريد الخروج؟\nسيتم فقدان تقدم اللعبة.",
                 "Вы уверены, что хотите выйти?\nПрогресс игры будет потерян.",
                 "¿Estás seguro de que quieres salir?\nSe perderá el progreso del juego.");
-        add("restart_game", "Restart Game", "התחלה מחדש", "إعادة اللعبة", "Начать заново", "Reiniciar juego");
-        add("restart_confirm", "Are you sure you want to restart?\nCurrent progress will be lost.",
-                "האם אתה בטוח שברצונך להתחיל מחדש?\nההתקדמות הנוכחית תאבד.",
-                "هل أنت متأكد أنك تريد إعادة اللعبة؟\nسيتم فقدان التقدم الحالي.",
-                "Вы уверены, что хотите начать заново?\nТекущий прогресс будет потерян.",
-                "¿Estás seguro de que quieres reiniciar?\nSe perderá el progreso actual.");
         add("exit_title", "Exit", "יציאה", "خروج", "Выход", "Salir");
         add("exit_confirm_msg", "Are you sure you want to exit?", "האם אתה בטוח שברצונך לצאת?",
                 "هل أنت متأكد أنك تريد الخروج؟", "Вы уверены, что хотите выйти?", "¿Estás seguro de que quieres salir?");
