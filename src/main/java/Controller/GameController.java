@@ -554,6 +554,7 @@ public class GameController {
         String diff = (difficultyFilter == null) ? "All" : difficultyFilter;
         String res = (resultFilter == null) ? "All" : resultFilter;
         String search = (searchTerm == null) ? "" : searchTerm.trim().toLowerCase();
+        boolean hasNameSearch = !search.isEmpty();
 
         Map<String, PlayerStats> map = new HashMap<>();
 
@@ -572,24 +573,27 @@ public class GameController {
             String p1 = e.getPlayer1Name() == null ? "" : e.getPlayer1Name();
             String p2 = e.getPlayer2Name() == null ? "" : e.getPlayer2Name();
 
-            if (!search.isEmpty()) {
-                String diffLower = (e.getDifficulty() == null) ? "" : e.getDifficulty().toLowerCase();
-                String resLower = (e.getResult() == null) ? "" : e.getResult().toLowerCase();
+            if (hasNameSearch) {
+                boolean p1Match = p1.toLowerCase().contains(search);
+                boolean p2Match = p2.toLowerCase().contains(search);
 
-                boolean match =
-                        p1.toLowerCase().contains(search) ||
-                                p2.toLowerCase().contains(search) ||
-                                diffLower.contains(search) ||
-                                resLower.contains(search);
+                // אם אף אחד לא מתאים – מדלגים על המשחק הזה
+                if (!p1Match && !p2Match) continue;
 
-                if (!match) continue;
+                double gameAcc = e.getAccuracy();
+
+                // חשוב: לעדכן רק את מי שמתאים לחיפוש
+                if (p1Match) updatePlayerStats(map, p1, e, gameAcc);
+                if (p2Match) updatePlayerStats(map, p2, e, gameAcc);
+
+                continue; // כדי לא להוסיף את שניהם בהמשך
             }
 
-
+// בלי חיפוש שם — התנהגות רגילה (מוסיפים את שני השחקנים)
             double gameAcc = e.getAccuracy();
-
             updatePlayerStats(map, p1, e, gameAcc);
             updatePlayerStats(map, p2, e, gameAcc);
+
         }
 
         List<PlayerHistoryRow> rows = new ArrayList<>();

@@ -235,15 +235,25 @@ public class QuestionManager {
 
         list.sort(Comparator.comparingInt(Question::getId));
 
+        // 1) SAVE external (always)
+        writeCsv(file, list);
+
+        // 2) ALSO save dev resources (only if exists)
+        File dev = new File("src/main/resources/" + file.getName());
+        if (dev.getParentFile().exists()) {
+            writeCsv(dev, list);
+        }
+    }
+
+    private void writeCsv(File file, List<Question> list) {
         try (PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
             out.println("id,text,optionA,optionB,optionC,optionD,correctOption,difficultyLevel");
-            for (Question q : list) {
-                out.println(q.toCsvRow());
-            }
+            for (Question q : list) out.println(q.toCsvRow());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
 
     public Question getRandomUnusedQuestionAnyLevel() {
         if (allQuestions.isEmpty()) return null;
