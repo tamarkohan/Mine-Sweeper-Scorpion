@@ -10,6 +10,16 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 /**
+ * Panel that always reports LEFT_TO_RIGHT so layout never flips in RTL locales.
+ */
+@SuppressWarnings("serial")
+final class FixedLTRPanel extends JPanel {
+    FixedLTRPanel(LayoutManager layout) { super(layout); }
+    @Override
+    public ComponentOrientation getComponentOrientation() { return ComponentOrientation.LEFT_TO_RIGHT; }
+}
+
+/**
  * Main in-game panel: displays two boards, player info, score, lives and controls.
  * Handles the "Thinking" animation during language switching.
  */
@@ -40,6 +50,7 @@ public class GamePanel extends JPanel {
     private JPanel wrap1;
     private JPanel wrap2;
     private JPanel centerPanel;
+    private JPanel topPanel;
     private Timer resizeStabilizer;
     private Timer gameTimer;
     private final Runnable onBackToStart;
@@ -193,6 +204,7 @@ public class GamePanel extends JPanel {
     private void initComponents() {
         setLayout(new BorderLayout());
         setOpaque(false);
+        setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 
         String levelName = controller.getDifficultyName();
         String bgPath = switch (levelName) {
@@ -204,9 +216,10 @@ public class GamePanel extends JPanel {
         BackgroundPanel bg = new BackgroundPanel(bgPath);
         bg.setLayout(new BorderLayout());
         bg.setOpaque(false);
+        bg.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
         add(bg, BorderLayout.CENTER);
 
-        centerPanel = new JPanel(new GridLayout(1, 2, 40, 0));
+        centerPanel = new FixedLTRPanel(new GridBagLayout());
         centerPanel.setOpaque(false);
         bg.add(centerPanel, BorderLayout.CENTER);
 
@@ -221,9 +234,10 @@ public class GamePanel extends JPanel {
         Dimension boxDim = new Dimension(FIXED_BOX_WIDTH, FIXED_BOX_HEIGHT);
         Dimension headerDim = new Dimension(100, headerHeight);
 
-        // --- Player 1 Side ---
+        // --- Player 1 Side (displayed on RIGHT) ---
         JPanel leftSide = new JPanel(new BorderLayout());
         leftSide.setOpaque(false);
+        leftSide.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
         JPanel leftTopGroup = new JPanel();
         leftTopGroup.setLayout(new BoxLayout(leftTopGroup, BoxLayout.Y_AXIS));
         leftTopGroup.setOpaque(false);
@@ -232,7 +246,7 @@ public class GamePanel extends JPanel {
         leftTopGroup.setMaximumSize(headerDim);
 
         playerBox1 = new NeonInputField(new Color(255, 80, 80));
-        playerBox1.setText(player1Name);
+        playerBox1.setText(LanguageManager.get("player1", controller.getCurrentLanguage())); // ימין: اللاعب 1
         playerBox1.setDisplayMode(true);
         playerBox1.setAlignmentX(Component.CENTER_ALIGNMENT);
         playerBox1.setFieldWidth(FIXED_BOX_WIDTH);
@@ -267,9 +281,10 @@ public class GamePanel extends JPanel {
         wrap1.add(leftGlow, new GridBagConstraints());
         leftSide.add(wrap1, BorderLayout.CENTER);
 
-        // --- Player 2 Side ---
+        // --- Player 2 Side (displayed on LEFT) ---
         JPanel rightSide = new JPanel(new BorderLayout());
         rightSide.setOpaque(false);
+        rightSide.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
         JPanel rightTopGroup = new JPanel();
         rightTopGroup.setLayout(new BoxLayout(rightTopGroup, BoxLayout.Y_AXIS));
         rightTopGroup.setOpaque(false);
@@ -278,7 +293,7 @@ public class GamePanel extends JPanel {
         rightTopGroup.setMaximumSize(headerDim);
 
         playerBox2 = new NeonInputField(new Color(80, 180, 255));
-        playerBox2.setText(player2Name);
+        playerBox2.setText(LanguageManager.get("player2", controller.getCurrentLanguage())); // שמאל: اللاعب 2
         playerBox2.setDisplayMode(true);
         playerBox2.setAlignmentX(Component.CENTER_ALIGNMENT);
         playerBox2.setFieldWidth(FIXED_BOX_WIDTH);
@@ -305,8 +320,22 @@ public class GamePanel extends JPanel {
         wrap2.add(rightGlow, new GridBagConstraints());
         rightSide.add(wrap2, BorderLayout.CENTER);
 
-        centerPanel.add(leftSide);
-        centerPanel.add(rightSide);
+        // Force physical positions: gridx=0 = left (Player 2), gridx=1 = right (Player 1)
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(0, 0, 0, 20);
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.gridy = 0;
+        gbc.gridx = 0;
+        centerPanel.add(rightSide, gbc);
+        gbc.gridx = 1;
+        gbc.insets = new Insets(0, 20, 0, 0);
+        centerPanel.add(leftSide, gbc);
+        topPanel = centerPanel;
+        applyComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+        topPanel.revalidate();
+        topPanel.repaint();
 
         // --- Footer ---
         JPanel footer = new JPanel(new BorderLayout());
@@ -441,6 +470,8 @@ public class GamePanel extends JPanel {
 
     private void updateAllLanguageTexts() {
         LanguageManager.Language lang = controller.getCurrentLanguage();
+        playerBox1.setText(LanguageManager.get("player1", lang)); // ימין: اللاعب 1
+        playerBox2.setText(LanguageManager.get("player2", lang)); // שמאל: اللاعب 2
         lblMinesLeft1.setText(getMinesLeftText(1));
         lblMinesLeft2.setText(getMinesLeftText(2));
         lblScore.setText(LanguageManager.get("score", lang) + ": " + controller.getSharedScore());
@@ -451,6 +482,9 @@ public class GamePanel extends JPanel {
         long minutes = (elapsedMillis / 1000) / 60;
         lblTime.setText(LanguageManager.get("time", lang) + String.format(": %02d:%02d", minutes, seconds));
 
+        setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+        applyComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+        if (topPanel != null) { topPanel.revalidate(); topPanel.repaint(); }
         revalidate();
         repaint();
     }
@@ -710,6 +744,8 @@ public class GamePanel extends JPanel {
             result = result.replace("GOOD", "جيد").replace("BAD", "سيء").replace("Good", "جيد").replace("Bad", "سيء");
             result = result.replace("You didn't answer the question.", "لم تجب على السؤال.");
             result = result.replace("Activation cost was deducted.", "تم خصم تكلفة التفعيل.");
+            // Arabic RTL: عرض التغيير بصيغة قبل/بعد بدل الأسهم (مثلاً: النقاط: قبل 85، بعد 96)
+            result = result.replaceAll("(\\d+)\\s*->\\s*(\\d+)", "قبل $1، بعد $2");
         } else if (lang == LanguageManager.Language.RU) {
             result = result.replace("EASY", "Легкий").replace("MEDIUM", "Средний").replace("HARD", "Сложный").replace("EXPERT", "Эксперт");
             result = result.replace("Wrong!", "Неправильно!").replace("Wrong ", "Неправильно ").replace("Wrong:", "Неправильно:");
@@ -776,9 +812,15 @@ public class GamePanel extends JPanel {
             result = result.replace("Activation cost was deducted.", "Se dedujo el costo de activacion.");
         }
 
-        // Fix arrow direction for RTL languages (Hebrew, Arabic)
-        // In RTL, → should become ← so the change direction is correct when read right-to-left
+        // Fix arrow for RTL: Arabic uses قبل/بعد (already applied above); Hebrew uses ← (96 ← 85)
+        if (LanguageManager.isRTL(lang) && lang != LanguageManager.Language.AR) {
+            result = result.replaceAll("(\\d+)\\s*->\\s*(\\d+)", "$2 \u2190 $1"); // Y ← X
+        } else if (lang != LanguageManager.Language.AR) {
+            result = result.replace("->", "\u2192"); // → for LTR
+        }
+        // RTL: تثبيت الإشارة قبل الرقم (+8 نقطة وليس 8+ نقطة) باستخدام LTR embedding
         if (LanguageManager.isRTL(lang)) {
+            result = result.replaceAll("([+-]\\d+)", "\u202A$1\u202C");
             result = fixRtlNumberArrows(result);
         } else {
             result = result.replace("->", " \u2192 ");
