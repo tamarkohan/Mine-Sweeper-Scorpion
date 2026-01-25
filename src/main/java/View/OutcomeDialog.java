@@ -335,6 +335,11 @@ public class OutcomeDialog extends JDialog {
         result = result.replace(" life", " " + lifeText);
         result = result.replace(" lives", " " + lifeText);
 
+        // RTL: تثبيت الإشارة قبل الرقم (+8 نقطة وليس 8+) بـ \u202A LTR embedding و \u202C
+        if (LanguageManager.isRTL(lang)) {
+            result = result.replaceAll("([+-]\\d+)", "\u202A$1\u202C");
+        }
+
         // Translate surprise outcomes
         result = result.replace("Good surprise!", goodSurprise);
         result = result.replace("Bad surprise!", badSurprise);
@@ -349,6 +354,13 @@ public class OutcomeDialog extends JDialog {
         // Translate common phrases
         result = result.replace("You didn't answer the question.", didntAnswer);
         result = result.replace("Activation cost was deducted.", costDeducted);
+
+        // Arabic: عرض التغيير بصيغة قبل/بعد (النقاط: قبل 85، بعد 96)
+        if (lang == LanguageManager.Language.AR) {
+            result = result.replaceAll("(\\d+)\\s*->\\s*(\\d+)", "قبل $1، بعد $2");
+        } else if (LanguageManager.isRTL(lang)) {
+            result = result.replaceAll("(\\d+)\\s*->\\s*(\\d+)", "$2 \u2190 $1");
+        }
 
         return result;
     }

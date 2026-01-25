@@ -288,10 +288,14 @@ public class StartPanel extends JPanel {
         String questionsText = LanguageManager.get("questions_count", lang);
         String surprisesText = LanguageManager.get("surprises_count", lang);
 
+        boolean isArabic = (lang == LanguageManager.Language.AR);
+        // Arabic: string אחד בשורה אחת (אין רווח שורה בין "أرواح لكل لاعب:" ל־10)
+        String livesPart = isArabic ? (sharedLivesText + "\u00A0" + lives) : (lives + " " + sharedLivesText);
+
         String infoHtml;
         if (isRTL) {
             infoHtml = "<html><div style='text-align: center; direction: rtl; color: " + hexColor + "; font-family: Arial; font-size: 13px;'>" +
-                    "<b>" + lives + " " + sharedLivesText + "</b><br>" +
+                    "<b><span style='white-space: nowrap'>" + livesPart + "</span></b><br>" +
                     "<b>" + boardText + " " + sizeStr + "</b><br>" +
                     "<b>" + mines + " " + minesText + "</b><br>" +
                     "<span style='font-size: 10px;'>" + surprises + " " + surprisesText + " | " + questions + " " + questionsText + "</span></div></html>";
