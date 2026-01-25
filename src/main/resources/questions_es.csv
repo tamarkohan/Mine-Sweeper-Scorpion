@@ -1,4 +1,6 @@
 id,text,optionA,optionB,optionC,optionD,correctOption,difficultyLevel
+2,"En el desarrollo ágil, ¿cuál es la historia de usuario?",Documento detallado de diseño técnico,Lista de todos los bugs del proyecto,Una breve descripción de la funcionalidad desde la perspectiva del usuario,Agenda de la reunión Sprint,C,EASY
+3,¿Cuál es el acrónimo de Especificación de Requisitos de Software en Lengua Inglesa?,Revisión y especificaciones de software,Especificación de Requisitos de Software,Calendario de lanzamientos del sistema,Estándar de Fiabilidad del Sistema,B,EASY
 4,¿Qué artefacto se produce típicamente en la fase de Requisitos?,Casos de prueba unitarios,Diagramas de clases,Manual de usuario,Especificación de Requisitos de Software (SRS),D,EASY
 5,¿Cuál de las siguientes describe MEJOR las pruebas de Caja Negra?,Pruebas basadas en la implementación interna del código,Pruebas centradas en entradas y salidas según la especificación,Pruebas realizadas solo por el equipo de desarrollo,Pruebas que solo verifican el rendimiento,B,EASY
 6,¿Cuál es el objetivo de una Revisión de Código?,Reescribir el código desde cero,Comprobar solo el estilo de codificación,Encontrar defectos y mejorar la calidad antes de las pruebas,Medir el tiempo de ejecución del código,C,EASY
