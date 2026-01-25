@@ -162,7 +162,7 @@ public class LanguageManager {
         add("level", "LEVEL:", "רמת קושי:", "المستوى:", "УРОВЕНЬ:", "NIVEL:");
         add("shared_lives", "Shared Lives", "חיים משותפים", "أرواح مشتركة", "Общих жизней", "Vidas compartidas");
         add("board", "Board", "לוח", "اللوحة", "Поле", "Tablero");
-        add("mines_per_player", "Mines to play", "מוקשים לשחקן", "ألغام للعب", "Мин для игры", "Minas para jugar");
+        add("mines_per_player", "Mines per player", "מוקשים לשחקן", "ألغام للعب", "Мин для каждого игрока", "Minas por jugador");
         add("questions_count", "Questions", "שאלות", "أسئلة", "Вопросов", "Preguntas");
         add("surprises_count", "Surprises", "הפתעות", "مفاجآت", "Сюрприза", "Sorpresas");
         add("missing_names", "Please enter names for both players.", "אנא הזן שמות לשני השחקנים.", "يرجى إدخال أسماء لكلا اللاعبين.", "Введите имена обоих игроков.", "Por favor, ingresa los nombres de ambos jugadores.");
