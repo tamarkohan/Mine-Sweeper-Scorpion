@@ -821,9 +821,12 @@ public class GamePanel extends JPanel {
         // RTL: تثبيت الإشارة قبل الرقم (+8 نقطة وليس 8+ نقطة) باستخدام LTR embedding
         if (LanguageManager.isRTL(lang)) {
             result = result.replaceAll("([+-]\\d+)", "\u202A$1\u202C");
+            result = fixRtlNumberArrows(result);
+        } else {
+            result = result.replace("->", " \u2192 ");
         }
-
         return result;
+
     }
 
     public void updateStatus() {
@@ -911,4 +914,19 @@ public class GamePanel extends JPanel {
         });
         resizeStabilizer.start();
     }
+
+    private String fixRtlNumberArrows(String s) {
+        if (s == null) return null;
+
+        s = s.replace("->", " \u2192 ");
+
+        String LRE = "\u202A";
+        String PDF = "\u202C";
+
+        s = s.replaceAll("(\\d+)\\s*\u2192\\s*(\\d+)", LRE + "$1 \u2192 $2" + PDF);
+
+        return s;
+    }
+
+
 }
