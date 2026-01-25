@@ -3,7 +3,6 @@ package View;
 import Controller.GameController;
 import Model.Question;
 import Model.QuestionManager;
-import View.IconButton;
 import util.LanguageManager;
 import util.SoundToggleOverlay;
 
@@ -22,7 +21,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import util.SoundManager;
-import View.ConfirmDialog;
 
 public class QuestionManagementFrame extends JFrame {
 
@@ -43,6 +41,13 @@ public class QuestionManagementFrame extends JFrame {
     private final JButton btnAdd;
     private final JButton btnEdit;
     private final JButton btnDelete;
+
+    private JButton burgerBtn;
+    private JPanel drawerPanel;
+    private boolean drawerOpen = false;
+    private JButton drawerClearBtn;
+    private JLabel drawerTitle;
+    private JPanel glass;
 
     private final IconButton btnLanguage;
     private final JLabel toastLabel;
@@ -104,6 +109,7 @@ public class QuestionManagementFrame extends JFrame {
         });
 
         filterPanel = createFilterPanel();
+
         tableScroll = createStyledScrollPane(table);
 
         btnAdd = createStyledButton("Add");
@@ -190,6 +196,9 @@ public class QuestionManagementFrame extends JFrame {
         setContentPane(root);
         SoundToggleOverlay.attach(this);
 
+        setupGlassPane();
+        createDrawerPanel();
+
         updateUIText();
         updateFilterComboItems();
         loadTable();
@@ -197,9 +206,110 @@ public class QuestionManagementFrame extends JFrame {
         toastTimer = new Timer(2000, e -> toastLabel.setVisible(false));
         toastTimer.setRepeats(false);
 
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                if (drawerOpen) positionDrawer();
+            }
+            @Override
+            public void componentMoved(java.awt.event.ComponentEvent e) {
+                if (drawerOpen) positionDrawer();
+            }
+        });
+
         setUndecorated(true);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
+    }
+
+    private void setupGlassPane() {
+        glass = new JPanel(null);
+        glass.setOpaque(false);
+        glass.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                if (drawerPanel != null && drawerPanel.isVisible()) {
+                    Point p = SwingUtilities.convertPoint(glass, e.getPoint(), drawerPanel);
+                    if (p.x < 0 || p.y < 0 || p.x > drawerPanel.getWidth() || p.y > drawerPanel.getHeight()) {
+                        closeDrawer();
+                    }
+                }
+            }
+        });
+        setGlassPane(glass);
+        glass.setVisible(false);
+    }
+
+    private void openDrawer() {
+        drawerOpen = true;
+        glass.setVisible(true);
+        drawerPanel.setVisible(true);
+        positionDrawer();
+        drawerPanel.requestFocusInWindow();
+    }
+
+    private void closeDrawer() {
+        drawerOpen = false;
+        if (drawerPanel != null) drawerPanel.setVisible(false);
+        if (glass != null) glass.setVisible(false);
+    }
+
+    private void toggleDrawer() {
+        if (drawerOpen) closeDrawer();
+        else openDrawer();
+    }
+
+    private void positionDrawer() {
+        if (drawerPanel == null || burgerBtn == null || glass == null) return;
+
+        Point p = SwingUtilities.convertPoint(burgerBtn.getParent(), burgerBtn.getLocation(), glass);
+        int w = 280;
+        int h = drawerPanel.getPreferredSize().height;
+        int x = p.x + burgerBtn.getWidth() - w;
+        int y = p.y + burgerBtn.getHeight() + 8;
+
+        drawerPanel.setSize(w, h);
+        drawerPanel.setLocation(Math.max(10, x), Math.max(10, y));
+        drawerPanel.revalidate();
+        drawerPanel.repaint();
+    }
+
+    private void createDrawerPanel() {
+        drawerPanel = new JPanel();
+        drawerPanel.setLayout(new BoxLayout(drawerPanel, BoxLayout.Y_AXIS));
+        drawerPanel.setBackground(new Color(5, 6, 10, 235));
+        drawerPanel.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(ACCENT_COLOR, 1),
+                new EmptyBorder(12, 12, 12, 12)
+        ));
+        drawerPanel.setVisible(false);
+
+        drawerTitle = new JLabel("Filters");
+        drawerTitle.setForeground(ACCENT_COLOR);
+        drawerTitle.setFont(new Font("Dialog", Font.BOLD, 14));
+
+        corrLabel = new JLabel("Correct:");
+        corrLabel.setForeground(TEXT_COLOR);
+        corrLabel.setFont(new Font("Dialog", Font.BOLD, 14));
+
+        drawerClearBtn = createStyledButton("Clear");
+        attachClickSound(drawerClearBtn);
+        drawerClearBtn.addActionListener(e -> {
+            difficultyFilter.setSelectedIndex(0);
+            correctAnswerFilter.setSelectedIndex(0);
+            applyFilters();
+            closeDrawer();
+        });
+
+        drawerPanel.add(drawerTitle);
+        drawerPanel.add(Box.createVerticalStrut(12));
+        drawerPanel.add(corrLabel);
+        drawerPanel.add(Box.createVerticalStrut(6));
+        drawerPanel.add(correctAnswerFilter);
+        drawerPanel.add(Box.createVerticalStrut(12));
+        drawerPanel.add(drawerClearBtn);
+
+        glass.add(drawerPanel);
     }
 
     private void showLanguagePopup() {
@@ -397,6 +507,16 @@ public class QuestionManagementFrame extends JFrame {
         };
     }
 
+    private String getFiltersTitle(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> "מסננים";
+            case AR -> "فلاتر";
+            case RU -> "Фильтры";
+            case ES -> "Filtros";
+            default -> "Filters";
+        };
+    }
+
     private String[] getTableHeaders(LanguageManager.Language lang) {
         return switch (lang) {
             case HE -> new String[]{"מזהה", "טקסט", "א", "ב", "ג", "ד", "נכונה", "רמה"};
@@ -417,11 +537,12 @@ public class QuestionManagementFrame extends JFrame {
         btnDelete.setText(getDeleteText(lang));
 
         diffLabel.setText(getDiffLabelText(lang));
-        corrLabel.setText(getCorrLabelText(lang));
+        if (corrLabel != null) corrLabel.setText(getCorrLabelText(lang));
         clearBtn.setText(getClearText(lang));
+        if (drawerClearBtn != null) drawerClearBtn.setText(getClearText(lang));
+        if (drawerTitle != null) drawerTitle.setText(getFiltersTitle(lang));
 
         lblSortHint.setText(LanguageManager.get("sort_hint", lang));
-
         model.setColumnIdentifiers(getTableHeaders(lang));
 
         ComponentOrientation o = isRTL ? ComponentOrientation.RIGHT_TO_LEFT : ComponentOrientation.LEFT_TO_RIGHT;
@@ -433,6 +554,7 @@ public class QuestionManagementFrame extends JFrame {
         }
         filterPanel.setComponentOrientation(o);
         rebuildFilterPanel(isRTL);
+        if (drawerPanel != null) drawerPanel.setComponentOrientation(o);
         table.getTableHeader().resizeAndRepaint();
     }
 
@@ -443,20 +565,20 @@ public class QuestionManagementFrame extends JFrame {
 
         if (isRTL) {
             filterPanel.add(clearBtn);
-            filterPanel.add(correctAnswerFilter);
-            filterPanel.add(corrLabel);
+            filterPanel.add(burgerBtn);
             filterPanel.add(difficultyFilter);
             filterPanel.add(diffLabel);
         } else {
             filterPanel.add(diffLabel);
             filterPanel.add(difficultyFilter);
-            filterPanel.add(corrLabel);
-            filterPanel.add(correctAnswerFilter);
+            filterPanel.add(burgerBtn);
             filterPanel.add(clearBtn);
         }
 
         filterPanel.revalidate();
         filterPanel.repaint();
+
+        if (drawerOpen) positionDrawer();
     }
 
     private void updateFilterComboItems() {
@@ -705,10 +827,6 @@ public class QuestionManagementFrame extends JFrame {
         styleCombo(difficultyFilter);
         attachComboClickSound(difficultyFilter);
 
-        corrLabel = new JLabel("Correct:");
-        corrLabel.setForeground(TEXT_COLOR);
-        corrLabel.setFont(new Font("Dialog", Font.BOLD, 14));
-
         correctAnswerFilter = new JComboBox<>(new String[]{"All", "A", "B", "C", "D"});
         styleCombo(correctAnswerFilter);
         attachComboClickSound(correctAnswerFilter);
@@ -716,19 +834,36 @@ public class QuestionManagementFrame extends JFrame {
         clearBtn = createStyledButton("Clear");
         attachClickSound(clearBtn);
 
+        burgerBtn = new JButton("☰");
+        burgerBtn.setPreferredSize(new Dimension(46, 36));
+        burgerBtn.setBackground(new Color(40, 40, 40));
+        burgerBtn.setForeground(ACCENT_COLOR);
+        burgerBtn.setFont(new Font("Dialog", Font.BOLD, 18));
+        burgerBtn.setFocusPainted(false);
+        burgerBtn.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(ACCENT_COLOR),
+                new EmptyBorder(2, 10, 2, 10)
+        ));
+        burgerBtn.addActionListener(e -> toggleDrawer());
+        attachClickSound(burgerBtn);
+
         clearBtn.addActionListener(e -> {
             difficultyFilter.setSelectedIndex(0);
             correctAnswerFilter.setSelectedIndex(0);
             applyFilters();
+            closeDrawer();
         });
 
         difficultyFilter.addActionListener(e -> applyFilters());
         correctAnswerFilter.addActionListener(e -> applyFilters());
+        correctAnswerFilter.setLightWeightPopupEnabled(false);
+        correctAnswerFilter.setPreferredSize(new Dimension(240, 34));
+        correctAnswerFilter.setMaximumSize(new Dimension(240, 34));
+
 
         p.add(diffLabel);
         p.add(difficultyFilter);
-        p.add(corrLabel);
-        p.add(correctAnswerFilter);
+        p.add(burgerBtn);
         p.add(clearBtn);
 
         return p;
@@ -844,7 +979,6 @@ public class QuestionManagementFrame extends JFrame {
         }
     }
 
-    // ================= DIALOG CLASS =================
     private class NeonQuestionDialog extends JDialog {
         private Question result = null;
         private final JTextField idField = new JTextField();
@@ -872,7 +1006,6 @@ public class QuestionManagementFrame extends JFrame {
 
             setTitle(existing == null ? getDialogAddTitle() : getDialogEditTitle());
 
-            // Setup combo boxes based on language
             setupCorrectCombo();
             setupDiffCombo();
 
@@ -1131,7 +1264,6 @@ public class QuestionManagementFrame extends JFrame {
         }
     }
 
-    // ================= HELPER CLASS =================
     private static class BackgroundPanel extends JPanel {
         private Image backgroundImage;
 
