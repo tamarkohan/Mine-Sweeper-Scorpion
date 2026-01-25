@@ -44,7 +44,7 @@ public class SurpriseActivator extends SpecialCellActivator {
         return " Surprise activated!\n" +
                 "Activation cost: -" + cost + " pts\n" +
                 result.details + "\n" +
-                "Score: " + beforeScore + " → " + afterScore + "\n" +
-                "Lives: " + beforeLives + " → " + afterLives;
+                "Score: " + beforeScore + " -> " + afterScore + "\n" +
+                "Lives: " + beforeLives + " -> " + afterLives;
     }
 }

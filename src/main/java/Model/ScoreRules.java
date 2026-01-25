@@ -53,14 +53,14 @@ public class ScoreRules {
                 case EASY -> {
                     boolean penalty = rnd.nextBoolean(); // OR nothing
                     yield penalty
-                            ? new Result(-3, 0, "Wrong EASY: -3 pts (OR nothing). Chosen: -3 pts.")
-                            : new Result(0, 0, "Wrong EASY: -3 pts (OR nothing). Chosen: nothing.");
+                            ? new Result(-3, 0, "Wrong EASY: -3 pts. (50% luck) Unlucky - penalty applied.")
+                            : new Result(0, 0, "Wrong EASY: -3 pts. (50% luck) Lucky - no penalty!");
                 }
                 case MEDIUM -> {
                     boolean penalty = rnd.nextBoolean();
                     yield penalty
-                            ? new Result(-6, 0, "Wrong MEDIUM: -6 pts (OR nothing). Chosen: -6 pts.")
-                            : new Result(0, 0, "Wrong MEDIUM: -6 pts (OR nothing). Chosen: nothing.");
+                            ? new Result(-6, 0, "Wrong MEDIUM: -6 pts. (50% luck) Unlucky - penalty applied.")
+                            : new Result(0, 0, "Wrong MEDIUM: -6 pts. (50% luck) Lucky - no penalty!");
                 }
                 case HARD -> new Result(-10, 0, "Wrong HARD: -10 pts.");
                 case EXPERT -> new Result(-15, -1, "Wrong EXPERT: -15 pts, -1 life.");
@@ -87,15 +87,15 @@ public class ScoreRules {
                 case MEDIUM -> {
                     boolean penalty = rnd.nextBoolean(); // OR nothing
                     yield penalty
-                            ? new Result(-10, -1, "Wrong MEDIUM: (-10 pts, -1 life) OR nothing. Chosen: (-10 pts, -1 life).")
-                            : new Result(0, 0, "Wrong MEDIUM: (-10 pts, -1 life) OR nothing. Chosen: nothing.");
+                            ? new Result(-10, -1, "Wrong MEDIUM: -10 pts, -1 life. (50% luck) Unlucky - penalty applied.")
+                            : new Result(0, 0, "Wrong MEDIUM: -10 pts, -1 life. (50% luck) Lucky - no penalty!");
                 }
                 case HARD -> new Result(-15, -1, "Wrong HARD: -15 pts, -1 life.");
                 case EXPERT -> {
                     boolean optionA = rnd.nextBoolean(); // OR between two penalties
                     yield optionA
-                            ? new Result(-20, -1, "Wrong EXPERT: (-20 pts, -1 life) OR (-20 pts, -2 lives). Chosen: (-20 pts, -1 life).")
-                            : new Result(-20, -2, "Wrong EXPERT: (-20 pts, -1 life) OR (-20 pts, -2 lives). Chosen: (-20 pts, -2 lives).");
+                            ? new Result(-20, -1, "Wrong EXPERT: -20 pts, -1 life. (50% luck between -1 or -2 lives) Result: -1 life.")
+                            : new Result(-20, -2, "Wrong EXPERT: -20 pts, -2 lives. (50% luck between -1 or -2 lives) Result: -2 lives.");
                 }
             };
         }
@@ -111,8 +111,8 @@ public class ScoreRules {
                 case MEDIUM -> {
                     boolean optionA = rnd.nextBoolean(); // OR between +1 or +2 lives
                     yield optionA
-                            ? new Result(+15, +1, "Correct MEDIUM: (+15 pts, +1 life) OR (+15 pts, +2 lives). Chosen: (+15 pts, +1 life).")
-                            : new Result(+15, +2, "Correct MEDIUM: (+15 pts, +1 life) OR (+15 pts, +2 lives). Chosen: (+15 pts, +2 lives).");
+                            ? new Result(+15, +1, "Correct MEDIUM: +15 pts, +1 life. (50% luck between +1 or +2 lives) Result: +1 life.")
+                            : new Result(+15, +2, "Correct MEDIUM: +15 pts, +2 lives. (50% luck between +1 or +2 lives) Result: +2 lives.");
                 }
                 case HARD -> new Result(+20, +2, "Correct HARD: +20 pts, +2 lives.");
                 case EXPERT -> new Result(+40, +3, "Correct EXPERT: +40 pts, +3 lives.");
@@ -123,8 +123,8 @@ public class ScoreRules {
                 case MEDIUM -> {
                     boolean optionA = rnd.nextBoolean();
                     yield optionA
-                            ? new Result(-15, -1, "Wrong MEDIUM: (-15 pts, -1 life) OR (-15 pts, -2 lives). Chosen: (-15 pts, -1 life).")
-                            : new Result(-15, -2, "Wrong MEDIUM: (-15 pts, -1 life) OR (-15 pts, -2 lives). Chosen: (-15 pts, -2 lives).");
+                            ? new Result(-15, -1, "Wrong MEDIUM: -15 pts, -1 life. (50% luck between -1 or -2 lives) Result: -1 life.")
+                            : new Result(-15, -2, "Wrong MEDIUM: -15 pts, -2 lives. (50% luck between -1 or -2 lives) Result: -2 lives.");
                 }
                 case HARD -> new Result(-20, -2, "Wrong HARD: -20 pts, -2 lives.");
                 case EXPERT -> new Result(-40, -3, "Wrong EXPERT: -40 pts, -3 lives.");

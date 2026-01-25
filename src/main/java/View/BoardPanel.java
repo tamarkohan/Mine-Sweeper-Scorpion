@@ -136,13 +136,17 @@ public class BoardPanel extends JPanel {
                         // sound for this popup
                         SoundManager.exitDialog();
 
-                        boolean isHebrew = controller.getCurrentLanguage() == LanguageManager.Language.HE;
+                        LanguageManager.Language lang = controller.getCurrentLanguage();
+                        String title = getFlagDialogTitle(lang);
+                        String translatedMsg = translateFlagMessage(msg, lang);
+                        boolean isRTL = LanguageManager.isRTL(lang);
+
                         ConfirmDialog.showInfo(
                                 SwingUtilities.getWindowAncestor(this),
-                                isHebrew ? "דגלים" : "FLAGS",
-                                msg,
+                                title,
+                                translatedMsg,
                                 new Color(65, 255, 240), // same cyan as restart
-                                isHebrew
+                                isRTL
                         );
                     }
                 }
@@ -242,7 +246,7 @@ public class BoardPanel extends JPanel {
                 btn.setDisabledIcon(null);
 
                 String t = data.text;
-                if ("🚩".equals(t)) {
+                if ("🚩".equals(t) || "flag".equals(t)) {
                     btn.setIcon(IconCache.icon("/ui/cells/flag.png", (int) (cellSize * 0.80)));
                     btn.setDisabledIcon(btn.getIcon());
                 } else if ("M".equals(t)) {
@@ -281,7 +285,9 @@ public class BoardPanel extends JPanel {
                 }
             }
         }
-        if (playMineSfx) {
+        // Only play mine sound if player clicked a mine (NOT for reward reveals)
+        // When pendingEffect is set (REVEAL_1_MINE or REVEAL_3X3), it's a reward - skip sound
+        if (playMineSfx && pendingEffect == null) {
             SoundManager.wrongAnswer();
         }
 
@@ -301,7 +307,10 @@ public class BoardPanel extends JPanel {
     protected void paintChildren(Graphics g) {
         super.paintChildren(g);
 
-        if (waiting && controller.isGameRunning()) {
+        // Don't draw waiting overlay while reward animation is playing - let user see the revealed cells
+        boolean animationInProgress = !animStart.isEmpty();
+
+        if (waiting && controller.isGameRunning() && !animationInProgress) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -315,7 +324,7 @@ public class BoardPanel extends JPanel {
             LanguageManager.Language lang = controller.getCurrentLanguage();
             String text = LanguageManager.get("wait_turn", lang);
 
-            g2.setFont(new Font("Arial", Font.BOLD, 18));
+            g2.setFont(new Font("Dialog", Font.BOLD, 18));
             FontMetrics fm = g2.getFontMetrics();
             int textWidth = fm.stringWidth(text);
             int textX = (getWidth() - textWidth) / 2;
@@ -339,15 +348,20 @@ public class BoardPanel extends JPanel {
             animTimer = new javax.swing.Timer(30, e -> {
                 for (Point p : animStart.keySet()) buttons[p.x][p.y].repaint();
                 long t = System.currentTimeMillis();
-                animStart.entrySet().removeIf(en -> (t - en.getValue()) > 900);
-                if (animStart.isEmpty()) ((javax.swing.Timer) e.getSource()).stop();
+                boolean hadEntries = !animStart.isEmpty();
+                animStart.entrySet().removeIf(en -> (t - en.getValue()) > 1500); // 1.5 seconds animation
+                // When animation ends, repaint entire panel so waiting overlay appears
+                if (hadEntries && animStart.isEmpty()) {
+                    repaint();
+                    ((javax.swing.Timer) e.getSource()).stop();
+                }
             });
         }
         if (!animTimer.isRunning()) animTimer.start();
     }
 
     private float animPhase(long startMs) {
-        float dt = (System.currentTimeMillis() - startMs) / 900f;
+        float dt = (System.currentTimeMillis() - startMs) / 1500f; // Match 1.5 second duration
         return Math.max(0f, Math.min(1f, dt));
     }
 
@@ -373,7 +387,7 @@ public class BoardPanel extends JPanel {
         btn.setOpaque(true);
         btn.setHorizontalAlignment(SwingConstants.CENTER);
         btn.setVerticalAlignment(SwingConstants.CENTER);
-        btn.setFont(new Font("Arial", Font.BOLD, 14));
+        btn.setFont(new Font("Dialog", Font.BOLD, 14));
         btn.setForeground(new Color(20, 20, 20));
         if (boardNumber == 1) {
             btn.setBorder(BorderFactory.createLineBorder(new Color(190, 120, 120, 140), 1));
@@ -414,5 +428,45 @@ public class BoardPanel extends JPanel {
                 g2.dispose();
             }
         }
+    }
+
+    private String getFlagDialogTitle(LanguageManager.Language lang) {
+        return switch (lang) {
+            case HE -> "דגלים";
+            case AR -> "الأعلام";
+            case RU -> "Флаги";
+            case ES -> "Banderas";
+            default -> "Flags";
+        };
+    }
+
+    private String translateFlagMessage(String msg, LanguageManager.Language lang) {
+        if (msg == null || lang == LanguageManager.Language.EN) return msg;
+
+        String result = msg;
+
+        if (lang == LanguageManager.Language.HE) {
+            result = result.replace("No flags left!", "לא נשארו דגלים!");
+            result = result.replace("You already used all", "כבר השתמשת בכל");
+            result = result.replace("flags.", "דגלים.");
+            result = result.replace("Remove a flag to place a new one.", "הסר דגל כדי להניח חדש.");
+        } else if (lang == LanguageManager.Language.AR) {
+            result = result.replace("No flags left!", "لم تتبق أعلام!");
+            result = result.replace("You already used all", "لقد استخدمت بالفعل جميع");
+            result = result.replace("flags.", "أعلام.");
+            result = result.replace("Remove a flag to place a new one.", "أزل علما لوضع علم جديد.");
+        } else if (lang == LanguageManager.Language.RU) {
+            result = result.replace("No flags left!", "Флаги закончились!");
+            result = result.replace("You already used all", "Вы уже использовали все");
+            result = result.replace("flags.", "флагов.");
+            result = result.replace("Remove a flag to place a new one.", "Уберите флаг, чтобы поставить новый.");
+        } else if (lang == LanguageManager.Language.ES) {
+            result = result.replace("No flags left!", "No quedan banderas!");
+            result = result.replace("You already used all", "Ya usaste todas las");
+            result = result.replace("flags.", "banderas.");
+            result = result.replace("Remove a flag to place a new one.", "Quita una bandera para colocar una nueva.");
+        }
+
+        return result;
     }
 }

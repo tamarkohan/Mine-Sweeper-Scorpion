@@ -36,7 +36,6 @@ public class QuestionManager {
     private final List<Question> cacheEs = new ArrayList<>();
     private boolean isCacheLoaded = false;
 
-
     private util.TranslatorService translator; // lazy
 
     /**
@@ -132,7 +131,6 @@ public class QuestionManager {
             default -> util.AppPaths.questionsEnFile();
         };
     }
-
 
     private interface InputStreamSupplier { InputStream get() throws Exception; }
 

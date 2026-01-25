@@ -87,7 +87,6 @@ public class Board {
                 if (mines > 0) {
                     cells[r][c].setContent(Cell.CellContent.NUMBER);
                 } else {
-                    // נשאר EMPTY (על זה מותר לשים Q/S)
                     cells[r][c].setContent(Cell.CellContent.EMPTY);
                 }
             }
@@ -235,14 +234,17 @@ public class Board {
 
         boolean wasFlagged = cell.isFlagged();
 
-        // If trying to PLACE a new flag, enforce max flags = number of mines
-        if (!wasFlagged && flagsPlaced >= totalMines) {
-            game.setLastActionMessage(
-                    "No flags left!\n" +
-                            "You already used all " + totalMines + " flags.\n" +
-                            "Remove a flag to place a new one."
-            );
-            return false;
+        // If trying to PLACE a new flag, enforce max flags = number of unrevealed mines
+        if (!wasFlagged) {
+            int unrevealedMines = countUnrevealedMines();
+            if (flagsPlaced >= unrevealedMines) {
+                game.setLastActionMessage(
+                        "No flags left!\n" +
+                                "You already used all " + unrevealedMines + " flags.\n" +
+                                "Remove a flag to place a new one."
+                );
+                return false;
+            }
         }
 
         boolean stateChanged = cell.toggleFlag();
@@ -268,57 +270,145 @@ public class Board {
         return true;
     }
 
+    /**
+     * Counts how many mines are not yet revealed (still hidden).
+     */
+    private int countUnrevealedMines() {
+        int count = 0;
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                Cell cell = cells[r][c];
+                if (cell.isMine() && !cell.isRevealed()) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
 
 
     /**
      * Reveals a single random mine cell without affecting score (reward type).
+     * Returns true if a mine was revealed, false if no unrevealed mine found.
      */
-    public void revealRandomMine() {
-        Random rand = new Random();
-        int attempts = rows * cols * 2; // Limit attempts to prevent infinite loop
-
-        while (attempts > 0) {
-            int r = rand.nextInt(rows);
-            int c = rand.nextInt(cols);
-            Cell cell = cells[r][c];
-
-            if (cell.isMine() && !cell.isRevealed() && !cell.isFlagged()) {
-                cell.reveal();
-                System.out.println("Reward: A mine at (" + r + "," + c + ") was safely revealed.");
-                // The footnote states no score for automatic mine reveal.
-                return;
+    public boolean revealRandomMine() {
+        // Collect all unrevealed, unflagged mines
+        java.util.List<Cell> unrevealedMines = new java.util.ArrayList<>();
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                Cell cell = cells[r][c];
+                if (cell.isMine() && !cell.isRevealed() && !cell.isFlagged()) {
+                    unrevealedMines.add(cell);
+                }
             }
-            attempts--;
         }
-        System.out.println("Reward: Could not find an unrevealed mine to show.");
+
+        if (unrevealedMines.isEmpty()) {
+            System.out.println("Reward: No unrevealed mines available to show.");
+            return false;
+        }
+
+        // Pick random mine from the list
+        Random rand = new Random();
+        Cell chosen = unrevealedMines.get(rand.nextInt(unrevealedMines.size()));
+        chosen.reveal();
+        System.out.println("Reward: A mine at (" + chosen.getRow() + "," + chosen.getCol() + ") was safely revealed.");
+        // The footnote states no score for automatic mine reveal.
+        return true;
     }
 
-    public void revealRandom3x3AreaReward() {
+    /**
+     * Reveals a random 3x3 area as a reward.
+     * Tries to find an area with unrevealed cells. Returns the count of newly revealed cells.
+     */
+    public int revealRandom3x3AreaReward() {
         Random rand = new Random();
-        int r0 = rand.nextInt(rows - 2);
-        int c0 = rand.nextInt(cols - 2);
 
+        // Find the best 3x3 position (one with most unrevealed cells)
+        int bestR = -1, bestC = -1, bestCount = 0;
+
+        // Try up to 20 random positions to find a good one
+        for (int attempt = 0; attempt < 20; attempt++) {
+            int r0 = rand.nextInt(rows - 2);
+            int c0 = rand.nextInt(cols - 2);
+            int count = countUnrevealedIn3x3(r0, c0);
+            if (count > bestCount) {
+                bestCount = count;
+                bestR = r0;
+                bestC = c0;
+                if (count >= 5) break; // Good enough, stop searching
+            }
+        }
+
+        // If random didn't find anything good, scan entire board for best position
+        if (bestCount == 0) {
+            for (int r0 = 0; r0 <= rows - 3; r0++) {
+                for (int c0 = 0; c0 <= cols - 3; c0++) {
+                    int count = countUnrevealedIn3x3(r0, c0);
+                    if (count > bestCount) {
+                        bestCount = count;
+                        bestR = r0;
+                        bestC = c0;
+                    }
+                }
+            }
+        }
+
+        // If still no unrevealed cells found anywhere
+        if (bestCount == 0) {
+            System.out.println("Reward: No unrevealed cells available for 3x3 reveal.");
+            return 0;
+        }
+
+        // Reveal the 3x3 area at the best position
+        int revealed = 0;
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                int r = r0 + i;
-                int c = c0 + j;
+                int r = bestR + i;
+                int c = bestC + j;
                 Cell cell = cells[r][c];
 
                 // don't touch already processed cells
                 if (cell.isRevealed() || cell.isFlagged()) continue;
 
-                //  reveal visually only (no score/lives side effects)
+                // reveal visually only (no score/lives side effects)
                 cell.reveal();
+                revealed++;
 
-                //  if it's NOT a mine, count it as progress like a normal reveal
+                // if it's NOT a mine, count it as progress like a normal reveal
                 if (!cell.isMine()) {
                     safeCellsRemaining--;
                 }
             }
         }
 
+        System.out.println("Reward: Revealed " + revealed + " cells in 3x3 area starting at (" + bestR + "," + bestC + ")");
+
         // after reward reveal, check win/loss (win possible)
         game.checkGameStatus();
+
+        return revealed;
+    }
+
+    /**
+     * Counts unrevealed, unflagged cells in a 3x3 area starting at (r0, c0).
+     */
+    private int countUnrevealedIn3x3(int r0, int c0) {
+        int count = 0;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                int r = r0 + i;
+                int c = c0 + j;
+                if (isValid(r, c)) {
+                    Cell cell = cells[r][c];
+                    if (!cell.isRevealed() && !cell.isFlagged()) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
     }
 
 
@@ -412,7 +502,14 @@ public class Board {
     }
 
     public int getFlagsRemaining() {
-        return totalMines - flagsPlaced;
+        return countUnrevealedMines() - flagsPlaced;
+    }
+
+    /**
+     * Returns the count of unrevealed mines (for UI display).
+     */
+    public int getUnrevealedMinesCount() {
+        return countUnrevealedMines();
     }
 
 }

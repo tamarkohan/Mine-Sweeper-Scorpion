@@ -72,7 +72,7 @@ public class OutcomeDialog extends JDialog {
         b.setFocusPainted(false);
         b.setForeground(TEXT);
         int fontSize = LanguageManager.getAdjustedFontSize(13, lang);
-        b.setFont(new Font("Arial", Font.BOLD, fontSize));
+        b.setFont(new Font("Dialog", Font.BOLD, fontSize));
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         b.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(accent, 2, true),
@@ -137,7 +137,7 @@ public class OutcomeDialog extends JDialog {
 
             g2.setColor(accent);
             int fontSize = LanguageManager.getAdjustedFontSize(44, lang);
-            g2.setFont(new Font("Arial", Font.BOLD, fontSize));
+            g2.setFont(new Font("Dialog", Font.BOLD, fontSize));
 
             FontMetrics fm = g2.getFontMetrics();
             int x = (w - fm.stringWidth(text)) / 2;
@@ -201,7 +201,7 @@ public class OutcomeDialog extends JDialog {
 
                 int baseFontSize = important ? 16 : 15;
                 int fontSize = LanguageManager.getAdjustedFontSize(baseFontSize, lang);
-                g2.setFont(new Font("Arial", important ? Font.BOLD : Font.PLAIN, fontSize));
+                g2.setFont(new Font("Dialog", important ? Font.BOLD : Font.PLAIN, fontSize));
                 g2.setColor(important ? TEXT : MUTED);
 
                 String printed = (important ? "• " : "  ") + line;
@@ -228,10 +228,10 @@ public class OutcomeDialog extends JDialog {
 
         String lower = outcomeMessage.toLowerCase();
 
-        boolean isCorrect = lower.contains("correct") || lower.contains("נכון") || lower.contains("صحيح");
-        boolean isWrong = lower.contains("wrong") || lower.contains("שגוי") || lower.contains("خطأ");
+        boolean isCorrect = lower.contains("correct") || lower.contains("נכון") || lower.contains("صحيح") || lower.contains("правильно") || lower.contains("correcto");
+        boolean isWrong = lower.contains("wrong") || lower.contains("שגוי") || lower.contains("خطأ") || lower.contains("неправильно") || lower.contains("incorrecto");
         boolean isSkipped = lower.contains("didn't answer") || lower.contains("did not answer")
-                || lower.contains("skipped") || lower.contains("דילגת") || lower.contains("تم التخطي");
+                || lower.contains("skipped") || lower.contains("דילגת") || lower.contains("تم التخطي") || lower.contains("пропущен") || lower.contains("omitido");
 
         Color accent;
         String title;
@@ -262,8 +262,8 @@ public class OutcomeDialog extends JDialog {
         LanguageManager.Language lang = GameController.getInstance().getCurrentLanguage();
 
         String lower = outcomeMessage.toLowerCase();
-        boolean good = lower.contains("good") || lower.contains("טוב") || lower.contains("جيد");
-        boolean bad = lower.contains("bad") || lower.contains("רע") || lower.contains("سيء");
+        boolean good = lower.contains("good") || lower.contains("טוב") || lower.contains("جيد") || lower.contains("хорошо") || lower.contains("bueno");
+        boolean bad = lower.contains("bad") || lower.contains("רע") || lower.contains("سيء") || lower.contains("плохо") || lower.contains("malo");
 
         Color accent = good ? ACCENT_GREEN : (bad ? ACCENT_RED : new Color(65, 255, 240));
         String title = good ? LanguageManager.get("surprise_good", lang)
