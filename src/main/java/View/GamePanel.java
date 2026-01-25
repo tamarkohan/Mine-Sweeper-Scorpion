@@ -205,6 +205,7 @@ public class GamePanel extends JPanel {
         setLayout(new BorderLayout());
         setOpaque(false);
         setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+        LanguageManager.Language lang = controller.getCurrentLanguage();
 
         String levelName = controller.getDifficultyName();
         String bgPath = switch (levelName) {
@@ -246,7 +247,7 @@ public class GamePanel extends JPanel {
         leftTopGroup.setMaximumSize(headerDim);
 
         playerBox1 = new NeonInputField(new Color(255, 80, 80));
-        playerBox1.setText(LanguageManager.get("player1", controller.getCurrentLanguage())); // ימין: اللاعب 1
+        playerBox1.setText(player1Name);
         playerBox1.setDisplayMode(true);
         playerBox1.setAlignmentX(Component.CENTER_ALIGNMENT);
         playerBox1.setFieldWidth(FIXED_BOX_WIDTH);
@@ -293,12 +294,14 @@ public class GamePanel extends JPanel {
         rightTopGroup.setMaximumSize(headerDim);
 
         playerBox2 = new NeonInputField(new Color(80, 180, 255));
-        playerBox2.setText(LanguageManager.get("player2", controller.getCurrentLanguage())); // שמאל: اللاعب 2
+        playerBox2.setText(player2Name);
         playerBox2.setDisplayMode(true);
         playerBox2.setAlignmentX(Component.CENTER_ALIGNMENT);
         playerBox2.setFieldWidth(FIXED_BOX_WIDTH);
         playerBox2.setPreferredSize(boxDim);
         playerBox2.setMaximumSize(boxDim);
+        playerBox1.applyLanguageDirection(lang);
+        playerBox2.applyLanguageDirection(lang);
 
         lblMinesLeft2 = new JLabel(getMinesLeftText(2), SwingConstants.CENTER);
         lblMinesLeft2.setForeground(Color.WHITE);
@@ -345,7 +348,6 @@ public class GamePanel extends JPanel {
         JPanel scoreLivesPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 0));
         scoreLivesPanel.setOpaque(false);
 
-        LanguageManager.Language lang = controller.getCurrentLanguage();
         lblScore = new JLabel(LanguageManager.get("score", lang) + ": 0");
         lblScore.setForeground(Color.WHITE);
         lblScore.setFont(new Font("Dialog", Font.BOLD, 18));
@@ -470,8 +472,8 @@ public class GamePanel extends JPanel {
 
     private void updateAllLanguageTexts() {
         LanguageManager.Language lang = controller.getCurrentLanguage();
-        playerBox1.setText(LanguageManager.get("player1", lang)); // ימין: اللاعب 1
-        playerBox2.setText(LanguageManager.get("player2", lang)); // שמאל: اللاعب 2
+        playerBox1.applyLanguageDirection(lang);
+        playerBox2.applyLanguageDirection(lang);
         lblMinesLeft1.setText(getMinesLeftText(1));
         lblMinesLeft2.setText(getMinesLeftText(2));
         lblScore.setText(LanguageManager.get("score", lang) + ": " + controller.getSharedScore());
