@@ -1,61 +1,36 @@
-REM Scorpion Minesweeper Launcher
 @echo off
-chcp 65001 >nul
-cd /d "%~dp0"
 echo ==========================================
-echo Running Scorpion Minesweeper
+echo   Scorpion Minesweeper Launcher
 echo ==========================================
-echo.
 
-REM Check if classes exist, if not compile
-if not exist "target\classes\View\MainFrame.class" (
-    echo MainFrame.class not found. Compiling...
-    echo.
-    
-    REM Compile Model classes first
-    echo Compiling Model classes...
-    javac -d target\classes -cp target\classes -source 19 -target 19 src\main\java\Model\*.java src\main\java\Model\specialcell\*.java src\main\java\Model\specialcell\factory\*.java
-    if %ERRORLEVEL% NEQ 0 (
-        echo Model compilation failed!
-        pause
-        exit /b 1
-    )
-    
-    REM Compile Controller
-    echo Compiling Controller classes...
-    javac -d target\classes -cp target\classes -source 19 -target 19 src\main\java\Controller\*.java
-    if %ERRORLEVEL% NEQ 0 (
-        echo Controller compilation failed!
-        pause
-        exit /b 1
-    )
-    
-    REM Compile View
-    echo Compiling View classes...
-    javac -d target\classes -cp target\classes -source 19 -target 19 src\main\java\View\*.java
-    if %ERRORLEVEL% NEQ 0 (
-        echo View compilation failed!
-        pause
-        exit /b 1
-    )
-    
-    echo Compilation successful!
-    echo.
+REM 1. Look for the JAR file
+if exist "target\Mine_Sweeper_Scorpion-1.0-SNAPSHOT.jar" (
+    echo Launching Game...
+    java -jar target\Mine_Sweeper_Scorpion-1.0-SNAPSHOT.jar
+    goto :EOF
 )
 
-echo Starting application...
-echo.
-java -cp "target/classes" View.MainFrame
-
-if %ERRORLEVEL% NEQ 0 (
-    echo.
-    echo Application failed to start!
-    echo Checking if MainFrame.class exists...
-    if exist "target\classes\View\MainFrame.class" (
-        echo MainFrame.class found but error occurred.
-    ) else (
-        echo MainFrame.class NOT found!
+REM 2. If JAR is missing, check if they have Maven installed (For Developers)
+where mvn >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    echo JAR file not found. Building with Maven...
+    call mvn package -DskipTests
+    
+    if exist "target\Mine_Sweeper_Scorpion-1.0-SNAPSHOT.jar" (
+        echo Build Success! Launching...
+        java -jar target\Mine_Sweeper_Scorpion-1.0-SNAPSHOT.jar
+        goto :EOF
     )
-    pause
 )
 
+REM 3. If no JAR and no Maven (For You or Recruiters)
+echo.
+echo [ERROR] Game file not found!
+echo.
+echo IF YOU ARE A DEVELOPER:
+echo   Please open this project in IntelliJ IDEA and run "Maven -> Package".
+echo.
+echo IF YOU ARE A USER:
+echo   Please download the "Playable Demo" ZIP from the GitHub Releases page.
+echo.
+pause
