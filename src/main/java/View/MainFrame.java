@@ -1,3 +1,6 @@
+/**
+ * Main application entry point for Scorpion Minesweeper.
+ */
 package View;
 
 import Controller.GameController;
