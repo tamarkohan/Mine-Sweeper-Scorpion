@@ -1,8 +1,9 @@
 # Scorpion Minesweeper
 ### [Watch the 90-Second Demo & Gameplay](https://www.youtube.com/watch?v=banIviN_BXg)
-[![Scorpion Minesweeper Demo](https://img.youtube.com/vi/banIviN_BXg/hqdefault.jpg)](https://www.youtube.com/watch?v=banIviN_BXg)  <br>
 
-**A cooperative, two-player strategy game merging classic Minesweeper logic with trivia challenges and RPG mechanics.**
+[![Scorpion Minesweeper Demo](https://img.youtube.com/vi/banIviN_BXg/maxresdefault.jpg?v=1)](https://www.youtube.com/watch?v=banIviN_BXg) <br>
+
+**A cooperative, two-player strategy game merging classic weeper logic with trivia challenges and RPG mechanics.**
 
 ## Project Overview
 Scorpion Minesweeper is a Java-based desktop application developed using the **Model-View-Controller (MVC)** architectural pattern. Unlike the traditional solitary game, this project introduces a **cooperative multiplayer mode** where two players share a life pool and score, requiring communication and strategy to win.
