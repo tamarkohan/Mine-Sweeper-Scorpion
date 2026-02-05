@@ -1,54 +1,62 @@
-# 🦂 Scorpion Minesweeper
+# Scorpion Minesweeper
 
-> A cooperative, two-player strategy game that merges classic Minesweeper logic with trivia challenges and RPG elements.
+**A cooperative, two-player strategy game merging classic Minesweeper logic with trivia challenges and RPG mechanics.**
 
-## 📖 Overview
-Scorpion Minesweeper is a Java-based desktop application developed using the **MVC (Model-View-Controller)** architectural pattern. Unlike the traditional solitary game, this project introduces a **cooperative multiplayer mode** where two players share a life pool and score, requiring communication and strategy to win.
+## Project Overview
+Scorpion Minesweeper is a Java-based desktop application developed using the **Model-View-Controller (MVC)** architectural pattern. Unlike the traditional solitary game, this project introduces a **cooperative multiplayer mode** where two players share a life pool and score, requiring communication and strategy to win.
 
-The project was executed under a strict **Agile/Scrum** methodology over 3 iterations, simulating a full software development lifecycle (SDLC) from requirements (SRS) to final delivery.
+The project was executed under a strict **Agile/Scrum** methodology over three iterations, simulating a full software development lifecycle (SDLC) from requirements gathering (SRS) to final delivery.
 
-## ✨ Key Features
-* **Co-op Multiplayer:** Two active boards with shared resources (Lives & Score).
-* **Trivia Integration:** Special "Question Cells" trigger multiple-choice queries. Correct answers grant bonuses; wrong answers cost lives.
-* **RPG Elements:** "Surprise Cells" provide random buffs (extra lives) or debuffs.
-* **Accessibility:** Interface supported in five languages: English, Hebrew, Russian, Spanish, and Arabic.
-* **Dynamic Translations (My Key Contribution):** Integrated **Microsoft Azure Translator API** to support real-time language switching for new questions added between all languages and CSVs.
-* **Smart Feedback:** Audio cues for game events and "Smart Flags" that prevent flagging more mines than exist.
+## System Features
 
-## 🛠️ Tech Stack
+### Core Gameplay
+* **Co-op Multiplayer:** Two active boards with synchronized resources, including shared lives and scores.
+* **Trivia Integration:** Special "Question Cells" trigger multiple-choice queries. Correct answers grant point bonuses, while incorrect answers result in life penalties.
+* **RPG Mechanics:** "Surprise Cells" introduce random elements, providing buffs (such as extra lives) or debuffs based on chance.
+
+### My Contributions
+* **Accessibility & Localization:** Engineered a multi-language interface supporting English, Hebrew, Russian, Spanish, and Arabic to broaden user inclusion.
+* **Dynamic Translation API:** Integrated the **Microsoft Azure Translator API** to enable real-time, automated translation of new question content across all supported languages and CSV data files.
+* **Smart Feedback System:** Implemented audio cues for game events and a "Smart Flag" validation system that prevents users from flagging more mines than statistically possible.
+
+## Technical Architecture
 * **Language:** Java (JDK 19)
-* **GUI:** Java Swing / AWT
-* **Architecture:** Model-View-Controller (MVC)
-* **Data Persistence:** CSV (Custom implementation for history & question banks)
-* **APIs:** Microsoft Azure Translator
-* **Testing:** JUnit (Unit & Integration Testing)
+* **GUI Framework:** Java Swing / AWT
+* **Design Pattern:** Model-View-Controller (MVC)
+* **Data Persistence:** Custom CSV implementation for game history and question banks
+* **External APIs:** Microsoft Azure Translator
+* **Testing:** JUnit 5 (Unit & Integration Testing)
 
-## 🚀 How to Run
-1.  **Prerequisites:** Ensure you have Java 19 or higher installed.
-2.  Clone the repository:
+## Installation and Execution
+1.  **Prerequisites:** Ensure Java 19 or higher is installed on the local machine.
+2.  **Clone the Repository:**
     ```bash
     git clone [https://github.com/tamarkohan/Mine-Sweeper-Scorpion.git](https://github.com/tamarkohan/Mine-Sweeper-Scorpion.git)
     ```
-3.  Run the launcher script:
+3.  **Run the Application:**
+    Navigate to the root directory and execute the launcher script:
     ```bash
     ./run-app.bat
     ```
-    *(Or run the JAR file directly)*: `java -jar Mine_Sweeper_Scorpion.jar`
+    Alternatively, launch the JAR file directly:
+    ```bash
+    java -jar Mine_Sweeper_Scorpion.jar
+    ```
 
-## 🔮 Future Roadmap
-If development were to continue beyond the semester time constraints, the following features are planned:
-* **RPG Customization:** Unlockable skins and character avatars.
-* **Advanced Accessibility:** High-contrast modes, dynamic font resizing, and voice-over support for visually impaired users.
-* **Online Multiplayer:** Extending the cooperative logic to remote play via sockets.
+## Future Roadmap
+If development continues beyond the current scope, the following features are proposed:
+* **RPG Customization:** Implementation of unlockable skins and character avatars.
+* **Advanced Accessibility:** High-contrast modes, dynamic font resizing, and screen reader support.
+* **Online Multiplayer:** Extension of cooperative logic to support remote play via sockets.
 
-## 📂 Project Documentation
-This project follows industry-standard documentation practices. Detailed reports can be found in the `/docs` folder:
-* **[SRS (Software Requirements Specification)](docs/SRS_Scorpion.pdf):** Full functional breakdown.
-* **[SDP (Software Development Plan)](docs/SDP_Scorpion.pdf):** Agile planning and Gantt charts.
-* **[Iteration 3 Report](docs/iteration3_report_Scorpion.pdf):** Final delivery summary and testing results.
-* **[Bonus Report](docs/Scorpion_Bonus.pdf):** Detailed breakdown of creative bonuses and API integration.
-* **[Original Requirements](docs/Mine-Sweeper_Project_Requirements.pdf):** Initial project scope.
+## Documentation
+This project adheres to industry-standard documentation practices. Detailed reports are available in the `docs/` directory:
+* **[SRS (Software Requirements Specification)](docs/SRS_Scorpion.pdf):** Functional breakdown and system requirements.
+* **[SDP (Software Development Plan)](docs/SDP_Scorpion.pdf):** Agile planning, Gantt charts, and timeline.
+* **[Iteration 3 Report](docs/iteration3_report_Scorpion.pdf):** Final delivery summary and testing metrics.
+* **[Bonus Report](docs/Scorpion_Bonus.pdf):** Technical breakdown of API integration and advanced features.
+* **[Original Requirements](docs/Mine-Sweeper_Project_Requirements.pdf):** Initial academic project scope.
 
-## 👩‍💻 Credits
+## Credits
 **Lead Developer:** Tamar Kohan
-*Created as part of the Information Systems Engineering program at the University of Haifa.*
+*Developed as part of the Information Systems Engineering program at the University of Haifa.*
