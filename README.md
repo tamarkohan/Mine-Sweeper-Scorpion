@@ -43,6 +43,19 @@ The project was executed under a strict **Agile/Scrum** methodology over three i
     java -jar Mine_Sweeper_Scorpion.jar
     ```
 
+## Important Notes
+
+### Translation & API Limits
+This project uses a **Microsoft Azure for Students** license for real-time translation.
+* **Quota:** The API has a limited monthly character quota.
+* **Status:** If translations stop working or revert to English, the monthly student quota has likely been reached.
+* **Note:** The game remains fully playable in English regardless of API status.
+
+### Question Management
+The game includes an Admin Panel to add, edit, or remove trivia questions.
+* **Access:** Click the "Question Management" button on the main menu.
+* **Password:** `ADMIN` (case-sensitive)
+
 ## Future Roadmap
 If development continues beyond the current scope, the following features are proposed:
 * **RPG Customization:** Implementation of unlockable skins and character avatars.
@@ -58,5 +71,5 @@ This project adheres to industry-standard documentation practices. Detailed repo
 * **[Original Requirements](docs/Mine-Sweeper_Project_Requirements.pdf):** Initial academic project scope.
 
 ## Credits
-**Lead Developer:** Tamar Kohan<br>
+**Lead Developer:** Tamar Kohan
 *Developed as part of the Information Systems program at the University of Haifa.*
