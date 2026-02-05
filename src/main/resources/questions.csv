@@ -22,4 +22,4 @@ id,text,optionA,optionB,optionC,optionD,correctOption,difficultyLevel
 22,Which White-Box technique helps to systematically cover different logical combinations?,Decision or Condition Coverage,Random functional tests,Usability testing,Alpha/Beta testing,A,EXPERT
 23,Which statement about Test-Driven Development (TDD) is MOST accurate?,Tests are written after full implementation,TDD encourages writing tests first and then code,TDD eliminates the need for design completely,TDD is used only for GUI testing,B,EXPERT
 24,A serious defect was found in production. What activity is MOST suitable to prevent recurrence?,Adding more informal chats,Performing root-cause analysis and improving test practices,Asking developers to work faster,Removing all unit tests,B,EXPERT
- 
+
