@@ -28,7 +28,7 @@ echo.
 echo [ERROR] Game file not found!
 echo.
 echo IF YOU ARE A DEVELOPER:
-echo   Please open this project in IntelliJ IDEA and run "Maven -> Package".
+echo   Please open this project in your Java IDE (e.g., IntelliJ Idea or Eclipse) and run a Maven Build.
 echo.
 echo IF YOU ARE A USER:
 echo   Please download the "Playable Demo" ZIP from the GitHub Releases page.
