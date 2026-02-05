@@ -59,4 +59,4 @@ This project adheres to industry-standard documentation practices. Detailed repo
 
 ## Credits
 **Lead Developer:** Tamar Kohan
-* *Developed as part of the Information Systems Engineering program at the University of Haifa.*
+*Developed as part of the Information Systems program at the University of Haifa.*
