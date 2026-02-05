@@ -1,36 +1,73 @@
-@echo off
-echo ==========================================
-echo   Scorpion Minesweeper Launcher
-echo ==========================================
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-REM 1. Look for the JAR file
-if exist "target\Mine_Sweeper_Scorpion-1.0-SNAPSHOT.jar" (
-    echo Launching Game...
-    java -jar target\Mine_Sweeper_Scorpion-1.0-SNAPSHOT.jar
-    goto :EOF
-)
+    <groupId>com.minesweeper.scorpion</groupId>
+    <artifactId>Mine_Sweeper_Scorpion</artifactId>
+    <version>1.0-SNAPSHOT</version>
 
-REM 2. If JAR is missing, check if they have Maven installed (For Developers)
-where mvn >nul 2>nul
-if %ERRORLEVEL% EQU 0 (
-    echo JAR file not found. Building with Maven...
-    call mvn package -DskipTests
-    
-    if exist "target\Mine_Sweeper_Scorpion-1.0-SNAPSHOT.jar" (
-        echo Build Success! Launching...
-        java -jar target\Mine_Sweeper_Scorpion-1.0-SNAPSHOT.jar
-        goto :EOF
-    )
-)
+    <properties>
+        <maven.compiler.source>19</maven.compiler.source>
+        <maven.compiler.target>19</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <junit.version>5.10.0</junit.version>
+    </properties>
 
-REM 3. If no JAR and no Maven (For You or Recruiters)
-echo.
-echo [ERROR] Game file not found!
-echo.
-echo IF YOU ARE A DEVELOPER:
-echo   Please open this project in your Java IDE (e.g., IntelliJ Idea or Eclipse) and run a Maven Build.
-echo.
-echo IF YOU ARE A USER:
-echo   Please download the "Playable Demo" ZIP from the GitHub Releases page.
-echo.
-pause
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>19</source>
+                    <target>19</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>View.MainFrame</mainClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>View.MainFrame</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
