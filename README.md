@@ -71,5 +71,5 @@ This project adheres to industry-standard documentation practices. Detailed repo
 * **[Original Requirements](docs/Mine-Sweeper_Project_Requirements.pdf):** Initial academic project scope.
 
 ## Credits
-**Lead Developer:** Tamar Kohan
+**Lead Developer:** Tamar Kohan<br>
 *Developed as part of the Information Systems program at the University of Haifa.*
