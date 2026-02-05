@@ -1,6 +1,6 @@
 # Scorpion Minesweeper
-[![Watch the Demo](https://img.youtube.com/vi/banlviN_BXg/0.jpg)](https://www.youtube.com/watch?v=banlviN_BXg)
-
+### [Watch the 90-Second Demo & Gameplay](https://www.youtube.com/watch?v=banIviN_BXg)
+[![Scorpion Minesweeper Demo](https://img.youtube.com/vi/banIviN_BXg/hqdefault.jpg)](https://www.youtube.com/watch?v=banIviN_BXg)
 **A cooperative, two-player strategy game merging classic Minesweeper logic with trivia challenges and RPG mechanics.**
 
 ## Project Overview
